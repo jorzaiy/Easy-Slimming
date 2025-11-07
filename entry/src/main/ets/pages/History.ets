@@ -83,6 +83,14 @@ struct HistoryPage {
           .fontSize(14)
           .fontColor(Color.Gray)
           .margin({ top: 5 })
+        if (record.notes && record.notes.trim()) {
+          Text(record.notes)
+            .fontSize(14)
+            .fontColor('#666666')
+            .margin({ top: 8 })
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
       }
       .layoutWeight(1)
       .alignItems(HorizontalAlign.Start)

@@ -17,7 +17,8 @@ class WeightRecordDao {
   async insert(record: WeightRecord): Promise<number> {
     const valueBucket: relationalStore.ValuesBucket = {
       'weight': record.weight,
-      'date': record.date
+      'date': record.date,
+      'notes': record.notes || ''
     };
     try {
       let id = await this.rdbStore.insert(TABLE_NAME, valueBucket);
@@ -41,7 +42,8 @@ class WeightRecordDao {
           let id = resultSet.getLong(resultSet.getColumnIndex('id'));
           let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
           let date = resultSet.getLong(resultSet.getColumnIndex('date'));
-          records.push(new WeightRecord(weight, date, id));
+          let notes = resultSet.getString(resultSet.getColumnIndex('notes'));
+          records.push(new WeightRecord(weight, date, id, notes));
         }
       }
       resultSet.close();
@@ -57,7 +59,8 @@ class WeightRecordDao {
   async update(record: WeightRecord): Promise<number> {
     const valueBucket: relationalStore.ValuesBucket = {
       'weight': record.weight,
-      'date': record.date
+      'date': record.date,
+      'notes': record.notes || ''
     };
     let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
     predicates.equalTo('id', record.id);
