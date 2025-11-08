@@ -7,6 +7,9 @@ import { FormValidator } from '../common/FormValidator';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
+import { getTargetWeightService, TargetWeightRecord } from '../data/TargetWeightService';
+import { TargetWeightSettingDialog } from '../common/TargetWeightSettingDialog';
+import { common } from '@kit.AbilityKit';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'Chart';
@@ -48,10 +51,12 @@ struct WeightChartPage {
   @State records: WeightRecord[] = [];
   @State timeRange: TimeRange = TimeRange.MONTH;
   @State targetWeight: number = WeightRecord.getTargetWeight();
+  @State currentTarget: TargetWeightRecord | null = null;
   @State selectedPoint: ChartDataPoint | null = null;
   @State chartWidth: number = 350;
   @State chartHeight: number = 300;
   @State showTargetDialog: boolean = false;
+  @State showSettingDialog: boolean = false;
   @State tempTargetWeight: string = '';
   @State statistics: Statistics = {
     currentWeight: 0,
@@ -65,17 +70,37 @@ struct WeightChartPage {
     minWeight: 0,
     maxWeight: 0
   };
-  
+  private context: common.UIContext | null = null;
   private chartDataPoints: ChartDataPoint[] = [];
   private chartPadding: number = 40;
   private targetWeightLineY: number = 0;
 
   async aboutToAppear() {
+    this.context = this.getUIContext();
     await this.loadChartData();
+    await this.loadTargetWeight();
   }
 
   onPageShow() {
     this.loadChartData();
+    this.loadTargetWeight();
+  }
+
+  async loadTargetWeight() {
+    try {
+      if (!this.context) {
+        return;
+      }
+      const service = await getTargetWeightService(this.context);
+      if (service) {
+        this.currentTarget = await service.getCurrentTarget();
+        if (this.currentTarget) {
+          this.targetWeight = this.currentTarget.targetWeight;
+        }
+      }
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to load target weight: ${e}`);
+    }
   }
 
   async loadChartData() {
@@ -174,54 +199,42 @@ struct WeightChartPage {
   }
 
   showTargetWeightDialog() {
-    this.tempTargetWeight = this.targetWeight.toString();
-    this.showTargetDialog = true;
+    this.showSettingDialog = true;
   }
 
-  updateTargetWeight() {
-    const weight = parseFloat(this.tempTargetWeight);
-    if (!isNaN(weight) && weight > 0 && weight < 200) {
-      WeightRecord.setTargetWeight(weight);
-      this.targetWeight = weight;
-      this.loadChartData();
-      this.showTargetDialog = false;
-      promptAction.showToast({
-        message: '目标体重已更新',
-        duration: 2000
-      });
-    } else {
-      promptAction.showToast({
-        message: '请输入有效的体重数值',
-        duration: 2000
-      });
-    }
+  onTargetChange(target: TargetWeightRecord) {
+    this.currentTarget = target;
+    this.targetWeight = target.targetWeight;
+    WeightRecord.setTargetWeight(target.targetWeight);
+    this.loadChartData();
   }
 
   build() {
-    Column() {
-      // 标题栏
-      Row() {
-        Image($r('app.media.ic_back'))
-          .width(24)
-          .height(24)
-          .onClick(() => {
-            try {
-              router.back();
-            } catch (error) {
-              hilog.error(DOMAIN, TAG, `Failed to navigate back, cause: ${error}`);
-            }
-          })
-        Text('体重趋势')
-          .fontSize(24)
-          .fontWeight(FontWeight.Bold)
-          .layoutWeight(1)
-          .textAlign(TextAlign.Center)
-          .margin({ right: 24 })
-      }
-      .width('100%')
-      .padding(15)
-      .backgroundColor(Color.White)
-      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
+    Stack() {
+      Column() {
+        // 标题栏
+        Row() {
+          Image($r('app.media.ic_back'))
+            .width(24)
+            .height(24)
+            .onClick(() => {
+              try {
+                router.back();
+              } catch (error) {
+                hilog.error(DOMAIN, TAG, `Failed to navigate back, cause: ${error}`);
+              }
+            })
+          Text('体重趋势')
+            .fontSize(24)
+            .fontWeight(FontWeight.Bold)
+            .layoutWeight(1)
+            .textAlign(TextAlign.Center)
+            .margin({ right: 24 })
+        }
+        .width('100%')
+        .padding(15)
+        .backgroundColor(Color.White)
+        .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
 
       // 时间范围选择器
       Row() {
@@ -405,14 +418,25 @@ struct WeightChartPage {
       .layoutWeight(1)
       .width('100%')
       .padding({ left: 20, right: 20 })
+      }
+      .layoutWeight(1)
+      .width('100%')
+      .backgroundColor('#F1F3F5')
+
+      // 目标体重设置对话框
+      TargetWeightSettingDialog({
+        isVisible: this.showSettingDialog,
+        currentTarget: this.currentTarget,
+        onTargetChange: (target: TargetWeightRecord) => {
+          this.onTargetChange(target);
+        },
+        onDismiss: () => {
+          this.showSettingDialog = false;
+        }
+      })
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F1F3F5')
-    .bindContentCover(this.showTargetDialog, this.TargetWeightDialog(), {
-      modalTransition: ModalTransition.NONE,
-      backgroundColor: Color.Transparent
-    })
   }
 
   @Builder

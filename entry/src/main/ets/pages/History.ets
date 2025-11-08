@@ -9,6 +9,8 @@ import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
 import { RemarkSummary } from '../components/RemarkDisplay';
 import { RemarkFilter } from '../components/RemarkFilter';
+import { getTargetWeightService, TargetWeightRecord } from '../data/TargetWeightService';
+import { common } from '@kit.AbilityKit';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'History';
@@ -22,13 +24,32 @@ struct HistoryPage {
   @State showDeleteDialog: boolean = false;
   @State recordToDelete: WeightRecord | null = null;
   @State selectedRemarkType: RemarkType | 'all' = 'all';
+  @State currentTarget: TargetWeightRecord | null = null;
+  private context: common.UIContext | null = null;
 
   async aboutToAppear() {
+    this.context = this.getUIContext();
     await this.loadHistory();
+    await this.loadTargetWeight();
   }
 
   onPageShow() {
     this.loadHistory();
+    this.loadTargetWeight();
+  }
+
+  async loadTargetWeight() {
+    try {
+      if (!this.context) {
+        return;
+      }
+      const service = await getTargetWeightService(this.context);
+      if (service) {
+        this.currentTarget = await service.getCurrentTarget();
+      }
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to load target weight: ${e}`);
+    }
   }
 
   formatDate(timestamp: number): string {
@@ -244,9 +265,21 @@ struct HistoryPage {
   RecordItem(record: WeightRecord) {
     Row() {
       Column() {
-        Text(`${record.weight.toFixed(1)} kg`)
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
+        Row() {
+          Text(`${record.weight.toFixed(1)} kg`)
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+          
+          if (this.currentTarget) {
+            const difference = record.weight - this.currentTarget.targetWeight;
+            Text(difference > 0 ? `+${difference.toFixed(1)} kg` : `${difference.toFixed(1)} kg`)
+              .fontSize(14)
+              .fontColor(difference > 0 ? AppColors.WARNING : AppColors.SUCCESS)
+              .margin({ left: 10 })
+              .fontWeight(FontWeight.Medium)
+          }
+        }
+        
         Text(this.formatDate(record.date))
           .fontSize(14)
           .fontColor(Color.Gray)

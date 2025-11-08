@@ -4,6 +4,8 @@ import { window } from '@kit.ArkUI';
 import { LogConstants } from '../common/Constants';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { initDao } from '../common/Global';
+import { getTargetWeightManager } from '../common/TargetWeightManager';
+import { getTargetWeightService } from '../data/TargetWeightService';
 
 const DOMAIN = LogConstants.DOMAIN;
 
@@ -17,10 +19,10 @@ export default class EntryAbility extends UIAbility {
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate');
     
     // Initialize global DAO instance
-    this.initializeGlobalDao();
+    this.initializeGlobalServices();
   }
 
-  private async initializeGlobalDao() {
+  private async initializeGlobalServices() {
     try {
       const dao = await getWeightRecordDao(this.context);
       if (dao) {
@@ -29,8 +31,18 @@ export default class EntryAbility extends UIAbility {
       } else {
         hilog.error(DOMAIN, 'testTag', 'Failed to initialize global DAO: received null');
       }
+
+      // Initialize target weight service
+      const targetService = await getTargetWeightService(this.context);
+      if (targetService) {
+        const manager = getTargetWeightManager();
+        await manager.initialize(this.context);
+        hilog.info(DOMAIN, 'testTag', 'Target weight service initialized successfully');
+      } else {
+        hilog.error(DOMAIN, 'testTag', 'Failed to initialize target weight service: received null');
+      }
     } catch (e) {
-      hilog.error(DOMAIN, 'testTag', 'Failed to initialize global DAO, cause: %{public}s', JSON.stringify(e));
+      hilog.error(DOMAIN, 'testTag', 'Failed to initialize global services, cause: %{public}s', JSON.stringify(e));
     }
   }
 
