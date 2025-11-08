@@ -1,14 +1,13 @@
 import hilog from '@ohos.hilog';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
-import router from '@ohos.router';
+import { NavigationHelper } from '../common/NavigationHelper';
+import { FormValidator } from '../common/FormValidator';
+import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 
-const DOMAIN = 0x0000;
-const TAG = 'WeightApp_EntryForm';
-
-const MIN_WEIGHT = 30;
-const MAX_WEIGHT = 200;
+const DOMAIN = LogConstants.DOMAIN;
+const TAG = LogConstants.TAG_PREFIX + 'EntryForm';
 
 @Entry
 @Component
@@ -19,36 +18,19 @@ struct WeightEntryForm {
   @State isSubmitting: boolean = false;
 
   isWeightValid(): boolean {
-    if (!this.weightInput || this.weightInput.trim() === '') {
-      return false;
-    }
-    const weight = parseFloat(this.weightInput);
-    if (isNaN(weight)) {
-      return false;
-    }
-    return weight >= MIN_WEIGHT && weight <= MAX_WEIGHT;
+    return FormValidator.validateWeight(this.weightInput).isValid;
   }
 
   isDateValid(): boolean {
-    return this.selectedDate.getTime() <= new Date().getTime();
+    return FormValidator.validateDate(this.selectedDate);
   }
 
   isFormValid(): boolean {
-    return this.isWeightValid() && this.isDateValid();
+    return FormValidator.validateForm(this.weightInput, this.selectedDate);
   }
 
   getWeightErrorMessage(): string {
-    if (!this.weightInput || this.weightInput.trim() === '') {
-      return '';
-    }
-    const weight = parseFloat(this.weightInput);
-    if (isNaN(weight)) {
-      return '请输入有效的数字';
-    }
-    if (weight < MIN_WEIGHT || weight > MAX_WEIGHT) {
-      return `体重应在 ${MIN_WEIGHT}-${MAX_WEIGHT} kg 范围内`;
-    }
-    return '';
+    return FormValidator.validateWeight(this.weightInput).errorMessage;
   }
 
   async handleSubmit() {
@@ -79,9 +61,7 @@ struct WeightEntryForm {
         this.notesInput = '';
         this.selectedDate = new Date();
 
-        setTimeout(() => {
-          router.back();
-        }, 500);
+        await NavigationHelper.navigateBackWithFeedback();
       } else {
         throw new Error('Failed to insert record');
       }
@@ -100,35 +80,35 @@ struct WeightEntryForm {
     Column() {
       Row() {
         Image($r('app.media.ic_back'))
-          .width(24)
-          .height(24)
+          .width(AppDimensions.ICON_SIZE)
+          .height(AppDimensions.ICON_SIZE)
           .onClick(() => {
-            router.back();
+            NavigationHelper.navigateBack();
           })
         Text('记录体重')
-          .fontSize(24)
+          .fontSize(AppText.FONT_SIZE_TITLE)
           .fontWeight(FontWeight.Bold)
           .layoutWeight(1)
           .textAlign(TextAlign.Center)
-          .margin({ right: 24 })
+          .margin({ right: AppDimensions.ICON_SIZE })
       }
       .width('100%')
-      .padding(15)
-      .backgroundColor(Color.White)
+      .padding(AppDimensions.PADDING_MEDIUM)
+      .backgroundColor(AppColors.WHITE)
       .shadow({ radius: 3, color: '#000000', opacity: 0.1 })
 
       Column() {
         Column() {
           Row() {
             Text('日期')
-              .fontSize(16)
+              .fontSize(AppText.FONT_SIZE_SMALL)
               .fontWeight(FontWeight.Medium)
             Text('*')
-              .fontSize(16)
-              .fontColor(Color.Red)
+              .fontSize(AppText.FONT_SIZE_SMALL)
+              .fontColor(AppColors.ERROR)
               .margin({ left: 4 })
           }
-          .margin({ bottom: 10 })
+          .margin({ bottom: AppDimensions.MARGIN_SMALL })
 
           DatePicker({
             start: new Date('1900-1-1'),
@@ -142,100 +122,100 @@ struct WeightEntryForm {
             })
         }
         .width('100%')
-        .padding(20)
-        .backgroundColor(Color.White)
-        .borderRadius(12)
+        .padding(AppDimensions.PADDING_LARGE)
+        .backgroundColor(AppColors.WHITE)
+        .borderRadius(AppDimensions.BORDER_RADIUS)
         .alignItems(HorizontalAlign.Start)
-        .margin({ bottom: 15 })
+        .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
 
         Column() {
           Row() {
             Text('体重 (kg)')
-              .fontSize(16)
+              .fontSize(AppText.FONT_SIZE_SMALL)
               .fontWeight(FontWeight.Medium)
             Text('*')
-              .fontSize(16)
-              .fontColor(Color.Red)
+              .fontSize(AppText.FONT_SIZE_SMALL)
+              .fontColor(AppColors.ERROR)
               .margin({ left: 4 })
           }
-          .margin({ bottom: 10 })
+          .margin({ bottom: AppDimensions.MARGIN_SMALL })
 
           TextInput({ placeholder: '请输入体重，如：65.5' })
             .type(InputType.Number)
             .width('100%')
-            .height(50)
-            .fontSize(18)
-            .placeholderFont({ size: 16 })
+            .height(AppDimensions.BUTTON_HEIGHT)
+            .fontSize(AppText.FONT_SIZE_BODY)
+            .placeholderFont({ size: AppText.FONT_SIZE_SMALL })
             .onChange((value: string) => {
               this.weightInput = value;
             })
 
           if (this.getWeightErrorMessage()) {
             Text(this.getWeightErrorMessage())
-              .fontSize(14)
-              .fontColor(Color.Red)
+              .fontSize(AppText.FONT_SIZE_TINY)
+              .fontColor(AppColors.ERROR)
               .margin({ top: 8 })
           } else if (this.weightInput) {
-            Text(`范围：${MIN_WEIGHT}-${MAX_WEIGHT} kg`)
-              .fontSize(14)
-              .fontColor(Color.Gray)
+            Text(`范围：${BusinessConstants.MIN_WEIGHT}-${BusinessConstants.MAX_WEIGHT} kg`)
+              .fontSize(AppText.FONT_SIZE_TINY)
+              .fontColor(AppColors.GRAY)
               .margin({ top: 8 })
           }
         }
         .width('100%')
-        .padding(20)
-        .backgroundColor(Color.White)
-        .borderRadius(12)
+        .padding(AppDimensions.PADDING_LARGE)
+        .backgroundColor(AppColors.WHITE)
+        .borderRadius(AppDimensions.BORDER_RADIUS)
         .alignItems(HorizontalAlign.Start)
-        .margin({ bottom: 15 })
+        .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
 
         Column() {
           Text('备注')
-            .fontSize(16)
+            .fontSize(AppText.FONT_SIZE_SMALL)
             .fontWeight(FontWeight.Medium)
-            .margin({ bottom: 10 })
+            .margin({ bottom: AppDimensions.MARGIN_SMALL })
 
           TextArea({ placeholder: '记录饮食、运动等信息（可选）' })
             .width('100%')
             .height(120)
-            .fontSize(16)
-            .placeholderFont({ size: 16 })
-            .maxLength(200)
+            .fontSize(AppText.FONT_SIZE_SMALL)
+            .placeholderFont({ size: AppText.FONT_SIZE_SMALL })
+            .maxLength(BusinessConstants.MAX_NOTES_LENGTH)
             .onChange((value: string) => {
               this.notesInput = value;
             })
 
-          Text(`${this.notesInput.length}/200`)
-            .fontSize(14)
-            .fontColor(Color.Gray)
+          Text(`${this.notesInput.length}/${BusinessConstants.MAX_NOTES_LENGTH}`)
+            .fontSize(AppText.FONT_SIZE_TINY)
+            .fontColor(AppColors.GRAY)
             .margin({ top: 8 })
             .width('100%')
             .textAlign(TextAlign.End)
         }
         .width('100%')
-        .padding(20)
-        .backgroundColor(Color.White)
-        .borderRadius(12)
+        .padding(AppDimensions.PADDING_LARGE)
+        .backgroundColor(AppColors.WHITE)
+        .borderRadius(AppDimensions.BORDER_RADIUS)
         .alignItems(HorizontalAlign.Start)
-        .margin({ bottom: 30 })
+        .margin({ bottom: AppDimensions.MARGIN_LARGE })
 
         Button(this.isSubmitting ? '保存中...' : '保存记录')
           .type(ButtonType.Capsule)
           .width('100%')
-          .height(50)
-          .fontSize(18)
+          .height(AppDimensions.BUTTON_HEIGHT)
+          .fontSize(AppText.FONT_SIZE_BODY)
           .fontWeight(FontWeight.Bold)
           .enabled(!this.isSubmitting && this.isFormValid())
-          .backgroundColor(this.isFormValid() && !this.isSubmitting ? '#007DFF' : '#CCCCCC')
+          .backgroundColor(this.isFormValid() && !this.isSubmitting ? AppColors.PRIMARY : AppColors.LIGHT_GRAY)
           .onClick(() => {
             this.handleSubmit();
           })
       }
       .width('100%')
-      .padding({ left: 20, right: 20, top: 20 })
+      .padding({ left: AppDimensions.PADDING_LARGE, right: AppDimensions.PADDING_LARGE, top: AppDimensions.PADDING_LARGE })
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F1F3F5')
+    .backgroundColor(AppColors.BACKGROUND)
   }
 }

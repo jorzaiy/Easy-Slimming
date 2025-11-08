@@ -1,4 +1,7 @@
-// 定义体重记录的数据模型
+/**
+ * 体重记录数据模型
+ * 包含体重数据的基本信息和目标体重管理
+ */
 export class WeightRecord {
   id: number;
   weight: number;
@@ -8,21 +11,93 @@ export class WeightRecord {
   private static targetWeight: number = 70.0; // 默认目标体重
 
   constructor(weight: number, date: number, id?: number, notes?: string) {
-    this.id = id;
+    if (weight <= 0 || weight > 200) {
+      throw new Error(`Invalid weight value: ${weight}. Must be between 0 and 200.`);
+    }
+    if (date <= 0) {
+      throw new Error(`Invalid date value: ${date}. Must be a positive timestamp.`);
+    }
+    
+    this.id = id ?? -1;
     this.weight = weight;
     this.date = date;
-    this.notes = notes;
+    this.notes = notes?.trim() || undefined;
   }
 
-  // 获取目标体重
+  /**
+   * 获取目标体重
+   * @returns 目标体重值
+   */
   static getTargetWeight(): number {
     return WeightRecord.targetWeight;
   }
 
-  // 设置目标体重
+  /**
+   * 设置目标体重
+   * @param weight 目标体重值
+   * @throws 当体重值无效时抛出异常
+   */
   static setTargetWeight(weight: number): void {
     if (weight > 0 && weight < 200) {
       WeightRecord.targetWeight = weight;
+    } else {
+      throw new Error(`Invalid target weight: ${weight}. Must be between 0 and 200.`);
     }
+  }
+
+  /**
+   * 获取与目标体重的差值
+   * @returns 与目标体重的差值（正值表示超重，负值表示偏轻）
+   */
+  getDifferenceFromTarget(): number {
+    return this.weight - WeightRecord.targetWeight;
+  }
+
+  /**
+   * 检查是否达到目标体重
+   * @param tolerance 允许的误差范围，默认为0.5kg
+   * @returns 是否达到目标
+   */
+  isAtTarget(tolerance: number = 0.5): boolean {
+    return Math.abs(this.getDifferenceFromTarget()) <= tolerance;
+  }
+
+  /**
+   * 获取格式化的日期字符串
+   * @returns 格式化的日期字符串
+   */
+  getFormattedDate(): string {
+    return new Date(this.date).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  /**
+   * 验证记录数据的完整性
+   * @returns 验证结果
+   */
+  validate(): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (this.weight <= 0 || this.weight > 200) {
+      errors.push(`Invalid weight: ${this.weight}. Must be between 0 and 200.`);
+    }
+    
+    if (this.date <= 0) {
+      errors.push(`Invalid date: ${this.date}. Must be a positive timestamp.`);
+    }
+    
+    if (this.date > Date.now()) {
+      errors.push(`Date cannot be in the future.`);
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 }

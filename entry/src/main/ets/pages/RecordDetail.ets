@@ -1,10 +1,11 @@
 import hilog from '@ohos.hilog';
 import { WeightRecord } from '../model/WeightRecord';
-import router from '@ohos.router';
+import { NavigationHelper } from '../common/NavigationHelper';
+import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 
-const DOMAIN = 0x0000;
-const TAG = 'WeightApp_RecordDetail';
+const DOMAIN = LogConstants.DOMAIN;
+const TAG = LogConstants.TAG_PREFIX + 'RecordDetail';
 
 @Entry
 @Component
@@ -17,7 +18,8 @@ struct RecordDetailPage {
       hilog.info(DOMAIN, TAG, `Router params type: ${typeof params}, value: ${params}`);
       
       if (params && typeof params === 'object' && 'record' in params) {
-        this.record = (params as any).record;
+        const recordParams = params as { record: WeightRecord };
+        this.record = recordParams.record;
         if (this.record && this.record.id) {
           hilog.info(DOMAIN, TAG, `Loaded record detail for id: ${this.record.id}`);
         } else {
@@ -39,9 +41,7 @@ struct RecordDetailPage {
       message: '记录信息加载失败',
       duration: 2000
     });
-    setTimeout(() => {
-      router.back();
-    }, 1000);
+    NavigationHelper.navigateBackWithFeedback(1000);
   }
 
   formatDate(timestamp: number): string {
@@ -60,21 +60,21 @@ struct RecordDetailPage {
       // Header
       Row() {
         Image($r('app.media.ic_back'))
-          .width(24)
-          .height(24)
+          .width(AppDimensions.ICON_SIZE)
+          .height(AppDimensions.ICON_SIZE)
           .onClick(() => {
-            router.back();
+            NavigationHelper.navigateBack();
           })
         Text('记录详情')
-          .fontSize(24)
+          .fontSize(AppText.FONT_SIZE_TITLE)
           .fontWeight(FontWeight.Bold)
           .layoutWeight(1)
           .textAlign(TextAlign.Center)
-          .margin({ right: 24 })
+          .margin({ right: AppDimensions.ICON_SIZE })
       }
       .width('100%')
-      .padding(15)
-      .backgroundColor(Color.White)
+      .padding(AppDimensions.PADDING_MEDIUM)
+      .backgroundColor(AppColors.WHITE)
       .shadow({ radius: 3, color: '#000000', opacity: 0.1 })
 
       if (this.record) {
