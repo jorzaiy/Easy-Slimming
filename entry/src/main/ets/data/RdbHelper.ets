@@ -20,7 +20,7 @@ const DDL_CREATE_TABLE = `
 class RdbHelper {
   private rdbStore: relationalStore.RdbStore | null = null;
 
-  async initRdbStore(context: common.UIContext | common.UIAbilityContext) {
+  async initRdbStore(context: common.Context) {
     if (this.rdbStore) {
       hilog.info(DOMAIN, TAG, 'RDB store already initialized.');
       return this.rdbStore;
