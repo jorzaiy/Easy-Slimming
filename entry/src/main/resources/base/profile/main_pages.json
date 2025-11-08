@@ -6,6 +6,7 @@
     "pages/RecordDetail",
     "pages/WeightEditForm",
     "pages/WeightChart",
-    "pages/StatisticsDashboard"
+    "pages/StatisticsDashboard",
+    "pages/TargetWeightManagement"
   ]
 }
