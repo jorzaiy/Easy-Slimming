@@ -17,10 +17,8 @@ struct Index {
   @State latestRecord: WeightRecord | null = null;
   @State currentTarget: TargetWeightRecord | null = null;
   @State showTargetDialog: boolean = false;
-  private context: common.UIContext | null = null;
 
   async aboutToAppear() {
-    this.context = this.getUIContext();
     await this.loadLatestRecord();
     await this.loadTargetWeight();
   }
@@ -58,10 +56,11 @@ struct Index {
 
   async loadTargetWeight() {
     try {
-      if (!this.context) {
+      const context = this.getUIContext();
+      if (!context) {
         return;
       }
-      const service = await getTargetWeightService(this.context);
+      const service = await getTargetWeightService(context as unknown as common.Context);
       if (service) {
         this.currentTarget = await service.getCurrentTarget();
         hilog.info(DOMAIN, TAG, 'Loaded target weight.');

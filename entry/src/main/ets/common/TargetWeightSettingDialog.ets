@@ -17,7 +17,6 @@ export struct TargetWeightSettingDialog {
   @Prop currentTarget: TargetWeightRecord | null;
   @Prop onTargetChange: (target: TargetWeightRecord) => void;
   @Prop onDismiss: () => void;
-  private context: common.UIContext | null = null;
 
   @State inputWeight: string = '';
   @State selectedTargetDate: Date = new Date();
@@ -29,7 +28,6 @@ export struct TargetWeightSettingDialog {
   private presets: number[] = [60, 65, 70, 75, 80];
 
   aboutToAppear() {
-    this.context = this.getUIContext();
     if (this.currentTarget) {
       this.inputWeight = this.currentTarget.targetWeight.toString();
       if (this.currentTarget.targetDate) {
@@ -65,7 +63,8 @@ export struct TargetWeightSettingDialog {
       return;
     }
 
-    if (!this.context) {
+    const context = this.getUIContext();
+    if (!context) {
       promptAction.showToast({
         message: '保存失败，请重试',
         duration: 2000
@@ -75,7 +74,7 @@ export struct TargetWeightSettingDialog {
 
     this.isSaving = true;
     try {
-      const service = await getTargetWeightService(this.context);
+      const service = await getTargetWeightService(context as unknown as common.Context);
       if (!service) {
         throw new Error('Service not initialized');
       }
@@ -145,33 +144,33 @@ export struct TargetWeightSettingDialog {
                   .fontWeight(FontWeight.Medium)
 
                 Grid() {
-                  ForEach(this.presets, (preset: number) => {
-                    GridItem() {
-                      Text(preset.toString())
-                        .width('100%')
-                        .height(45)
-                        .fontSize(AppText.FONT_SIZE_BODY)
-                        .textAlign(TextAlign.Center)
-                        .borderRadius(8)
-                        .backgroundColor(
-                          this.inputWeight === preset.toString()
-                            ? AppColors.PRIMARY
-                            : AppColors.BACKGROUND
-                        )
-                        .fontColor(
-                          this.inputWeight === preset.toString()
-                            ? AppColors.WHITE
-                            : AppColors.GRAY
-                        )
-                        .onClick(() => {
-                          this.selectPreset(preset);
-                        })
-                    }
-                  })
-                }
-                .columnsTemplate('1fr 1fr 1fr 1fr 1fr')
-                .width('100%')
-                .columnGap(8)
+                   ForEach(this.presets, (preset: number) => {
+                     GridItem() {
+                       Text(preset.toString())
+                         .width('100%')
+                         .height(45)
+                         .fontSize(AppText.FONT_SIZE_BODY)
+                         .textAlign(TextAlign.Center)
+                         .borderRadius(8)
+                         .backgroundColor(
+                           this.inputWeight === preset.toString()
+                             ? AppColors.PRIMARY
+                             : AppColors.BACKGROUND
+                         )
+                         .fontColor(
+                           this.inputWeight === preset.toString()
+                             ? AppColors.WHITE
+                             : AppColors.GRAY
+                         )
+                         .onClick(() => {
+                           this.selectPreset(preset);
+                         })
+                     }
+                   })
+                 }
+                 .columnsTemplate('1fr 1fr 1fr 1fr 1fr')
+                 .width('100%')
+                 .columnsGap(8)
               }
               .width('100%')
 
@@ -182,18 +181,17 @@ export struct TargetWeightSettingDialog {
                   .fontColor(AppColors.GRAY)
                   .fontWeight(FontWeight.Medium)
 
-                TextInput({ placeholder: '请输入目标体重' })
-                  .width('100%')
-                  .height(50)
-                  .fontSize(AppText.FONT_SIZE_BODY)
-                  .backgroundColor(AppColors.WHITE)
-                  .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
-                  .border({ width: 1, color: AppColors.BORDER_GRAY })
-                  .type(InputType.Number)
-                  .value(this.inputWeight)
-                  .onChange((value: string) => {
-                    this.inputWeight = value;
-                  })
+                TextInput({ placeholder: '请输入目标体重', text: this.inputWeight })
+                   .width('100%')
+                   .height(50)
+                   .fontSize(AppText.FONT_SIZE_BODY)
+                   .backgroundColor(AppColors.WHITE)
+                   .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
+                   .border({ width: 1, color: AppColors.BORDER_GRAY })
+                   .type(InputType.Number)
+                   .onChange((value: string) => {
+                     this.inputWeight = value;
+                   })
 
                 if (this.getWeightError()) {
                   Text(this.getWeightError())
@@ -250,17 +248,16 @@ export struct TargetWeightSettingDialog {
                   .fontColor(AppColors.GRAY)
                   .fontWeight(FontWeight.Medium)
 
-                TextArea({ placeholder: '输入相关备注信息' })
-                  .width('100%')
-                  .height(80)
-                  .fontSize(AppText.FONT_SIZE_SMALL)
-                  .backgroundColor(AppColors.WHITE)
-                  .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
-                  .border({ width: 1, color: AppColors.BORDER_GRAY })
-                  .value(this.notes)
-                  .onChange((value: string) => {
-                    this.notes = value;
-                  })
+                TextArea({ placeholder: '输入相关备注信息', text: this.notes })
+                   .width('100%')
+                   .height(80)
+                   .fontSize(AppText.FONT_SIZE_SMALL)
+                   .backgroundColor(AppColors.WHITE)
+                   .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
+                   .border({ width: 1, color: AppColors.BORDER_GRAY })
+                   .onChange((value: string) => {
+                     this.notes = value;
+                   })
 
                 Text(`${this.notes.length}/200`)
                   .fontSize(AppText.FONT_SIZE_TINY)

@@ -24,11 +24,15 @@ struct StatisticsDashboard {
   @State userHeight: number = 170;
   @State showHeightDialog: boolean = false;
   @State selectedTimeRange: TimeRange = 'all';
-  @State rangeStats: any = null;
-  private context: common.UIContext | null = null;
+  @State rangeStats: {
+    count: number;
+    average: number;
+    min: number;
+    max: number;
+    change: number;
+  } | null = null;
 
   async aboutToAppear() {
-    this.context = this.getUIContext();
     await this.loadStatistics();
     await this.loadUserHeight();
     await this.loadRangeStatistics();
@@ -41,8 +45,9 @@ struct StatisticsDashboard {
 
   async loadStatistics() {
     try {
-      if (this.context) {
-        this.statistics = await StatisticsService.getStatistics(this.context);
+      const context = this.getUIContext();
+      if (context) {
+        this.statistics = await StatisticsService.getStatistics(context as unknown as common.Context);
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load statistics: ${e}`);
@@ -57,8 +62,9 @@ struct StatisticsDashboard {
 
   async loadUserHeight() {
     try {
-      if (this.context) {
-        this.userHeight = await StatisticsService.getUserHeight(this.context);
+      const context = this.getUIContext();
+      if (context) {
+        this.userHeight = await StatisticsService.getUserHeight(context as unknown as common.Context);
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load user height: ${e}`);
@@ -73,8 +79,9 @@ struct StatisticsDashboard {
 
   async loadRangeStatistics() {
     try {
-      if (this.context) {
-        this.rangeStats = await StatisticsService.getTimeRangeStatistics(this.context, this.selectedTimeRange);
+      const context = this.getUIContext();
+      if (context) {
+        this.rangeStats = await StatisticsService.getTimeRangeStatistics(context as unknown as common.Context, this.selectedTimeRange);
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load range statistics: ${e}`);
@@ -89,8 +96,9 @@ struct StatisticsDashboard {
   async onRefresh() {
     this.isRefreshing = true;
     try {
-      if (this.context) {
-        this.statistics = await StatisticsService.refreshStatistics(this.context);
+      const context = this.getUIContext();
+      if (context) {
+        this.statistics = await StatisticsService.refreshStatistics(context as unknown as common.Context);
         await this.loadRangeStatistics();
       }
       promptAction.showToast({

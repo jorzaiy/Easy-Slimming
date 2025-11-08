@@ -29,18 +29,20 @@ struct HealthSyncSettings {
     { label: '合并数据', value: 'MERGE' }
   ];
   private syncSettingsDao: SyncSettingsDao | null = null;
-  private context: common.UIContext | null = null;
 
   async aboutToAppear() {
-    this.context = this.getUIContext();
     await this.initializeServices();
     await this.loadSettings();
   }
 
   private async initializeServices() {
     try {
+      const context = this.getUIContext();
+      if (!context) {
+        throw new Error('Context not available');
+      }
       const dao = await (await import('../data/SyncSettingsDao')).getSyncSettingsDao(
-        this.context
+        context as unknown as common.Context
       );
       if (dao) {
         this.syncSettingsDao = dao;

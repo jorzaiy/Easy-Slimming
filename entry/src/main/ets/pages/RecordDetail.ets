@@ -6,7 +6,8 @@ import { NavigationHelper } from '../common/NavigationHelper';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
-import { RemarkDisplay, RemarkEditDialog } from '../components/RemarkDisplay';
+import { RemarkDisplay } from '../components/RemarkDisplay';
+import { RemarkEditDialog } from '../components/RemarkEditDialog';
 
 // 路由参数接口
 interface RecordDetailParams {

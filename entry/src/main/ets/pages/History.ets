@@ -25,10 +25,8 @@ struct HistoryPage {
   @State recordToDelete: WeightRecord | null = null;
   @State selectedRemarkType: RemarkType | 'all' = 'all';
   @State currentTarget: TargetWeightRecord | null = null;
-  private context: common.UIContext | null = null;
 
   async aboutToAppear() {
-    this.context = this.getUIContext();
     await this.loadHistory();
     await this.loadTargetWeight();
   }
@@ -40,10 +38,11 @@ struct HistoryPage {
 
   async loadTargetWeight() {
     try {
-      if (!this.context) {
+      const context = this.getUIContext();
+      if (!context) {
         return;
       }
-      const service = await getTargetWeightService(this.context);
+      const service = await getTargetWeightService(context as unknown as common.Context);
       if (service) {
         this.currentTarget = await service.getCurrentTarget();
       }

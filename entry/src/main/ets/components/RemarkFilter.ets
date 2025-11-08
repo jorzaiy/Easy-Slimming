@@ -1,4 +1,4 @@
-import { RemarkType } from '../model/Remark';
+import { RemarkType, Remark } from '../model/Remark';
 import { AppColors, AppDimensions, AppText } from '../common/Constants';
 
 @Component

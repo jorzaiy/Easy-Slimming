@@ -70,13 +70,11 @@ struct WeightChartPage {
     minWeight: 0,
     maxWeight: 0
   };
-  private context: common.UIContext | null = null;
   private chartDataPoints: ChartDataPoint[] = [];
   private chartPadding: number = 40;
   private targetWeightLineY: number = 0;
 
   async aboutToAppear() {
-    this.context = this.getUIContext();
     await this.loadChartData();
     await this.loadTargetWeight();
   }
@@ -88,10 +86,11 @@ struct WeightChartPage {
 
   async loadTargetWeight() {
     try {
-      if (!this.context) {
+      const context = this.getUIContext();
+      if (!context) {
         return;
       }
-      const service = await getTargetWeightService(this.context);
+      const service = await getTargetWeightService(context as unknown as common.Context);
       if (service) {
         this.currentTarget = await service.getCurrentTarget();
         if (this.currentTarget) {
