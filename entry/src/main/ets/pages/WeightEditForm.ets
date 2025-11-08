@@ -5,6 +5,7 @@ import { NavigationHelper } from '../common/NavigationHelper';
 import { FormValidator } from '../common/FormValidator';
 import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
+import '../common/Global';
 
 // 路由参数接口
 interface EditFormParams {

@@ -6,6 +6,7 @@ import { ErrorHandler } from '../common/ErrorHandler';
 import { FormValidator } from '../common/FormValidator';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
+import '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'Chart';

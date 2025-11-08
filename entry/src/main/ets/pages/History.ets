@@ -5,6 +5,7 @@ import { NavigationHelper } from '../common/NavigationHelper';
 import { ErrorHandler } from '../common/ErrorHandler';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
+import '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'History';

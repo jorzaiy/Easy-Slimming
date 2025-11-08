@@ -8,7 +8,7 @@ import { common } from '@kit.AbilityKit';
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'WeightRecordDao';
 
-class WeightRecordDao {
+export class WeightRecordDao {
   private rdbStore: relationalStore.RdbStore;
 
   constructor(rdbStore: relationalStore.RdbStore) {
