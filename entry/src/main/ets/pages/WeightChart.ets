@@ -6,7 +6,7 @@ import { ErrorHandler } from '../common/ErrorHandler';
 import { FormValidator } from '../common/FormValidator';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
-import '../common/Global';
+import { getAppDao } from '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'Chart';
@@ -80,7 +80,8 @@ struct WeightChartPage {
 
   async loadChartData() {
     try {
-      if (!globalThis.dao) {
+      const dao = getAppDao();
+      if (!dao) {
         throw new Error('Global DAO not initialized');
       }
       const endDate = new Date();
@@ -98,7 +99,7 @@ struct WeightChartPage {
           break;
       }
 
-      this.records = await globalThis.dao.queryByDateRange(startDate.getTime(), endDate.getTime());
+      this.records = await dao.queryByDateRange(startDate.getTime(), endDate.getTime());
       this.targetWeight = WeightRecord.getTargetWeight();
       this.processChartData();
       hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} records for chart.`);

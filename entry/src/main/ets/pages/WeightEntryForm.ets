@@ -4,7 +4,7 @@ import { NavigationHelper } from '../common/NavigationHelper';
 import { FormValidator } from '../common/FormValidator';
 import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
-import '../common/Global';
+import { getAppDao } from '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'EntryForm';
@@ -54,10 +54,11 @@ struct WeightEntryForm {
       const notes = this.notesInput.trim() || undefined;
 
       const newRecord = new WeightRecord(weight, timestamp, undefined, notes);
-      if (!globalThis.dao) {
+      const dao = getAppDao();
+      if (!dao) {
         throw new Error('Global DAO not initialized');
       }
-      const recordId = await globalThis.dao.insert(newRecord);
+      const recordId = await dao.insert(newRecord);
 
       if (recordId > 0) {
         hilog.info(DOMAIN, TAG, `Successfully saved weight record with id: ${recordId}`);

@@ -5,7 +5,7 @@ import { NavigationHelper } from '../common/NavigationHelper';
 import { ErrorHandler } from '../common/ErrorHandler';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
-import '../common/Global';
+import { getAppDao } from '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'History';
@@ -45,10 +45,11 @@ struct HistoryPage {
 
   async loadHistory() {
     try {
-      if (!globalThis.dao) {
+      const dao = getAppDao();
+      if (!dao) {
         throw new Error('Global DAO not initialized');
       }
-      this.records = await globalThis.dao.queryAll();
+      this.records = await dao.queryAll();
       hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} history records.`);
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load history, cause: ${e}`);
@@ -86,10 +87,11 @@ struct HistoryPage {
     if (!this.recordToDelete) return;
 
     try {
-      if (!globalThis.dao) {
+      const dao = getAppDao();
+      if (!dao) {
         throw new Error('Global DAO not initialized');
       }
-      const rowsAffected = await globalThis.dao.deleteById(this.recordToDelete.id);
+      const rowsAffected = await dao.deleteById(this.recordToDelete.id);
       
       if (rowsAffected > 0) {
         hilog.info(DOMAIN, TAG, `Deleted record with id: ${this.recordToDelete.id}`);
