@@ -7,6 +7,17 @@ import { BusinessConstants } from './Constants';
 import hilog from '@ohos.hilog';
 import { LogConstants } from './Constants';
 
+// 路由参数接口
+interface RouteParams {
+  [key: string]: ESObject;
+}
+
+// 导航参数接口
+interface NavigationParams {
+  url: string;
+  params?: RouteParams;
+}
+
 export class NavigationHelper {
   private static readonly DOMAIN = LogConstants.DOMAIN;
   private static readonly TAG = LogConstants.TAG_PREFIX + 'Navigation';
@@ -17,13 +28,13 @@ export class NavigationHelper {
     * @param params 传递的参数
     * @param delay 延迟时间（毫秒），默认为0
     */
-  static async navigateToPage(url: string, params?: object, delay: number = 0): Promise<void> {
+  static async navigateToPage(url: string, params?: RouteParams, delay: number = 0): Promise<void> {
     try {
       if (delay > 0) {
         await new Promise(resolve => setTimeout(resolve, delay));
       }
 
-      const navigationParams = params ? { url, params } : { url };
+      const navigationParams: NavigationParams = params ? { url, params } : { url };
       await router.pushUrl(navigationParams);
 
       hilog.info(NavigationHelper.DOMAIN, NavigationHelper.TAG, `Successfully navigated to: ${url}`);
@@ -68,7 +79,7 @@ export class NavigationHelper {
     * 获取路由参数
     * @returns 路由参数对象
     */
-  static getRouteParams(): object | undefined {
+  static getRouteParams(): RouteParams | undefined {
     try {
       const params = router.getParams();
       return params !== null ? params : undefined;

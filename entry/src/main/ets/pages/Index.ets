@@ -22,9 +22,19 @@ struct Index {
     this.loadLatestRecord();
   }
 
+  formatDate(timestamp: number): string {
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hour = date.getHours().toString().padStart(2, '0');
+    const minute = date.getMinutes().toString().padStart(2, '0');
+    return `${year}/${month}/${day} ${hour}:${minute}`;
+  }
+
   async loadLatestRecord() {
     try {
-      const dao = await getWeightRecordDao(this.getUIContext().getApplicationContext());
+      const dao = await getWeightRecordDao(this.getContext());
       const records = await dao.queryAll();
       if (records.length > 0) {
         this.latestRecord = records[0]; // 默认按日期降序，第一个就是最新的
@@ -95,7 +105,7 @@ struct Index {
           .fontSize(24)
           .margin({ top: 80 })
           .fontColor(Color.Gray)
-        Text(`记录于: ${new Date(this.latestRecord.date).toLocaleString()}`)
+        Text(`记录于: ${this.formatDate(this.latestRecord.date)}`)
           .fontSize(16)
           .margin({ top: 10 })
           .fontColor(Color.Gray)

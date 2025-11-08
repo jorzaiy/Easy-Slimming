@@ -7,6 +7,11 @@ import { FormValidator } from '../common/FormValidator';
 import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 
+// 路由参数接口
+interface EditFormParams {
+  record: WeightRecord;
+}
+
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'EditForm';
 
@@ -25,8 +30,8 @@ struct WeightEditForm {
       const params = router.getParams();
       hilog.info(DOMAIN, TAG, `Router params type: ${typeof params}, value: ${params}`);
 
-      if (params && typeof params === 'object' && params && (params as object).hasOwnProperty('record')) {
-        const recordParams = params as { record: WeightRecord };
+      if (params && typeof params === 'object' && params && (params as EditFormParams).record) {
+        const recordParams = params as EditFormParams;
         const record = recordParams.record;
         if (record && record.id) {
           this.recordId = record.id;
@@ -76,6 +81,14 @@ struct WeightEditForm {
     return this.isWeightValid() && this.isDateValid();
   }
 
+  formatDateOnly(timestamp: number): string {
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  }
+
   getWeightErrorMessage(): string {
     if (!this.weightInput || this.weightInput.trim() === '') {
       return '';
@@ -103,7 +116,7 @@ struct WeightEditForm {
       const notes = this.notesInput.trim() || undefined;
 
       const updatedRecord = new WeightRecord(weight, timestamp, this.recordId, notes);
-      const dao = await getWeightRecordDao(this.getUIContext().getApplicationContext());
+      const dao = await getWeightRecordDao(this.getContext());
       const rowsAffected = await dao.update(updatedRecord);
 
       if (rowsAffected > 0) {
@@ -174,8 +187,10 @@ struct WeightEditForm {
           })
             .lunar(false)
             .onChange((value: DatePickerResult) => {
-              this.selectedDate = new Date(value.year, value.month, value.day);
-              hilog.info(DOMAIN, TAG, `Selected date: ${this.selectedDate.toLocaleDateString()}`);
+              if (value && value.year !== undefined && value.month !== undefined && value.day !== undefined) {
+                this.selectedDate = new Date(value.year, value.month, value.day);
+                hilog.info(DOMAIN, TAG, `Selected date: ${this.formatDateOnly(this.selectedDate.getTime())}`);
+              }
             })
         }
         .width('100%')

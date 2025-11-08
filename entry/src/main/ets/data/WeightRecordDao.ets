@@ -3,7 +3,7 @@ import { WeightRecord, ValidationResult } from '../model/WeightRecord';
 import { rdbHelper, TABLE_NAME } from './RdbHelper';
 import hilog from '@ohos.hilog';
 import { LogConstants } from '../common/Constants';
-import { Context } from '@ohos.app.ability.common';
+import { common } from '@kit.AbilityKit';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'WeightRecordDao';
@@ -197,7 +197,7 @@ class WeightRecordDao {
 
 let weightRecordDao: WeightRecordDao | null = null;
 
-export async function getWeightRecordDao(context: Context): Promise<WeightRecordDao> {
+export async function getWeightRecordDao(context: common.UIAbilityContext): Promise<WeightRecordDao | null> {
   if (weightRecordDao) {
     return weightRecordDao;
   }

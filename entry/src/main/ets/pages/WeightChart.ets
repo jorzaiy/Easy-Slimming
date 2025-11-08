@@ -39,7 +39,7 @@ struct WeightChartPage {
   @State tempTargetWeight: string = '';
   
   private chartDataPoints: ChartDataPoint[] = [];
-  private padding: number = 40;
+  private chartPadding: number = 40;
   private targetWeightLineY: number = 0;
 
   async aboutToAppear() {
@@ -52,7 +52,7 @@ struct WeightChartPage {
 
   async loadChartData() {
     try {
-      const dao = await getWeightRecordDao(this.getUIContext().getApplicationContext());
+      const dao = await getWeightRecordDao(this.getContext());
       const endDate = new Date();
       let startDate = new Date();
 
@@ -101,8 +101,8 @@ struct WeightChartPage {
 
     // 转换为图表坐标点
     this.chartDataPoints = this.records.map(record => {
-      const x = this.padding + ((record.date - minTime) / timeRange) * (this.chartWidth - 2 * this.padding);
-      const y = this.padding + ((maxWeight - record.weight) / weightRange) * (this.chartHeight - 2 * this.padding);
+      const x = this.chartPadding + ((record.date - minTime) / timeRange) * (this.chartWidth - 2 * this.chartPadding);
+      const y = this.chartPadding + ((maxWeight - record.weight) / weightRange) * (this.chartHeight - 2 * this.chartPadding);
       return {
         date: new Date(record.date),
         weight: record.weight,
@@ -112,7 +112,7 @@ struct WeightChartPage {
     });
 
     // 计算目标线的Y坐标
-    this.targetWeightLineY = this.padding + ((maxWeight - this.targetWeight) / weightRange) * (this.chartHeight - 2 * this.padding);
+    this.targetWeightLineY = this.chartPadding + ((maxWeight - this.targetWeight) / weightRange) * (this.chartHeight - 2 * this.chartPadding);
   }
 
   onTimeRangeChange(range: TimeRange) {
@@ -268,8 +268,8 @@ struct WeightChartPage {
               
               // 目标线
               Line()
-                .startPoint([this.padding, this.targetWeightLineY])
-                .endPoint([this.chartWidth - this.padding, this.targetWeightLineY])
+                .startPoint([this.chartPadding, this.targetWeightLineY])
+                .endPoint([this.chartWidth - this.chartPadding, this.targetWeightLineY])
                 .stroke(Color.Red)
                 .strokeWidth(2)
                 .strokeDashArray([5, 5])
@@ -318,7 +318,7 @@ struct WeightChartPage {
               .width('100%')
               .margin({ bottom: 10 })
 
-              Text(`日期: ${this.selectedPoint.date.toLocaleDateString()}`)
+              Text(`日期: ${this.formatDateOnly(this.selectedPoint.date.getTime())}`)
                 .fontSize(14)
                 .fontColor('#333333')
                 .width('100%')
@@ -337,7 +337,7 @@ struct WeightChartPage {
                 .margin({ top: 5 })
 
               const diff = this.selectedPoint.weight - this.targetWeight;
-              Text(`差距: ${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg`)
+              Text(`差距: ${this.calculateWeightDiff(this.selectedPoint.weight, this.targetWeight)} kg`)
                 .fontSize(14)
                 .fontColor(diff > 0 ? Color.Red : '#00C853')
                 .width('100%')
@@ -379,13 +379,7 @@ struct WeightChartPage {
   @Builder
   StatisticsCard() {
     if (this.records.length > 0) {
-      const weights = this.records.map(r => r.weight);
-      const currentWeight = this.records[0].weight; // 最新的体重
-      const startWeight = this.records[this.records.length - 1].weight; // 最早的体重
-      const minWeight = Math.min(...weights);
-      const maxWeight = Math.max(...weights);
-      const avgWeight = weights.reduce((sum, w) => sum + w, 0) / weights.length;
-      const totalChange = currentWeight - startWeight;
+      const stats = this.calculateStatistics();
 
       Column() {
         Text('统计信息')
@@ -399,7 +393,7 @@ struct WeightChartPage {
         Grid() {
           GridItem() {
             Column() {
-              Text(`${currentWeight.toFixed(1)}`)
+              Text(`${stats.currentWeight.toFixed(1)}`)
                 .fontSize(20)
                 .fontWeight(FontWeight.Bold)
                 .fontColor(Color.Blue)
@@ -414,10 +408,10 @@ struct WeightChartPage {
 
           GridItem() {
             Column() {
-              Text(`${totalChange > 0 ? '+' : ''}${totalChange.toFixed(1)}`)
+              Text(`${stats.totalChange > 0 ? '+' : ''}${stats.totalChange.toFixed(1)}`)
                 .fontSize(20)
                 .fontWeight(FontWeight.Bold)
-                .fontColor(totalChange > 0 ? Color.Red : '#00C853')
+                .fontColor(stats.totalChange > 0 ? Color.Red : '#00C853')
               Text('总体变化')
                 .fontSize(12)
                 .fontColor('#666666')
@@ -429,7 +423,7 @@ struct WeightChartPage {
 
           GridItem() {
             Column() {
-              Text(`${avgWeight.toFixed(1)}`)
+              Text(`${stats.avgWeight.toFixed(1)}`)
                 .fontSize(20)
                 .fontWeight(FontWeight.Bold)
                 .fontColor('#FF9800')
@@ -444,7 +438,7 @@ struct WeightChartPage {
 
           GridItem() {
             Column() {
-              Text(`${(maxWeight - minWeight).toFixed(1)}`)
+              Text(`${(stats.maxWeight - stats.minWeight).toFixed(1)}`)
                 .fontSize(20)
                 .fontWeight(FontWeight.Bold)
                 .fontColor('#9C27B0')
@@ -474,20 +468,18 @@ struct WeightChartPage {
   @Builder
   AxisLabels() {
     if (this.records.length > 0) {
-      const weights = this.records.map(r => r.weight);
-      const minWeight = Math.min(...weights, this.targetWeight) - 2;
-      const maxWeight = Math.max(...weights, this.targetWeight) + 2;
+      const range = this.calculateWeightRange();
       
       Column() {
         ForEach([0, 1, 2, 3, 4, 5], (index: number) => {
-          const weight = maxWeight - (index * (maxWeight - minWeight) / 5);
+          const weight = range.maxWeight - (index * (range.maxWeight - range.minWeight) / 5);
           Text(`${weight.toFixed(1)}`)
             .fontSize(10)
             .fontColor('#666666')
             .width(30)
             .textAlign(TextAlign.End)
             .margin({ top: index === 0 ? 0 : -15 })
-            .position({ x: 5, y: this.padding + index * (this.chartHeight - 2 * this.padding) / 5 - 6 })
+            .position({ x: 5, y: this.chartPadding + index * (this.chartHeight - 2 * this.chartPadding) / 5 - 6 })
         })
       }
       .width(this.chartWidth)
@@ -500,16 +492,16 @@ struct WeightChartPage {
     Column() {
       ForEach([0, 1, 2, 3, 4, 5], (index: number) => {
         Line()
-          .startPoint([this.padding, this.padding + index * (this.chartHeight - 2 * this.padding) / 5])
-          .endPoint([this.chartWidth - this.padding, this.padding + index * (this.chartHeight - 2 * this.padding) / 5])
+          .startPoint([this.chartPadding, this.chartPadding + index * (this.chartHeight - 2 * this.chartPadding) / 5])
+          .endPoint([this.chartWidth - this.chartPadding, this.chartPadding + index * (this.chartHeight - 2 * this.chartPadding) / 5])
           .stroke('#E5E5E5')
           .strokeWidth(1)
       })
       
       ForEach([0, 1, 2, 3, 4, 5], (index: number) => {
         Line()
-          .startPoint([this.padding + index * (this.chartWidth - 2 * this.padding) / 5, this.padding])
-          .endPoint([this.padding + index * (this.chartWidth - 2 * this.padding) / 5, this.chartHeight - this.padding])
+          .startPoint([this.chartPadding + index * (this.chartWidth - 2 * this.chartPadding) / 5, this.chartPadding])
+          .endPoint([this.chartPadding + index * (this.chartWidth - 2 * this.chartPadding) / 5, this.chartHeight - this.chartPadding])
           .stroke('#E5E5E5')
           .strokeWidth(1)
       })
@@ -571,6 +563,49 @@ struct WeightChartPage {
     .height('100%')
     .justifyContent(FlexAlign.Center)
     .backgroundColor('rgba(0, 0, 0, 0.5)')
+  }
+
+  private calculateWeightDiff(currentWeight: number, targetWeight: number): string {
+    const diff = currentWeight - targetWeight;
+    return `${diff > 0 ? '+' : ''}${diff.toFixed(1)}`;
+  }
+
+  formatDateOnly(timestamp: number): string {
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  }
+
+  private calculateWeightRange() {
+    const weights = this.records.map(r => r.weight);
+    const minWeight = Math.min(...weights, this.targetWeight) - 2;
+    const maxWeight = Math.max(...weights, this.targetWeight) + 2;
+
+    return {
+      minWeight,
+      maxWeight
+    };
+  }
+
+  private calculateStatistics() {
+    const weights = this.records.map(r => r.weight);
+    const currentWeight = this.records[0].weight; // 最新的体重
+    const startWeight = this.records[this.records.length - 1].weight; // 最早的体重
+    const minWeight = Math.min(...weights);
+    const maxWeight = Math.max(...weights);
+    const avgWeight = weights.reduce((sum, w) => sum + w, 0) / weights.length;
+    const totalChange = currentWeight - startWeight;
+
+    return {
+      currentWeight,
+      startWeight,
+      minWeight,
+      maxWeight,
+      avgWeight,
+      totalChange
+    };
   }
 
   private generatePathCommands(): string {
