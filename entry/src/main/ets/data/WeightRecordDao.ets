@@ -87,6 +87,31 @@ class WeightRecordDao {
       return 0;
     }
   }
+
+  // 根据ID查询单条记录
+  async queryById(id: number): Promise<WeightRecord | null> {
+    let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+    predicates.equalTo('id', id);
+    try {
+      let resultSet = await this.rdbStore.query(predicates);
+      let record: WeightRecord | null = null;
+      if (resultSet.rowCount > 0) {
+        if (resultSet.goToFirstRow()) {
+          let recordId = resultSet.getLong(resultSet.getColumnIndex('id'));
+          let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
+          let date = resultSet.getLong(resultSet.getColumnIndex('date'));
+          let notes = resultSet.getString(resultSet.getColumnIndex('notes'));
+          record = new WeightRecord(weight, date, recordId, notes);
+        }
+      }
+      resultSet.close();
+      hilog.info(DOMAIN, TAG, `Queried record with id: ${id}, found: ${record ? 'yes' : 'no'}`);
+      return record;
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to query record by id, cause: ${e}`);
+      return null;
+    }
+  }
 }
 
 let weightRecordDao: WeightRecordDao | null = null;
