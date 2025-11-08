@@ -3,7 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { LogConstants } from '../common/Constants';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
-import '../common/Global';
+import { initDao } from '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 
@@ -22,8 +22,13 @@ export default class EntryAbility extends UIAbility {
 
   private async initializeGlobalDao() {
     try {
-      globalThis.dao = await getWeightRecordDao(this.context);
-      hilog.info(DOMAIN, 'testTag', 'Global DAO initialized successfully');
+      const dao = await getWeightRecordDao(this.context);
+      if (dao) {
+        initDao(dao);
+        hilog.info(DOMAIN, 'testTag', 'Global DAO initialized successfully');
+      } else {
+        hilog.error(DOMAIN, 'testTag', 'Failed to initialize global DAO: received null');
+      }
     } catch (e) {
       hilog.error(DOMAIN, 'testTag', 'Failed to initialize global DAO, cause: %{public}s', JSON.stringify(e));
     }

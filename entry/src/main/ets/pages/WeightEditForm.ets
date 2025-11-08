@@ -5,7 +5,7 @@ import { NavigationHelper } from '../common/NavigationHelper';
 import { FormValidator } from '../common/FormValidator';
 import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
-import '../common/Global';
+import { getAppDao } from '../common/Global';
 
 // 路由参数接口
 interface EditFormParams {
@@ -116,10 +116,11 @@ struct WeightEditForm {
       const notes = this.notesInput.trim() || undefined;
 
       const updatedRecord = new WeightRecord(weight, timestamp, this.recordId, notes);
-      if (!globalThis.dao) {
+      const dao = getAppDao();
+      if (!dao) {
         throw new Error('Global DAO not initialized');
       }
-      const rowsAffected = await globalThis.dao.update(updatedRecord);
+      const rowsAffected = await dao.update(updatedRecord);
 
       if (rowsAffected > 0) {
         hilog.info(DOMAIN, TAG, `Successfully updated weight record with id: ${this.recordId}`);

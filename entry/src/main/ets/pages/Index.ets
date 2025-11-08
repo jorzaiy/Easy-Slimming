@@ -4,7 +4,7 @@ import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
-import '../common/Global';
+import { getAppDao } from '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'Index';
@@ -34,10 +34,11 @@ struct Index {
 
   async loadLatestRecord() {
     try {
-      if (!globalThis.dao) {
+      const dao = getAppDao();
+      if (!dao) {
         throw new Error('Global DAO not initialized');
       }
-      const records = await globalThis.dao.queryAll();
+      const records = await dao.queryAll();
       if (records.length > 0) {
         this.latestRecord = records[0]; // 默认按日期降序，第一个就是最新的
         hilog.info(DOMAIN, TAG, 'Loaded latest record.');
