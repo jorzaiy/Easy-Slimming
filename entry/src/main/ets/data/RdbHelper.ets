@@ -1,8 +1,9 @@
 import relationalStore from '@ohos.data.relationalStore';
 import hilog from '@ohos.hilog';
+import { LogConstants } from '../common/Constants';
 
-const DOMAIN = 0x0000;
-const TAG = 'RdbHelper';
+const DOMAIN = LogConstants.DOMAIN;
+const TAG = LogConstants.TAG_PREFIX + 'RdbHelper';
 
 const DB_NAME = 'WEIGHT_DB.db';
 const TABLE_NAME = 'weight_record';

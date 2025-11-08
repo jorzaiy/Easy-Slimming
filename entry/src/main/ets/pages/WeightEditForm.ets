@@ -1,14 +1,13 @@
 import hilog from '@ohos.hilog';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
-import router from '@ohos.router';
+import { NavigationHelper } from '../common/NavigationHelper';
+import { FormValidator } from '../common/FormValidator';
+import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 
-const DOMAIN = 0x0000;
-const TAG = 'WeightApp_EditForm';
-
-const MIN_WEIGHT = 30;
-const MAX_WEIGHT = 200;
+const DOMAIN = LogConstants.DOMAIN;
+const TAG = LogConstants.TAG_PREFIX + 'EditForm';
 
 @Entry
 @Component
@@ -26,7 +25,8 @@ struct WeightEditForm {
       hilog.info(DOMAIN, TAG, `Router params type: ${typeof params}, value: ${params}`);
       
       if (params && typeof params === 'object' && 'record' in params) {
-        const record = (params as any).record;
+        const recordParams = params as { record: WeightRecord };
+        const record = recordParams.record;
         if (record && record.id) {
           this.recordId = record.id;
           this.selectedDate = new Date(record.date);
@@ -53,9 +53,7 @@ struct WeightEditForm {
       message: '记录信息加载失败',
       duration: 2000
     });
-    setTimeout(() => {
-      router.back();
-    }, 1000);
+    NavigationHelper.navigateBackWithFeedback(1000);
   }
 
   isWeightValid(): boolean {
@@ -115,9 +113,7 @@ struct WeightEditForm {
           duration: 2000
         });
 
-        setTimeout(() => {
-          router.back();
-        }, 500);
+        await NavigationHelper.navigateBackWithFeedback();
       } else {
         throw new Error('No records were updated');
       }

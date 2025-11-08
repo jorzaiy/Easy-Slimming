@@ -1,11 +1,12 @@
 import hilog from '@ohos.hilog';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
-import router from '@ohos.router';
+import { NavigationHelper } from '../common/NavigationHelper';
+import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 
-const DOMAIN = 0x0000;
-const TAG = 'WeightApp_Index';
+const DOMAIN = LogConstants.DOMAIN;
+const TAG = LogConstants.TAG_PREFIX + 'Index';
 
 @Entry
 @Component

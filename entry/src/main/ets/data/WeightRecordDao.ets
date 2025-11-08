@@ -2,9 +2,10 @@ import relationalStore from '@ohos.data.relationalStore';
 import { WeightRecord } from '../model/WeightRecord';
 import { rdbHelper, TABLE_NAME } from './RdbHelper';
 import hilog from '@ohos.hilog';
+import { LogConstants } from '../common/Constants';
 
-const DOMAIN = 0x0000;
-const TAG = 'WeightRecordDao';
+const DOMAIN = LogConstants.DOMAIN;
+const TAG = LogConstants.TAG_PREFIX + 'WeightRecordDao';
 
 class WeightRecordDao {
   private rdbStore: relationalStore.RdbStore;
@@ -13,18 +14,33 @@ class WeightRecordDao {
     this.rdbStore = rdbStore;
   }
 
-  // 插入数据
+  /**
+   * 插入数据
+   * @param record 要插入的体重记录
+   * @returns 插入记录的ID，失败返回-1
+   */
   async insert(record: WeightRecord): Promise<number> {
+    // 验证记录数据
+    const validation = record.validate();
+    if (!validation.isValid) {
+      hilog.error(DOMAIN, TAG, `Invalid record data: ${validation.errors.join(', ')}`);
+      return -1;
+    }
+
     const valueBucket: relationalStore.ValuesBucket = {
       'weight': record.weight,
       'date': record.date,
       'notes': record.notes || ''
     };
+    
     try {
+      await this.rdbStore.executeSql('BEGIN TRANSACTION');
       let id = await this.rdbStore.insert(TABLE_NAME, valueBucket);
-      hilog.info(DOMAIN, TAG, `Inserted record with id: ${id}`);
+      await this.rdbStore.executeSql('COMMIT');
+      hilog.info(DOMAIN, TAG, `Successfully inserted record with id: ${id}`);
       return id;
     } catch (e) {
+      await this.rdbStore.executeSql('ROLLBACK');
       hilog.error(DOMAIN, TAG, `Failed to insert record, cause: ${e}`);
       return -1;
     }
