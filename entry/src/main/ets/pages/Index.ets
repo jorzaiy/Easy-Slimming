@@ -34,7 +34,7 @@ struct Index {
 
   build() {
     Column() {
-      Text('体重记录器')
+      Text('轻松减重')
         .fontSize(38)
         .fontWeight(FontWeight.Bold)
         .margin({ top: 40, bottom: 60 })
