@@ -9,11 +9,14 @@ const TAG = 'WeightApp_Index';
 @Entry
 @Component
 struct Index {
-  @State currentWeight: string = '';
   @State latestRecord: WeightRecord | null = null;
 
   async aboutToAppear() {
     await this.loadLatestRecord();
+  }
+
+  onPageShow() {
+    this.loadLatestRecord();
   }
 
   async loadLatestRecord() {
@@ -36,40 +39,14 @@ struct Index {
         .fontWeight(FontWeight.Bold)
         .margin({ top: 40, bottom: 60 })
 
-      TextInput({ placeholder: '请输入当前体重 (kg)' })
-        .type(InputType.Number)
-        .width('80%')
-        .height(50)
-        .fontSize(20)
-        .onChange((value: string) => {
-          this.currentWeight = value;
-        })
-
-      Button('保存')
+      Button('记录体重')
         .type(ButtonType.Capsule)
         .width('80%')
         .height(50)
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
-        .margin({ top: 30 })
-        .onClick(async () => {
-          if (this.currentWeight) {
-            try {
-              const weight = parseFloat(this.currentWeight);
-              if (isNaN(weight) || weight <= 0) {
-                hilog.warn(DOMAIN, TAG, 'Invalid weight input.');
-                return;
-              }
-              const newRecord = new WeightRecord(weight, new Date().getTime());
-              const dao = await getWeightRecordDao(getContext(this));
-              await dao.insert(newRecord);
-              hilog.info(DOMAIN, TAG, 'New weight record saved.');
-              this.currentWeight = ''; // 清空输入框
-              await this.loadLatestRecord(); // 重新加载并显示最新记录
-            } catch (e) {
-              hilog.error(DOMAIN, TAG, `Failed to save weight, cause: ${e}`);
-            }
-          }
+        .onClick(() => {
+          router.pushUrl({ url: 'pages/WeightEntryForm' });
         })
 
       Button('查看历史')

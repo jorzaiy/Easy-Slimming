@@ -3,10 +3,12 @@ export class WeightRecord {
   id: number;
   weight: number;
   date: number; // 使用时间戳存储日期
+  notes?: string; // 可选备注字段
 
-  constructor(weight: number, date: number, id?: number) {
+  constructor(weight: number, date: number, id?: number, notes?: string) {
     this.id = id;
     this.weight = weight;
     this.date = date;
+    this.notes = notes;
   }
 }
