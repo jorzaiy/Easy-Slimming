@@ -95,6 +95,14 @@ struct HistoryPage {
           .layoutWeight(1)
           .textAlign(TextAlign.Center)
           .margin({ right: 24 }) // to balance the back button
+        
+        Image($r('app.media.ic_back'))
+          .width(24)
+          .height(24)
+          .fillColor('#007DFF')
+          .onClick(() => {
+            router.pushUrl({ url: 'pages/WeightChart' });
+          })
       }
       .width('100%')
       .padding(15)

@@ -4,6 +4,7 @@
     "pages/History",
     "pages/WeightEntryForm",
     "pages/RecordDetail",
-    "pages/WeightEditForm"
+    "pages/WeightEditForm",
+    "pages/WeightChart"
   ]
 }

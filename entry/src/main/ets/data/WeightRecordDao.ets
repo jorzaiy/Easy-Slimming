@@ -112,6 +112,58 @@ class WeightRecordDao {
       return null;
     }
   }
+
+  // 根据日期范围查询记录
+  async queryByDateRange(startDate: number, endDate: number): Promise<WeightRecord[]> {
+    let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+    predicates.between('date', startDate, endDate);
+    predicates.orderByAsc('date');
+    try {
+      let resultSet = await this.rdbStore.query(predicates);
+      let records: WeightRecord[] = [];
+      if (resultSet.rowCount > 0) {
+        while (resultSet.goToNextRow()) {
+          let id = resultSet.getLong(resultSet.getColumnIndex('id'));
+          let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
+          let date = resultSet.getLong(resultSet.getColumnIndex('date'));
+          let notes = resultSet.getString(resultSet.getColumnIndex('notes'));
+          records.push(new WeightRecord(weight, date, id, notes));
+        }
+      }
+      resultSet.close();
+      hilog.info(DOMAIN, TAG, `Queried ${records.length} records for date range.`);
+      return records;
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to query records by date range, cause: ${e}`);
+      return [];
+    }
+  }
+
+  // 获取最近的N条记录
+  async queryRecentRecords(limit: number): Promise<WeightRecord[]> {
+    let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+    predicates.orderByDesc('date');
+    predicates.limit(limit);
+    try {
+      let resultSet = await this.rdbStore.query(predicates);
+      let records: WeightRecord[] = [];
+      if (resultSet.rowCount > 0) {
+        while (resultSet.goToNextRow()) {
+          let id = resultSet.getLong(resultSet.getColumnIndex('id'));
+          let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
+          let date = resultSet.getLong(resultSet.getColumnIndex('date'));
+          let notes = resultSet.getString(resultSet.getColumnIndex('notes'));
+          records.push(new WeightRecord(weight, date, id, notes));
+        }
+      }
+      resultSet.close();
+      hilog.info(DOMAIN, TAG, `Queried ${records.length} recent records.`);
+      return records.reverse(); // 返回按时间正序排列的记录
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to query recent records, cause: ${e}`);
+      return [];
+    }
+  }
 }
 
 let weightRecordDao: WeightRecordDao | null = null;

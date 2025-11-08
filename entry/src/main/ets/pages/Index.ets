@@ -64,6 +64,18 @@ struct Index {
           router.pushUrl({ url: 'pages/History' });
         })
 
+      Button('趋势图表')
+        .type(ButtonType.Capsule)
+        .width('80%')
+        .height(50)
+        .fontSize(22)
+        .fontWeight(FontWeight.Bold)
+        .margin({ top: 20 })
+        .backgroundColor('#007DFF')
+        .onClick(() => {
+          router.pushUrl({ url: 'pages/WeightChart' });
+        })
+
       if (this.latestRecord) {
         Text(`最近体重: ${this.latestRecord.weight.toFixed(1)} kg`)
           .fontSize(24)
