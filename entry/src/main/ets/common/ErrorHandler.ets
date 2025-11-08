@@ -11,77 +11,101 @@ export class ErrorHandler {
   private static readonly TAG = LogConstants.TAG_PREFIX + 'ErrorHandler';
 
   /**
-   * 处理数据库操作错误
-   * @param error 错误对象
-   * @param operation 操作名称
-   * @param userMessage 用户显示的消息
-   */
+    * 处理数据库操作错误
+    * @param error 错误对象
+    * @param operation 操作名称
+    * @param userMessage 用户显示的消息
+    */
   static handleDatabaseError(error: Error | string, operation: string, userMessage?: string): void {
-    const errorMessage = error?.message || error || 'Unknown error';
-    hilog.error(this.DOMAIN, this.TAG, `Database operation '${operation}' failed: ${errorMessage}`);
-    
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else {
+      errorMessage = 'Unknown error';
+    }
+
+    hilog.error(ErrorHandler.DOMAIN, ErrorHandler.TAG, `Database operation '${operation}' failed: ${errorMessage}`);
+
     const message = userMessage || '数据库操作失败，请重试';
-    this.showToast(message);
+    ErrorHandler.showToast(message);
   }
 
   /**
-   * 处理导航错误
-   * @param error 错误对象
-   * @param targetPage 目标页面
-   */
+    * 处理导航错误
+    * @param error 错误对象
+    * @param targetPage 目标页面
+    */
   static handleNavigationError(error: Error | string, targetPage: string): void {
-    const errorMessage = error?.message || error || 'Unknown error';
-    hilog.error(this.DOMAIN, this.TAG, `Navigation to '${targetPage}' failed: ${errorMessage}`);
-    this.showToast('页面跳转失败，请重试');
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else {
+      errorMessage = 'Unknown error';
+    }
+
+    hilog.error(ErrorHandler.DOMAIN, ErrorHandler.TAG, `Navigation to '${targetPage}' failed: ${errorMessage}`);
+    ErrorHandler.showToast('页面跳转失败，请重试');
   }
 
   /**
-   * 处理表单验证错误
-   * @param validationErrors 验证错误列表
-   */
+    * 处理表单验证错误
+    * @param validationErrors 验证错误列表
+    */
   static handleValidationError(validationErrors: string[]): void {
     const message = validationErrors.length > 0 ? validationErrors[0] : '输入数据无效';
-    hilog.warn(this.DOMAIN, this.TAG, `Validation failed: ${validationErrors.join(', ')}`);
-    this.showToast(message);
+    hilog.warn(ErrorHandler.DOMAIN, ErrorHandler.TAG, `Validation failed: ${validationErrors.join(', ')}`);
+    ErrorHandler.showToast(message);
   }
 
   /**
-   * 处理通用错误
-   * @param error 错误对象
-   * @param context 错误上下文
-   * @param userMessage 用户显示的消息
-   */
+    * 处理通用错误
+    * @param error 错误对象
+    * @param context 错误上下文
+    * @param userMessage 用户显示的消息
+    */
   static handleGenericError(error: Error | string, context: string, userMessage?: string): void {
-    const errorMessage = error?.message || error || 'Unknown error';
-    hilog.error(this.DOMAIN, this.TAG, `Error in '${context}': ${errorMessage}`);
-    
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else {
+      errorMessage = 'Unknown error';
+    }
+
+    hilog.error(ErrorHandler.DOMAIN, ErrorHandler.TAG, `Error in '${context}': ${errorMessage}`);
+
     const message = userMessage || '操作失败，请重试';
-    this.showToast(message);
+    ErrorHandler.showToast(message);
   }
 
   /**
-   * 显示成功消息
-   * @param message 成功消息
-   */
+    * 显示成功消息
+    * @param message 成功消息
+    */
   static showSuccess(message: string): void {
-    hilog.info(this.DOMAIN, this.TAG, `Success: ${message}`);
-    this.showToast(message);
+    hilog.info(ErrorHandler.DOMAIN, ErrorHandler.TAG, `Success: ${message}`);
+    ErrorHandler.showToast(message);
   }
 
   /**
-   * 显示警告消息
-   * @param message 警告消息
-   */
+    * 显示警告消息
+    * @param message 警告消息
+    */
   static showWarning(message: string): void {
-    hilog.warn(this.DOMAIN, this.TAG, `Warning: ${message}`);
-    this.showToast(message);
+    hilog.warn(ErrorHandler.DOMAIN, ErrorHandler.TAG, `Warning: ${message}`);
+    ErrorHandler.showToast(message);
   }
 
   /**
-   * 显示Toast消息
-   * @param message 消息内容
-   * @param duration 显示时长，默认使用常量值
-   */
+    * 显示Toast消息
+    * @param message 消息内容
+    * @param duration 显示时长，默认使用常量值
+    */
   private static showToast(message: string, duration: number = BusinessConstants.TOAST_DURATION): void {
     try {
       promptAction.showToast({
@@ -89,7 +113,15 @@ export class ErrorHandler {
         duration: duration
       });
     } catch (error) {
-      hilog.error(this.DOMAIN, this.TAG, `Failed to show toast: ${error}`);
+      let errorMessage: string;
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else {
+        errorMessage = 'Unknown error';
+      }
+      hilog.error(ErrorHandler.DOMAIN, ErrorHandler.TAG, `Failed to show toast: ${errorMessage}`);
     }
   }
 
@@ -110,25 +142,41 @@ export class ErrorHandler {
   }
 
   /**
-   * 检查是否为网络相关错误
-   * @param error 错误对象
-   * @returns 是否为网络错误
-   */
+    * 检查是否为网络相关错误
+    * @param error 错误对象
+    * @returns 是否为网络错误
+    */
   static isNetworkError(error: Error | string): boolean {
-    const errorMessage = error?.message?.toLowerCase() || '';
-    return errorMessage.includes('network') || 
-           errorMessage.includes('connection') || 
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message.toLowerCase();
+    } else if (typeof error === 'string') {
+      errorMessage = error.toLowerCase();
+    } else {
+      errorMessage = '';
+    }
+
+    return errorMessage.includes('network') ||
+           errorMessage.includes('connection') ||
            errorMessage.includes('timeout');
   }
 
   /**
-   * 检查是否为权限相关错误
-   * @param error 错误对象
-   * @returns 是否为权限错误
-   */
+    * 检查是否为权限相关错误
+    * @param error 错误对象
+    * @returns 是否为权限错误
+    */
   static isPermissionError(error: Error | string): boolean {
-    const errorMessage = error?.message?.toLowerCase() || '';
-    return errorMessage.includes('permission') || 
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message.toLowerCase();
+    } else if (typeof error === 'string') {
+      errorMessage = error.toLowerCase();
+    } else {
+      errorMessage = '';
+    }
+
+    return errorMessage.includes('permission') ||
            errorMessage.includes('access denied') ||
            errorMessage.includes('unauthorized');
   }

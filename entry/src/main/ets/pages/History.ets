@@ -27,7 +27,7 @@ struct HistoryPage {
 
   async loadHistory() {
     try {
-      const dao = await getWeightRecordDao(this.getContext());
+      const dao = await getWeightRecordDao(this.getUIContext().getApplicationContext());
       this.records = await dao.queryAll();
       hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} history records.`);
     } catch (e) {
