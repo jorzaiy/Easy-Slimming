@@ -1,10 +1,12 @@
 import hilog from '@ohos.hilog';
 import { WeightRecord } from '../model/WeightRecord';
+import { Remark, RemarkType } from '../model/Remark';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { FormValidator } from '../common/FormValidator';
 import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
+import { RemarkEntry } from '../components/RemarkEntry';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'EntryForm';
@@ -15,6 +17,7 @@ struct WeightEntryForm {
   @State selectedDate: Date = new Date();
   @State weightInput: string = '';
   @State notesInput: string = '';
+  @State remarks: Remark[] = [];
   @State isSubmitting: boolean = false;
 
   isWeightValid(): boolean {
@@ -58,10 +61,30 @@ struct WeightEntryForm {
       if (!dao) {
         throw new Error('Global DAO not initialized');
       }
+      
+      // 开始事务
+      const rdbStore = (dao as any).rdbStore;
+      if (rdbStore) {
+        await rdbStore.executeSql('BEGIN TRANSACTION');
+      }
+      
       const recordId = await dao.insert(newRecord);
 
       if (recordId > 0) {
         hilog.info(DOMAIN, TAG, `Successfully saved weight record with id: ${recordId}`);
+        
+        // 保存备注
+        let savedRemarks = 0;
+        for (const remark of this.remarks) {
+          remark.recordId = recordId;
+          const remarkId = await dao.addRemark(recordId, remark.type, remark.content);
+          if (remarkId > 0) {
+            savedRemarks++;
+          }
+        }
+        
+        await rdbStore.executeSql('COMMIT');
+        hilog.info(DOMAIN, TAG, `Successfully saved ${savedRemarks} remarks for record: ${recordId}`);
         
         promptAction.showToast({
           message: '体重记录保存成功',
@@ -70,13 +93,26 @@ struct WeightEntryForm {
 
         this.weightInput = '';
         this.notesInput = '';
+        this.remarks = [];
         this.selectedDate = new Date();
 
         await NavigationHelper.navigateBackWithFeedback();
       } else {
+        await rdbStore.executeSql('ROLLBACK');
         throw new Error('Failed to insert record');
       }
     } catch (e) {
+      const dao = getAppDao();
+      if (dao) {
+        try {
+          const errorRdbStore = (dao as any).rdbStore;
+          if (errorRdbStore) {
+            await errorRdbStore.executeSql('ROLLBACK');
+          }
+        } catch (rollbackError) {
+          hilog.error(DOMAIN, TAG, `Failed to rollback transaction: ${rollbackError}`);
+        }
+      }
       hilog.error(DOMAIN, TAG, `Failed to save weight record, cause: ${e}`);
       promptAction.showToast({
         message: '保存失败，请重试',
@@ -183,14 +219,14 @@ struct WeightEntryForm {
         .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
 
         Column() {
-          Text('备注')
+          Text('传统备注')
             .fontSize(AppText.FONT_SIZE_SMALL)
             .fontWeight(FontWeight.Medium)
             .margin({ bottom: AppDimensions.MARGIN_SMALL })
 
-          TextArea({ placeholder: '记录饮食、运动等信息（可选）' })
+          TextArea({ placeholder: '记录一般性备注信息（可选）' })
             .width('100%')
-            .height(120)
+            .height(80)
             .fontSize(AppText.FONT_SIZE_SMALL)
             .placeholderFont({ size: AppText.FONT_SIZE_SMALL })
             .maxLength(BusinessConstants.MAX_NOTES_LENGTH)
@@ -210,6 +246,25 @@ struct WeightEntryForm {
         .backgroundColor(AppColors.WHITE)
         .borderRadius(AppDimensions.BORDER_RADIUS)
         .alignItems(HorizontalAlign.Start)
+        .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
+
+        // 结构化备注输入
+        Column() {
+          Text('详细备注')
+            .fontSize(AppText.FONT_SIZE_SMALL)
+            .fontWeight(FontWeight.Bold)
+            .margin({ bottom: AppDimensions.MARGIN_SMALL })
+            .width('100%')
+            .textAlign(TextAlign.Start)
+
+          RemarkEntry({
+            remarks: this.remarks,
+            onRemarksChange: (newRemarks: Remark[]) => {
+              this.remarks = newRemarks;
+            }
+          })
+        }
+        .width('100%')
         .margin({ bottom: AppDimensions.MARGIN_LARGE })
 
         Button(this.isSubmitting ? '保存中...' : '保存记录')

@@ -1,11 +1,14 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
 import { WeightRecord } from '../model/WeightRecord';
+import { Remark, RemarkType } from '../model/Remark';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { FormValidator } from '../common/FormValidator';
 import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
+import { RemarkEntry } from '../components/RemarkEntry';
+import { RemarkDisplay, RemarkEditDialog } from '../components/RemarkDisplay';
 
 // 路由参数接口
 interface EditFormParams {
@@ -21,11 +24,15 @@ struct WeightEditForm {
   @State selectedDate: Date = new Date();
   @State weightInput: string = '';
   @State notesInput: string = '';
+  @State remarks: Remark[] = [];
   @State isSubmitting: boolean = false;
   @State recordId: number = -1;
   @State isEditMode: boolean = false;
+  @State showEditDialog: boolean = false;
+  @State editingRemark: Remark | null = null;
+  @State editingIndex: number = -1;
 
-  aboutToAppear() {
+  async aboutToAppear() {
     try {
       const params = router.getParams();
       hilog.info(DOMAIN, TAG, `Router params type: ${typeof params}, value: ${params}`);
@@ -40,6 +47,9 @@ struct WeightEditForm {
           this.notesInput = record.notes || '';
           this.isEditMode = true;
           hilog.info(DOMAIN, TAG, `Loaded record for editing, id: ${this.recordId}`);
+          
+          // 加载现有备注
+          await this.loadRemarks();
         } else {
           hilog.error(DOMAIN, TAG, 'Invalid record object received');
           this.handleNavigationError();
@@ -87,6 +97,100 @@ struct WeightEditForm {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     return `${year}/${month}/${day}`;
+  }
+
+  async loadRemarks() {
+    if (!this.isEditMode || this.recordId <= 0) return;
+
+    try {
+      const dao = getAppDao();
+      if (!dao) {
+        throw new Error('Global DAO not initialized');
+      }
+      this.remarks = await dao.queryRemarksByRecordId(this.recordId);
+      hilog.info(DOMAIN, TAG, `Loaded ${this.remarks.length} remarks for record ${this.recordId}`);
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to load remarks, cause: ${e}`);
+    }
+  }
+
+  showAddRemarkDialog() {
+    this.editingRemark = null;
+    this.editingIndex = -1;
+    this.showEditDialog = true;
+  }
+
+  showEditRemarkDialog(remark: Remark, index: number) {
+    this.editingRemark = remark;
+    this.editingIndex = index;
+    this.showEditDialog = true;
+  }
+
+  async handleSaveRemark(type: RemarkType, content: string) {
+    if (!this.isEditMode || this.recordId <= 0) return;
+
+    try {
+      const dao = getAppDao();
+      if (!dao) {
+        throw new Error('Global DAO not initialized');
+      }
+
+      if (this.editingRemark && this.editingIndex >= 0) {
+        // 更新现有备注
+        const rows = await dao.updateRemark(this.editingRemark.id, type, content);
+        if (rows > 0) {
+          await this.loadRemarks();
+          promptAction.showToast({
+            message: '备注更新成功',
+            duration: 2000
+          });
+        }
+      } else {
+        // 添加新备注
+        const remarkId = await dao.addRemark(this.recordId, type, content);
+        if (remarkId > 0) {
+          await this.loadRemarks();
+          promptAction.showToast({
+            message: '备注添加成功',
+            duration: 2000
+          });
+        }
+      }
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to save remark, cause: ${e}`);
+      promptAction.showToast({
+        message: '保存失败，请重试',
+        duration: 2000
+      });
+    } finally {
+      this.showEditDialog = false;
+      this.editingRemark = null;
+      this.editingIndex = -1;
+    }
+  }
+
+  async handleDeleteRemark(remarkId: number, index: number) {
+    try {
+      const dao = getAppDao();
+      if (!dao) {
+        throw new Error('Global DAO not initialized');
+      }
+
+      const rows = await dao.deleteRemark(remarkId);
+      if (rows > 0) {
+        await this.loadRemarks();
+        promptAction.showToast({
+          message: '备注删除成功',
+          duration: 2000
+        });
+      }
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to delete remark, cause: ${e}`);
+      promptAction.showToast({
+        message: '删除失败，请重试',
+        duration: 2000
+      });
+    }
   }
 
   getWeightErrorMessage(): string {
@@ -245,14 +349,14 @@ struct WeightEditForm {
         .margin({ bottom: 15 })
 
         Column() {
-          Text('备注')
+          Text('传统备注')
             .fontSize(16)
             .fontWeight(FontWeight.Medium)
             .margin({ bottom: 10 })
 
-          TextArea({ placeholder: '记录饮食、运动等信息（可选）', text: this.notesInput })
+          TextArea({ placeholder: '记录一般性备注信息（可选）', text: this.notesInput })
             .width('100%')
-            .height(120)
+            .height(80)
             .fontSize(16)
             .placeholderFont({ size: 16 })
             .maxLength(BusinessConstants.MAX_NOTES_LENGTH)
@@ -272,7 +376,42 @@ struct WeightEditForm {
         .backgroundColor(Color.White)
         .borderRadius(12)
         .alignItems(HorizontalAlign.Start)
-        .margin({ bottom: 30 })
+        .margin({ bottom: 15 })
+
+        // 结构化备注部分（仅在编辑模式下显示）
+        if (this.isEditMode) {
+          Column() {
+            Row() {
+              Text('详细备注')
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .layoutWeight(1)
+
+              Button('添加')
+                .type(ButtonType.Capsule)
+                .height(32)
+                .fontSize(14)
+                .backgroundColor(AppColors.PRIMARY)
+                .onClick(() => {
+                  this.showAddRemarkDialog();
+                })
+            }
+            .width('100%')
+            .margin({ bottom: 15 })
+
+            RemarkDisplay({
+              remarks: this.remarks,
+              onEditRemark: (remark: Remark, index: number) => {
+                this.showEditRemarkDialog(remark, index);
+              },
+              onDeleteRemark: (remarkId: number, index: number) => {
+                this.handleDeleteRemark(remarkId, index);
+              }
+            })
+          }
+          .width('100%')
+          .margin({ bottom: 15 })
+        }
 
         Button(this.isSubmitting ? '更新中...' : '保存修改')
           .type(ButtonType.Capsule)
@@ -292,5 +431,25 @@ struct WeightEditForm {
     .width('100%')
     .height('100%')
     .backgroundColor('#F1F3F5')
+    .bindContentCover(this.showEditDialog, this.buildEditDialog(), {
+      modalTransition: ModalTransition.NONE,
+      backgroundColor: Color.Transparent
+    })
+  }
+
+  @Builder
+  buildEditDialog() {
+    RemarkEditDialog({
+      isVisible: this.showEditDialog,
+      remark: this.editingRemark,
+      onSave: (type: RemarkType, content: string) => {
+        this.handleSaveRemark(type, content);
+      },
+      onCancel: () => {
+        this.showEditDialog = false;
+        this.editingRemark = null;
+        this.editingIndex = -1;
+      }
+    })
   }
 }

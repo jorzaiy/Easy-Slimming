@@ -1,9 +1,12 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
 import { WeightRecord } from '../model/WeightRecord';
+import { Remark, RemarkType } from '../model/Remark';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
+import { getAppDao } from '../common/Global';
+import { RemarkDisplay, RemarkEditDialog } from '../components/RemarkDisplay';
 
 // 路由参数接口
 interface RecordDetailParams {
@@ -17,8 +20,12 @@ const TAG = LogConstants.TAG_PREFIX + 'RecordDetail';
 @Component
 struct RecordDetailPage {
   @State record: WeightRecord | null = null;
+  @State remarks: Remark[] = [];
+  @State showEditDialog: boolean = false;
+  @State editingRemark: Remark | null = null;
+  @State editingIndex: number = -1;
 
-  aboutToAppear() {
+  async aboutToAppear() {
     try {
       const params = router.getParams();
       hilog.info(DOMAIN, TAG, `Router params type: ${typeof params}, value: ${params}`);
@@ -28,6 +35,7 @@ struct RecordDetailPage {
         this.record = recordParams.record;
         if (this.record && this.record.id) {
           hilog.info(DOMAIN, TAG, `Loaded record detail for id: ${this.record.id}`);
+          await this.loadRemarks();
         } else {
           hilog.error(DOMAIN, TAG, 'Invalid record object received');
           this.handleNavigationError();
@@ -48,6 +56,100 @@ struct RecordDetailPage {
       duration: 2000
     });
     NavigationHelper.navigateBackWithFeedback(1000);
+  }
+
+  async loadRemarks() {
+    if (!this.record || !this.record.id) return;
+
+    try {
+      const dao = getAppDao();
+      if (!dao) {
+        throw new Error('Global DAO not initialized');
+      }
+      this.remarks = await dao.queryRemarksByRecordId(this.record.id);
+      hilog.info(DOMAIN, TAG, `Loaded ${this.remarks.length} remarks for record ${this.record.id}`);
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to load remarks, cause: ${e}`);
+    }
+  }
+
+  showAddRemarkDialog() {
+    this.editingRemark = null;
+    this.editingIndex = -1;
+    this.showEditDialog = true;
+  }
+
+  showEditRemarkDialog(remark: Remark, index: number) {
+    this.editingRemark = remark;
+    this.editingIndex = index;
+    this.showEditDialog = true;
+  }
+
+  async handleSaveRemark(type: RemarkType, content: string) {
+    if (!this.record || !this.record.id) return;
+
+    try {
+      const dao = getAppDao();
+      if (!dao) {
+        throw new Error('Global DAO not initialized');
+      }
+
+      if (this.editingRemark && this.editingIndex >= 0) {
+        // 更新现有备注
+        const rows = await dao.updateRemark(this.editingRemark.id, type, content);
+        if (rows > 0) {
+          await this.loadRemarks();
+          promptAction.showToast({
+            message: '备注更新成功',
+            duration: 2000
+          });
+        }
+      } else {
+        // 添加新备注
+        const remarkId = await dao.addRemark(this.record.id, type, content);
+        if (remarkId > 0) {
+          await this.loadRemarks();
+          promptAction.showToast({
+            message: '备注添加成功',
+            duration: 2000
+          });
+        }
+      }
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to save remark, cause: ${e}`);
+      promptAction.showToast({
+        message: '保存失败，请重试',
+        duration: 2000
+      });
+    } finally {
+      this.showEditDialog = false;
+      this.editingRemark = null;
+      this.editingIndex = -1;
+    }
+  }
+
+  async handleDeleteRemark(remarkId: number, index: number) {
+    try {
+      const dao = getAppDao();
+      if (!dao) {
+        throw new Error('Global DAO not initialized');
+      }
+
+      const rows = await dao.deleteRemark(remarkId);
+      if (rows > 0) {
+        await this.loadRemarks();
+        promptAction.showToast({
+          message: '备注删除成功',
+          duration: 2000
+        });
+      }
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to delete remark, cause: ${e}`);
+      promptAction.showToast({
+        message: '删除失败，请重试',
+        duration: 2000
+      });
+    }
   }
 
   formatDate(timestamp: number): string {
@@ -126,7 +228,7 @@ struct RecordDetailPage {
           // Notes Card (if exists)
           if (this.record.notes && this.record.notes.trim()) {
             Column() {
-              Text('备注')
+              Text('传统备注')
                 .fontSize(16)
                 .fontWeight(FontWeight.Medium)
                 .fontColor('#666666')
@@ -142,8 +244,42 @@ struct RecordDetailPage {
             .backgroundColor(Color.White)
             .borderRadius(12)
             .alignItems(HorizontalAlign.Start)
-            .margin({ bottom: 20 })
+            .margin({ bottom: 15 })
           }
+
+          // Remarks Section
+          Column() {
+            Row() {
+              Text('详细备注')
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#666666')
+                .layoutWeight(1)
+
+              Button('添加')
+                .type(ButtonType.Capsule)
+                .height(32)
+                .fontSize(14)
+                .backgroundColor(AppColors.PRIMARY)
+                .onClick(() => {
+                  this.showAddRemarkDialog();
+                })
+            }
+            .width('100%')
+            .margin({ bottom: 15 })
+
+            RemarkDisplay({
+              remarks: this.remarks,
+              onEditRemark: (remark: Remark, index: number) => {
+                this.showEditRemarkDialog(remark, index);
+              },
+              onDeleteRemark: (remarkId: number, index: number) => {
+                this.handleDeleteRemark(remarkId, index);
+              }
+            })
+          }
+          .width('100%')
+          .margin({ bottom: 20 })
 
           // Action Buttons
           Column() {
@@ -185,5 +321,25 @@ struct RecordDetailPage {
     .width('100%')
     .height('100%')
     .backgroundColor('#F1F3F5')
+    .bindContentCover(this.showEditDialog, this.buildEditDialog(), {
+      modalTransition: ModalTransition.NONE,
+      backgroundColor: Color.Transparent
+    })
+  }
+
+  @Builder
+  buildEditDialog() {
+    RemarkEditDialog({
+      isVisible: this.showEditDialog,
+      remark: this.editingRemark,
+      onSave: (type: RemarkType, content: string) => {
+        this.handleSaveRemark(type, content);
+      },
+      onCancel: () => {
+        this.showEditDialog = false;
+        this.editingRemark = null;
+        this.editingIndex = -1;
+      }
+    })
   }
 }

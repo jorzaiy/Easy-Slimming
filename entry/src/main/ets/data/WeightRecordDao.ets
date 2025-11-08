@@ -1,6 +1,7 @@
 import relationalStore from '@ohos.data.relationalStore';
 import { WeightRecord, ValidationResult } from '../model/WeightRecord';
-import { rdbHelper, TABLE_NAME } from './RdbHelper';
+import { Remark, RemarkType } from '../model/Remark';
+import { rdbHelper, TABLE_NAME, REMARKS_TABLE_NAME } from './RdbHelper';
 import hilog from '@ohos.hilog';
 import { LogConstants } from '../common/Constants';
 import { common } from '@kit.AbilityKit';
@@ -99,13 +100,28 @@ export class WeightRecordDao {
 
   // 删除数据
   async deleteById(id: number): Promise<number> {
-    let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
-    predicates.equalTo('id', id);
     try {
+      await this.rdbStore.executeSql('BEGIN TRANSACTION');
+      
+      // 先删除关联的备注
+      let remarkPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+      remarkPredicates.equalTo('record_id', id);
+      await this.rdbStore.delete(remarkPredicates);
+      
+      // 再删除体重记录
+      let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+      predicates.equalTo('id', id);
       let rows = await this.rdbStore.delete(predicates);
-      hilog.info(DOMAIN, TAG, `Deleted ${rows} records.`);
+      
+      await this.rdbStore.executeSql('COMMIT');
+      hilog.info(DOMAIN, TAG, `Deleted ${rows} records and associated remarks.`);
       return rows;
     } catch (e) {
+      try {
+        await this.rdbStore.executeSql('ROLLBACK');
+      } catch (rollbackError) {
+        hilog.error(DOMAIN, TAG, `Failed to rollback transaction: ${rollbackError}`);
+      }
       hilog.error(DOMAIN, TAG, `Failed to delete record, cause: ${e}`);
       return 0;
     }
@@ -192,6 +208,210 @@ export class WeightRecordDao {
       hilog.error(DOMAIN, TAG, `Failed to query recent records, cause: ${e}`);
       return [];
     }
+  }
+
+  // ===== 备注相关方法 =====
+
+  /**
+   * 为体重记录添加备注
+   * @param recordId 体重记录ID
+   * @param type 备注类型
+   * @param content 备注内容
+   * @returns 备注ID，失败返回-1
+   */
+  async addRemark(recordId: number, type: RemarkType, content: string): Promise<number> {
+    try {
+      const remark = new Remark(recordId, type, content);
+      const valueBucket: relationalStore.ValuesBucket = {
+        'record_id': recordId,
+        'type': type,
+        'content': content,
+        'timestamp': remark.timestamp
+      };
+      
+      await this.rdbStore.executeSql('BEGIN TRANSACTION');
+      let id = await this.rdbStore.insert(REMARKS_TABLE_NAME, valueBucket);
+      await this.rdbStore.executeSql('COMMIT');
+      hilog.info(DOMAIN, TAG, `Successfully added remark with id: ${id} for record: ${recordId}`);
+      return id;
+    } catch (e) {
+      try {
+        await this.rdbStore.executeSql('ROLLBACK');
+      } catch (rollbackError) {
+        hilog.error(DOMAIN, TAG, `Failed to rollback transaction: ${rollbackError}`);
+      }
+      hilog.error(DOMAIN, TAG, `Failed to add remark, cause: ${e}`);
+      return -1;
+    }
+  }
+
+  /**
+   * 查询某条记录的所有备注
+   * @param recordId 体重记录ID
+   * @returns 备注列表
+   */
+  async queryRemarksByRecordId(recordId: number): Promise<Remark[]> {
+    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    predicates.equalTo('record_id', recordId);
+    predicates.orderByDesc('timestamp');
+    try {
+      let resultSet = await this.rdbStore.query(predicates);
+      let remarks: Remark[] = [];
+      if (resultSet && resultSet.rowCount > 0) {
+        while (resultSet.goToNextRow()) {
+          let id = resultSet.getLong(resultSet.getColumnIndex('id'));
+          let rid = resultSet.getLong(resultSet.getColumnIndex('record_id'));
+          let type = resultSet.getString(resultSet.getColumnIndex('type')) as RemarkType;
+          let content = resultSet.getString(resultSet.getColumnIndex('content'));
+          let timestamp = resultSet.getLong(resultSet.getColumnIndex('timestamp'));
+          remarks.push(new Remark(rid, type, content, timestamp, id));
+        }
+      }
+      if (resultSet) {
+        resultSet.close();
+      }
+      hilog.info(DOMAIN, TAG, `Queried ${remarks.length} remarks for record id: ${recordId}.`);
+      return remarks;
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to query remarks by record id, cause: ${e}`);
+      return [];
+    }
+  }
+
+  /**
+   * 更新备注
+   * @param remarkId 备注ID
+   * @param type 新的备注类型
+   * @param content 新的备注内容
+   * @returns 更新的行数
+   */
+  async updateRemark(remarkId: number, type: RemarkType, content: string): Promise<number> {
+    try {
+      const timestamp = Date.now();
+      const valueBucket: relationalStore.ValuesBucket = {
+        'type': type,
+        'content': content,
+        'timestamp': timestamp
+      };
+      let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+      predicates.equalTo('id', remarkId);
+      
+      let rows = await this.rdbStore.update(valueBucket, predicates);
+      hilog.info(DOMAIN, TAG, `Updated ${rows} remark(s) with id: ${remarkId}.`);
+      return rows;
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to update remark, cause: ${e}`);
+      return 0;
+    }
+  }
+
+  /**
+   * 删除备注
+   * @param remarkId 备注ID
+   * @returns 删除的行数
+   */
+  async deleteRemark(remarkId: number): Promise<number> {
+    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    predicates.equalTo('id', remarkId);
+    try {
+      let rows = await this.rdbStore.delete(predicates);
+      hilog.info(DOMAIN, TAG, `Deleted ${rows} remark(s) with id: ${remarkId}.`);
+      return rows;
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to delete remark, cause: ${e}`);
+      return 0;
+    }
+  }
+
+  /**
+   * 删除某条体重记录的所有备注
+   * @param recordId 体重记录ID
+   * @returns 删除的行数
+   */
+  async deleteRemarksByRecordId(recordId: number): Promise<number> {
+    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    predicates.equalTo('record_id', recordId);
+    try {
+      let rows = await this.rdbStore.delete(predicates);
+      hilog.info(DOMAIN, TAG, `Deleted ${rows} remark(s) for record id: ${recordId}.`);
+      return rows;
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to delete remarks by record id, cause: ${e}`);
+      return 0;
+    }
+  }
+
+  /**
+   * 按备注类型筛选体重记录
+   * @param type 备注类型
+   * @returns 包含指定类型备注的体重记录ID列表
+   */
+  async queryRecordIdsByRemarkType(type: RemarkType): Promise<number[]> {
+    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    predicates.equalTo('type', type);
+    predicates.distinct('record_id');
+    try {
+      let resultSet = await this.rdbStore.query(predicates);
+      let recordIds: number[] = [];
+      if (resultSet && resultSet.rowCount > 0) {
+        while (resultSet.goToNextRow()) {
+          let recordId = resultSet.getLong(resultSet.getColumnIndex('record_id'));
+          recordIds.push(recordId);
+        }
+      }
+      if (resultSet) {
+        resultSet.close();
+      }
+      hilog.info(DOMAIN, TAG, `Found ${recordIds.length} records with remark type: ${type}.`);
+      return recordIds;
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to query record ids by remark type, cause: ${e}`);
+      return [];
+    }
+  }
+
+  /**
+   * 按备注内容搜索体重记录
+   * @param keyword 搜索关键词
+   * @returns 包含关键词的备注对应的体重记录ID列表
+   */
+  async searchRecordIdsByRemarkContent(keyword: string): Promise<number[]> {
+    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    predicates.contains('content', keyword);
+    predicates.distinct('record_id');
+    try {
+      let resultSet = await this.rdbStore.query(predicates);
+      let recordIds: number[] = [];
+      if (resultSet && resultSet.rowCount > 0) {
+        while (resultSet.goToNextRow()) {
+          let recordId = resultSet.getLong(resultSet.getColumnIndex('record_id'));
+          if (!recordIds.includes(recordId)) {
+            recordIds.push(recordId);
+          }
+        }
+      }
+      if (resultSet) {
+        resultSet.close();
+      }
+      hilog.info(DOMAIN, TAG, `Found ${recordIds.length} records with remarks containing: ${keyword}.`);
+      return recordIds;
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to search record ids by remark content, cause: ${e}`);
+      return [];
+    }
+  }
+
+  /**
+   * 获取体重记录及其备注
+   * @param recordId 体重记录ID
+   * @returns 包含备注的体重记录对象
+   */
+  async queryWithRemarks(recordId: number): Promise<{ record: WeightRecord | null; remarks: Remark[] }> {
+    const record = await this.queryById(recordId);
+    const remarks = await this.queryRemarksByRecordId(recordId);
+    
+    hilog.info(DOMAIN, TAG, `Queried record ${recordId} with ${remarks.length} remarks.`);
+    return { record, remarks };
   }
 }
 
