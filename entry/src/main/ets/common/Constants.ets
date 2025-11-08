@@ -51,6 +51,7 @@ export class BusinessConstants {
   static readonly MIN_WEIGHT = 30;
   static readonly MAX_WEIGHT = 200;
   static readonly MAX_NOTES_LENGTH = 200;
+  static readonly MAX_REMARK_CONTENT_LENGTH = 200;
   static readonly DEFAULT_TARGET_WEIGHT = 70.0;
   static readonly TOAST_DURATION = 2000;
   static readonly NAVIGATION_DELAY = 500;

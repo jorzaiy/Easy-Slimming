@@ -1,11 +1,14 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
 import { WeightRecord } from '../model/WeightRecord';
+import { Remark, RemarkType } from '../model/Remark';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { ErrorHandler } from '../common/ErrorHandler';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
+import { RemarkSummary } from '../components/RemarkDisplay';
+import { RemarkFilter } from '../components/RemarkFilter';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'History';
@@ -14,8 +17,11 @@ const TAG = LogConstants.TAG_PREFIX + 'History';
 @Component
 struct HistoryPage {
   @State records: WeightRecord[] = [];
+  @State filteredRecords: WeightRecord[] = [];
+  @State remarksMap: Map<number, Remark[]> = new Map();
   @State showDeleteDialog: boolean = false;
   @State recordToDelete: WeightRecord | null = null;
+  @State selectedRemarkType: RemarkType | 'all' = 'all';
 
   async aboutToAppear() {
     await this.loadHistory();
@@ -50,10 +56,31 @@ struct HistoryPage {
         throw new Error('Global DAO not initialized');
       }
       this.records = await dao.queryAll();
-      hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} history records.`);
+      
+      // 加载每条记录的备注
+      this.remarksMap.clear();
+      for (const record of this.records) {
+        const remarks = await dao.queryRemarksByRecordId(record.id);
+        this.remarksMap.set(record.id, remarks);
+      }
+      
+      this.applyFilter();
+      hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} history records with remarks.`);
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load history, cause: ${e}`);
     }
+  }
+
+  applyFilter() {
+    if (this.selectedRemarkType === 'all') {
+      this.filteredRecords = this.records;
+    } else {
+      this.filteredRecords = this.records.filter(record => {
+        const remarks = this.remarksMap.get(record.id) || [];
+        return remarks.some(remark => remark.type === this.selectedRemarkType);
+      });
+    }
+    hilog.info(DOMAIN, TAG, `Applied filter: ${this.selectedRemarkType}, showing ${this.filteredRecords.length} records.`);
   }
 
   showRecordDetail(record: WeightRecord) {
@@ -152,16 +179,48 @@ struct HistoryPage {
       .backgroundColor(Color.White)
       .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
 
+      // 备注筛选器
       if (this.records.length > 0) {
+        RemarkFilter({
+          selectedType: this.selectedRemarkType,
+          onFilterChange: (type: RemarkType | 'all') => {
+            this.selectedRemarkType = type;
+            this.applyFilter();
+          }
+        })
+        .margin({ left: 20, right: 20, top: 10, bottom: 10 })
+      }
+
+      if (this.filteredRecords.length > 0) {
         List({ space: 10 }) {
-          ForEach(this.records, (item: WeightRecord) => {
+          ForEach(this.filteredRecords, (item: WeightRecord) => {
             ListItem() {
               this.RecordItem(item)
             }
           })
         }
         .layoutWeight(1)
-        .padding({ top: 10 })
+        .padding({ left: 20, right: 20, bottom: 10 })
+      } else if (this.records.length > 0) {
+        Column() {
+          Text('没有符合条件的记录')
+            .fontSize(18)
+            .fontColor(Color.Gray)
+            .margin({ top: '40%' })
+          
+          if (this.selectedRemarkType !== 'all') {
+            Button('清除筛选')
+              .type(ButtonType.Capsule)
+              .margin({ top: 20 })
+              .backgroundColor(AppColors.PRIMARY)
+              .onClick(() => {
+                this.selectedRemarkType = 'all';
+                this.applyFilter();
+              })
+          }
+        }
+        .layoutWeight(1)
+        .padding({ left: 20, right: 20 })
       } else {
         Column() {
           Text('还没有任何记录哦')
@@ -192,6 +251,8 @@ struct HistoryPage {
           .fontSize(14)
           .fontColor(Color.Gray)
           .margin({ top: 5 })
+        
+        // 传统备注
         if (record.notes && record.notes.trim()) {
           Text(record.notes)
             .fontSize(14)
@@ -199,6 +260,12 @@ struct HistoryPage {
             .margin({ top: 8 })
             .maxLines(2)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+        
+        // 结构化备注摘要
+        const remarks = this.remarksMap.get(record.id) || [];
+        if (remarks.length > 0) {
+          RemarkSummary({ remarks: remarks })
         }
       }
       .layoutWeight(1)
