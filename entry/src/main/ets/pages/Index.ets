@@ -189,7 +189,25 @@ struct Index {
                 hilog.error(DOMAIN, TAG, `Failed to navigate to TargetWeightManagement, cause: ${error}`);
               }
             })
-        }
+
+          Button('数据管理')
+            .type(ButtonType.Normal)
+            .width('80%')
+            .height(50)
+            .fontSize(22)
+            .fontWeight(FontWeight.Bold)
+            .margin({ top: 20 })
+            .backgroundColor(Color.White)
+            .fontColor(Color.Black)
+            .border({ width: 1, color: Color.Gray, radius: 25 })
+            .onClick(() => {
+              try {
+                router.pushUrl({ url: 'pages/DataManagement' });
+              } catch (error) {
+                hilog.error(DOMAIN, TAG, `Failed to navigate to DataManagement, cause: ${error}`);
+              }
+            })
+          }
 
         // 目标体重卡片
         if (this.currentTarget) {

@@ -10,7 +10,7 @@ const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'WeightRecordDao';
 
 export class WeightRecordDao {
-  private rdbStore: relationalStore.RdbStore;
+  rdbStore: relationalStore.RdbStore;
 
   constructor(rdbStore: relationalStore.RdbStore) {
     this.rdbStore = rdbStore;
