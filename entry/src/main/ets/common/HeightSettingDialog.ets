@@ -12,13 +12,11 @@ export struct HeightSettingDialog {
   @Prop currentHeight: number;
   @Prop onHeightChange: (height: number) => void;
   @Prop onDismiss: () => void;
-  private context: common.UIContext | null = null;
 
   @State inputHeight: string = '';
   @State isSaving: boolean = false;
 
   aboutToAppear() {
-    this.context = this.getUIContext();
     this.inputHeight = this.currentHeight.toString();
   }
 
@@ -33,7 +31,8 @@ export struct HeightSettingDialog {
       return;
     }
 
-    if (!this.context) {
+    const context = this.getUIContext();
+    if (!context) {
       promptAction.showToast({
         message: '保存失败，请重试',
         duration: 2000
@@ -43,7 +42,7 @@ export struct HeightSettingDialog {
 
     this.isSaving = true;
     try {
-      await StatisticsService.saveUserHeight(this.context, height);
+      await StatisticsService.saveUserHeight(context as unknown as common.Context, height);
       this.onHeightChange(height);
       this.onDismiss();
       promptAction.showToast({

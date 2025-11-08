@@ -31,10 +31,8 @@ struct HealthSync {
   private healthSyncService: HealthSyncService | null = null;
   private syncSettingsDao: SyncSettingsDao | null = null;
   private syncRecordDao: HealthSyncRecordDao | null = null;
-  private context: common.UIContext | null = null;
 
   async aboutToAppear() {
-    this.context = this.getUIContext();
     await this.initializeServices();
     await this.loadSyncData();
   }
@@ -46,11 +44,16 @@ struct HealthSync {
         throw new Error('Weight record DAO not initialized');
       }
 
+      const context = this.getUIContext();
+      if (!context) {
+        throw new Error('Context not available');
+      }
+
       const syncSettingsService = await (await import('../data/SyncSettingsDao')).getSyncSettingsDao(
-        this.context
+        context as unknown as common.Context
       );
       const syncRecordService = await (await import('../data/HealthSyncRecordDao')).getHealthSyncRecordDao(
-        this.context
+        context as unknown as common.Context
       );
 
       if (syncSettingsService && syncRecordService) {

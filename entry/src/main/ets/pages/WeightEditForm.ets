@@ -8,7 +8,8 @@ import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } fr
 import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
 import { RemarkEntry } from '../components/RemarkEntry';
-import { RemarkDisplay, RemarkEditDialog } from '../components/RemarkDisplay';
+import { RemarkDisplay } from '../components/RemarkDisplay';
+import { RemarkEditDialog } from '../components/RemarkEditDialog';
 
 // 路由参数接口
 interface EditFormParams {

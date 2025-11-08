@@ -28,10 +28,7 @@ struct DataManagement {
   @State isProcessing: boolean = false;
   @State progressMessage: string = '';
 
-  private context: common.UIContext | null = null;
-
   async aboutToAppear() {
-    this.context = this.getUIContext();
   }
 
   async onExport() {
@@ -48,16 +45,14 @@ struct DataManagement {
         throw new Error('DAO not initialized');
       }
 
-      let service: DataExportImportService | null = null;
-      if (this.context) {
-        service = await getDataExportImportService(dao);
-      }
+      const service = await getDataExportImportService(dao);
 
       if (!service) {
         throw new Error('Export service not initialized');
       }
 
-      const targetService = this.context ? await getTargetWeightService(this.context) : null;
+      const context = this.getUIContext();
+      const targetService = context ? await getTargetWeightService(context as unknown as common.Context) : null;
       const targets = targetService ? await targetService.getAllTargets() : undefined;
 
       const options = {

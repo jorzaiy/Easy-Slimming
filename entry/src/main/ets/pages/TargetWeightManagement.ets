@@ -21,10 +21,8 @@ struct TargetWeightManagement {
   @State currentTarget: TargetWeightRecord | null = null;
   @State showDialog: boolean = false;
   @State isLoading: boolean = true;
-  private context: common.UIContext | null = null;
 
   async aboutToAppear() {
-    this.context = this.getUIContext();
     await this.loadTargets();
   }
 
@@ -34,10 +32,11 @@ struct TargetWeightManagement {
 
   async loadTargets() {
     try {
-      if (!this.context) {
+      const context = this.getUIContext();
+      if (!context) {
         return;
       }
-      const service = await getTargetWeightService(this.context);
+      const service = await getTargetWeightService(context as unknown as common.Context);
       if (service) {
         this.currentTarget = await service.getCurrentTarget();
         this.targetHistory = await service.getTargetWeightHistory(20);
@@ -83,10 +82,11 @@ struct TargetWeightManagement {
         ]
       }).then(async (data) => {
         if (data.index === 1) {
-          if (!this.context) {
+          const context = this.getUIContext();
+          if (!context) {
             return;
           }
-          const service = await getTargetWeightService(this.context);
+          const service = await getTargetWeightService(context as unknown as common.Context);
           if (service) {
             const success = await service.deleteTargetWeight(id);
             if (success) {
