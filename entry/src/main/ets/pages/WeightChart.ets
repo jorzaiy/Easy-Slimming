@@ -1,6 +1,5 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
-import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { ErrorHandler } from '../common/ErrorHandler';
@@ -80,9 +79,8 @@ struct WeightChartPage {
 
   async loadChartData() {
     try {
-      const dao = await getWeightRecordDao(this.getUIContext());
-      if (!dao) {
-        throw new Error('Failed to initialize database');
+      if (!globalThis.dao) {
+        throw new Error('Global DAO not initialized');
       }
       const endDate = new Date();
       let startDate = new Date();
@@ -99,7 +97,7 @@ struct WeightChartPage {
           break;
       }
 
-      this.records = await dao.queryByDateRange(startDate.getTime(), endDate.getTime());
+      this.records = await globalThis.dao.queryByDateRange(startDate.getTime(), endDate.getTime());
       this.targetWeight = WeightRecord.getTargetWeight();
       this.processChartData();
       hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} records for chart.`);
