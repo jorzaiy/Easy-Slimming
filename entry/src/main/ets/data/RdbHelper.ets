@@ -1,7 +1,7 @@
 import relationalStore from '@ohos.data.relationalStore';
 import hilog from '@ohos.hilog';
-import { LogConstants } from '../common/Constants';
 import { common } from '@kit.AbilityKit';
+import { LogConstants } from '../common/Constants';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'RdbHelper';
@@ -20,7 +20,7 @@ const DDL_CREATE_TABLE = `
 class RdbHelper {
   private rdbStore: relationalStore.RdbStore | null = null;
 
-  async initRdbStore(context: common.UIAbilityContext) {
+  async initRdbStore(context: common.UIContext | common.UIAbilityContext) {
     if (this.rdbStore) {
       hilog.info(DOMAIN, TAG, 'RDB store already initialized.');
       return this.rdbStore;
