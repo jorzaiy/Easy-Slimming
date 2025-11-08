@@ -5,9 +5,13 @@ import { rdbHelper, TABLE_NAME, REMARKS_TABLE_NAME } from './RdbHelper';
 import hilog from '@ohos.hilog';
 import { LogConstants } from '../common/Constants';
 import { common } from '@kit.AbilityKit';
-
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'WeightRecordDao';
+
+export interface WeightRecordWithRemarks {
+  record: WeightRecord | null;
+  remarks: Remark[];
+}
 
 export class WeightRecordDao {
   rdbStore: relationalStore.RdbStore;
@@ -400,13 +404,12 @@ export class WeightRecordDao {
       return [];
     }
   }
-
   /**
    * 获取体重记录及其备注
    * @param recordId 体重记录ID
    * @returns 包含备注的体重记录对象
    */
-  async queryWithRemarks(recordId: number): Promise<{ record: WeightRecord | null; remarks: Remark[] }> {
+  async queryWithRemarks(recordId: number): Promise<WeightRecordWithRemarks> {
     const record = await this.queryById(recordId);
     const remarks = await this.queryRemarksByRecordId(recordId);
     

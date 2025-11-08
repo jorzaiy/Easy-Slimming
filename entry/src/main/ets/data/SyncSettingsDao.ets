@@ -2,12 +2,12 @@
  * 健康数据同步设置DAO
  * 管理同步配置的持久化
  */
-
 import relationalStore from '@ohos.data.relationalStore';
 import { SyncSettings, SyncMode } from '../model/SyncSettings';
 import { SYNC_SETTINGS_TABLE } from './RdbHelper';
 import hilog from '@ohos.hilog';
 import { LogConstants } from '../common/Constants';
+import { common } from '@kit.AbilityKit';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'SyncSettingsDao';
@@ -244,8 +244,7 @@ export class SyncSettingsDao {
 }
 
 let syncSettingsDao: SyncSettingsDao | null = null;
-
-export async function getSyncSettingsDao(context: any): Promise<SyncSettingsDao | null> {
+export async function getSyncSettingsDao(context: common.Context): Promise<SyncSettingsDao | null> {
   if (syncSettingsDao) {
     return syncSettingsDao;
   }

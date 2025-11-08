@@ -10,10 +10,16 @@ export enum RemarkType {
   MENSTRUAL = 'menstrual', // 生理期
   OTHER = 'other'     // 其他
 }
-
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
+}
+
+export interface RemarkTypeInfo {
+  type: RemarkType;
+  displayName: string;
+  icon: string;
+  color: string;
 }
 
 export class Remark {
@@ -164,12 +170,11 @@ export class Remark {
 
     return result;
   }
-
   /**
    * 获取所有可用的备注类型
    * @returns 备注类型数组
    */
-  static getAllTypes(): { type: RemarkType; displayName: string; icon: string; color: string }[] {
+  static getAllTypes(): RemarkTypeInfo[] {
     return [
       {
         type: RemarkType.DIET,

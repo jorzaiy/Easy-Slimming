@@ -2,12 +2,12 @@
  * 健康数据同步记录DAO
  * 管理与鸿蒙运动健康应用的同步历史
  */
-
 import relationalStore from '@ohos.data.relationalStore';
 import { HealthSyncRecord, SyncDirection, SyncStatus } from '../model/HealthSyncRecord';
 import { HEALTH_SYNC_RECORD_TABLE } from './RdbHelper';
 import hilog from '@ohos.hilog';
 import { LogConstants } from '../common/Constants';
+import { common } from '@kit.AbilityKit';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'HealthSyncRecordDao';
@@ -263,8 +263,7 @@ export class HealthSyncRecordDao {
 }
 
 let healthSyncRecordDao: HealthSyncRecordDao | null = null;
-
-export async function getHealthSyncRecordDao(context: any): Promise<HealthSyncRecordDao | null> {
+export async function getHealthSyncRecordDao(context: common.Context): Promise<HealthSyncRecordDao | null> {
   if (healthSyncRecordDao) {
     return healthSyncRecordDao;
   }
