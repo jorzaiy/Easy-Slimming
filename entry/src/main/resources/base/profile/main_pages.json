@@ -5,6 +5,7 @@
     "pages/WeightEntryForm",
     "pages/RecordDetail",
     "pages/WeightEditForm",
-    "pages/WeightChart"
+    "pages/WeightChart",
+    "pages/StatisticsDashboard"
   ]
 }
