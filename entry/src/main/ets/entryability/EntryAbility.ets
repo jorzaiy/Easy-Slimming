@@ -3,6 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { LogConstants } from '../common/Constants';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
+import '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 

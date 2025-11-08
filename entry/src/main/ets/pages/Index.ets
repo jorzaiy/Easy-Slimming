@@ -4,6 +4,7 @@ import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
+import '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'Index';
