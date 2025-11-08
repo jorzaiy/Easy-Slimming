@@ -29,6 +29,14 @@ struct WeightEntryForm {
     return FormValidator.validateForm(this.weightInput, this.selectedDate);
   }
 
+  formatDateOnly(timestamp: number): string {
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  }
+
   getWeightErrorMessage(): string {
     return FormValidator.validateWeight(this.weightInput).errorMessage;
   }
@@ -46,7 +54,7 @@ struct WeightEntryForm {
       const notes = this.notesInput.trim() || undefined;
 
       const newRecord = new WeightRecord(weight, timestamp, undefined, notes);
-      const dao = await getWeightRecordDao(this.getUIContext().getApplicationContext());
+      const dao = await getWeightRecordDao(this.getContext());
       const recordId = await dao.insert(newRecord);
 
       if (recordId > 0) {
@@ -117,8 +125,10 @@ struct WeightEntryForm {
           })
             .lunar(false)
             .onChange((value: DatePickerResult) => {
-              this.selectedDate = new Date(value.year, value.month, value.day);
-              hilog.info(DOMAIN, TAG, `Selected date: ${this.selectedDate.toLocaleDateString()}`);
+              if (value && value.year !== undefined && value.month !== undefined && value.day !== undefined) {
+                this.selectedDate = new Date(value.year, value.month, value.day);
+                hilog.info(DOMAIN, TAG, `Selected date: ${this.formatDateOnly(this.selectedDate.getTime())}`);
+              }
             })
         }
         .width('100%')

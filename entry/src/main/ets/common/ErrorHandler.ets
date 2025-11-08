@@ -136,7 +136,7 @@ export class ErrorHandler {
     const fullMessage = context ? `[${context}] ${message}` : message;
     const error = new Error(fullMessage);
     if (code) {
-      (error as Error & { code?: string }).code = code;
+      (error as any).code = code;
     }
     return error;
   }

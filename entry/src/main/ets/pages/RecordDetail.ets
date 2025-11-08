@@ -5,6 +5,11 @@ import { NavigationHelper } from '../common/NavigationHelper';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 
+// 路由参数接口
+interface RecordDetailParams {
+  record: WeightRecord;
+}
+
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'RecordDetail';
 
@@ -18,8 +23,8 @@ struct RecordDetailPage {
       const params = router.getParams();
       hilog.info(DOMAIN, TAG, `Router params type: ${typeof params}, value: ${params}`);
 
-      if (params && typeof params === 'object' && params && (params as object).hasOwnProperty('record')) {
-        const recordParams = params as { record: WeightRecord };
+      if (params && typeof params === 'object' && params && (params as RecordDetailParams).record) {
+        const recordParams = params as RecordDetailParams;
         this.record = recordParams.record;
         if (this.record && this.record.id) {
           hilog.info(DOMAIN, TAG, `Loaded record detail for id: ${this.record.id}`);
@@ -47,13 +52,12 @@ struct RecordDetailPage {
 
   formatDate(timestamp: number): string {
     const date = new Date(timestamp);
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hour = date.getHours().toString().padStart(2, '0');
+    const minute = date.getMinutes().toString().padStart(2, '0');
+    return `${year}/${month}/${day} ${hour}:${minute}`;
   }
 
   build() {

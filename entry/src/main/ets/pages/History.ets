@@ -25,9 +25,27 @@ struct HistoryPage {
     this.loadHistory();
   }
 
+  formatDate(timestamp: number): string {
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hour = date.getHours().toString().padStart(2, '0');
+    const minute = date.getMinutes().toString().padStart(2, '0');
+    return `${year}/${month}/${day} ${hour}:${minute}`;
+  }
+
+  formatDateOnly(timestamp: number): string {
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  }
+
   async loadHistory() {
     try {
-      const dao = await getWeightRecordDao(this.getUIContext().getApplicationContext());
+      const dao = await getWeightRecordDao(this.getContext());
       this.records = await dao.queryAll();
       hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} history records.`);
     } catch (e) {
@@ -164,7 +182,7 @@ struct HistoryPage {
         Text(`${record.weight.toFixed(1)} kg`)
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
-        Text(new Date(record.date).toLocaleString())
+        Text(this.formatDate(record.date))
           .fontSize(14)
           .fontColor(Color.Gray)
           .margin({ top: 5 })
@@ -223,7 +241,7 @@ struct HistoryPage {
             .fontColor('#333333')
             .margin({ bottom: 10 })
           
-          Text(`${this.recordToDelete.weight.toFixed(1)} kg - ${new Date(this.recordToDelete.date).toLocaleDateString()}`)
+          Text(`${this.recordToDelete.weight.toFixed(1)} kg - ${this.formatDateOnly(this.recordToDelete.date)}`)
             .fontSize(14)
             .fontColor('#666666')
             .margin({ bottom: 20 })
