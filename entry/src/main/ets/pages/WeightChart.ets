@@ -52,7 +52,7 @@ struct WeightChartPage {
 
   async loadChartData() {
     try {
-      const dao = await getWeightRecordDao(getContext(this));
+      const dao = await getWeightRecordDao(this.getContext());
       const endDate = new Date();
       let startDate = new Date();
 
@@ -165,7 +165,11 @@ struct WeightChartPage {
           .width(24)
           .height(24)
           .onClick(() => {
-            router.back();
+            try {
+              router.back();
+            } catch (error) {
+              hilog.error(DOMAIN, TAG, `Failed to navigate back, cause: ${error}`);
+            }
           })
         Text('体重趋势')
           .fontSize(24)
@@ -177,7 +181,7 @@ struct WeightChartPage {
       .width('100%')
       .padding(15)
       .backgroundColor(Color.White)
-      .shadow({ radius: 3, color: '#00000020' })
+      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
 
       // 时间范围选择器
       Row() {
@@ -185,7 +189,7 @@ struct WeightChartPage {
           .type(ButtonType.Capsule)
           .height(36)
           .fontSize(14)
-          .backgroundColor(this.timeRange === TimeRange.WEEK ? '#007DFF' : '#F1F3F5')
+          .backgroundColor(this.timeRange === TimeRange.WEEK ? Color.Blue : '#F1F3F5')
           .fontColor(this.timeRange === TimeRange.WEEK ? Color.White : '#333333')
           .onClick(() => this.onTimeRangeChange(TimeRange.WEEK))
 
@@ -193,7 +197,7 @@ struct WeightChartPage {
           .type(ButtonType.Capsule)
           .height(36)
           .fontSize(14)
-          .backgroundColor(this.timeRange === TimeRange.MONTH ? '#007DFF' : '#F1F3F5')
+          .backgroundColor(this.timeRange === TimeRange.MONTH ? Color.Blue : '#F1F3F5')
           .fontColor(this.timeRange === TimeRange.MONTH ? Color.White : '#333333')
           .margin({ left: 10 })
           .onClick(() => this.onTimeRangeChange(TimeRange.MONTH))
@@ -202,7 +206,7 @@ struct WeightChartPage {
           .type(ButtonType.Capsule)
           .height(36)
           .fontSize(14)
-          .backgroundColor(this.timeRange === TimeRange.THREE_MONTHS ? '#007DFF' : '#F1F3F5')
+          .backgroundColor(this.timeRange === TimeRange.THREE_MONTHS ? Color.Blue : '#F1F3F5')
           .fontColor(this.timeRange === TimeRange.THREE_MONTHS ? Color.White : '#333333')
           .margin({ left: 10 })
           .onClick(() => this.onTimeRangeChange(TimeRange.THREE_MONTHS))
@@ -221,7 +225,7 @@ struct WeightChartPage {
           Row() {
             Row() {
               Circle({ width: 8, height: 8 })
-                .fill('#007DFF')
+                .fill(Color.Blue)
               Text('体重')
                 .fontSize(12)
                 .fontColor('#333333')
@@ -275,14 +279,14 @@ struct WeightChartPage {
                 .width(this.chartWidth)
                 .height(this.chartHeight)
                 .commands(this.generatePathCommands())
-                .stroke('#007DFF')
+                .stroke(Color.Blue)
                 .strokeWidth(3)
                 .fill(Color.Transparent)
 
               // 数据点
               ForEach(this.chartDataPoints, (point: ChartDataPoint) => {
                 Circle({ width: 10, height: 10 })
-                  .fill('#007DFF')
+                  .fill(Color.Blue)
                   .position({ x: point.x - 5, y: point.y - 5 })
                   .onClick(() => {
                     this.selectedPoint = point;
@@ -322,7 +326,7 @@ struct WeightChartPage {
               Text(`体重: ${this.selectedPoint.weight.toFixed(1)} kg`)
                 .fontSize(16)
                 .fontWeight(FontWeight.Bold)
-                .fontColor('#007DFF')
+                .fontColor(Color.Blue)
                 .width('100%')
                 .margin({ top: 5 })
 
@@ -343,7 +347,7 @@ struct WeightChartPage {
             .backgroundColor(Color.White)
             .borderRadius(10)
             .margin({ top: 15 })
-            .shadow({ radius: 3, color: '#00000020' })
+            .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
           }
         } else {
           Column() {
@@ -398,7 +402,7 @@ struct WeightChartPage {
               Text(`${currentWeight.toFixed(1)}`)
                 .fontSize(20)
                 .fontWeight(FontWeight.Bold)
-                .fontColor('#007DFF')
+                .fontColor(Color.Blue)
               Text('当前体重')
                 .fontSize(12)
                 .fontColor('#666666')
@@ -463,7 +467,7 @@ struct WeightChartPage {
       .backgroundColor(Color.White)
       .borderRadius(10)
       .margin({ bottom: 15 })
-      .shadow({ radius: 3, color: '#00000020' })
+      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
     }
   }
 

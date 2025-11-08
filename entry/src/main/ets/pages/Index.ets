@@ -24,7 +24,7 @@ struct Index {
 
   async loadLatestRecord() {
     try {
-      const dao = await getWeightRecordDao(getContext(this));
+      const dao = await getWeightRecordDao(this.getContext());
       const records = await dao.queryAll();
       if (records.length > 0) {
         this.latestRecord = records[0]; // 默认按日期降序，第一个就是最新的
@@ -49,7 +49,11 @@ struct Index {
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
         .onClick(() => {
-          router.push({ url: 'pages/WeightEntryForm' });
+          try {
+            router.pushUrl({ url: 'pages/WeightEntryForm' });
+          } catch (error) {
+            hilog.error(DOMAIN, TAG, `Failed to navigate to WeightEntryForm, cause: ${error}`);
+          }
         })
 
       Button('查看历史')
@@ -63,7 +67,11 @@ struct Index {
         .fontColor(Color.Black)
         .border({ width: 1, color: Color.Gray, radius: 25 })
         .onClick(() => {
-          router.push({ url: 'pages/History' });
+          try {
+            router.pushUrl({ url: 'pages/History' });
+          } catch (error) {
+            hilog.error(DOMAIN, TAG, `Failed to navigate to History, cause: ${error}`);
+          }
         })
 
       Button('趋势图表')
@@ -73,9 +81,13 @@ struct Index {
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
         .margin({ top: 20 })
-        .backgroundColor('#007DFF')
+        .backgroundColor(Color.Blue)
         .onClick(() => {
-          router.push({ url: 'pages/WeightChart' });
+          try {
+            router.pushUrl({ url: 'pages/WeightChart' });
+          } catch (error) {
+            hilog.error(DOMAIN, TAG, `Failed to navigate to WeightChart, cause: ${error}`);
+          }
         })
 
       if (this.latestRecord) {

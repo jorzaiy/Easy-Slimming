@@ -27,7 +27,7 @@ struct HistoryPage {
 
   async loadHistory() {
     try {
-      const dao = await getWeightRecordDao(getContext(this));
+      const dao = await getWeightRecordDao(this.getContext());
       this.records = await dao.queryAll();
       hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} history records.`);
     } catch (e) {
@@ -36,17 +36,25 @@ struct HistoryPage {
   }
 
   showRecordDetail(record: WeightRecord) {
-    router.push({
-      url: 'pages/RecordDetail',
-      params: { record: record }
-    });
+    try {
+      router.pushUrl({
+        url: 'pages/RecordDetail',
+        params: { record: record }
+      });
+    } catch (error) {
+      hilog.error(DOMAIN, TAG, `Failed to navigate to RecordDetail, cause: ${error}`);
+    }
   }
 
   editRecord(record: WeightRecord) {
-    router.push({
-      url: 'pages/WeightEditForm',
-      params: { record: record }
-    });
+    try {
+      router.pushUrl({
+        url: 'pages/WeightEditForm',
+        params: { record: record }
+      });
+    } catch (error) {
+      hilog.error(DOMAIN, TAG, `Failed to navigate to WeightEditForm, cause: ${error}`);
+    }
   }
 
   confirmDelete(record: WeightRecord) {
@@ -58,7 +66,7 @@ struct HistoryPage {
     if (!this.recordToDelete) return;
 
     try {
-      const dao = await getWeightRecordDao(getContext(this));
+      const dao = await getWeightRecordDao(this.getContext());
       const rowsAffected = await dao.deleteById(this.recordToDelete.id);
       
       if (rowsAffected > 0) {
@@ -90,7 +98,11 @@ struct HistoryPage {
           .width(24)
           .height(24)
           .onClick(() => {
-            router.back();
+            try {
+              router.back();
+            } catch (error) {
+              hilog.error(DOMAIN, TAG, `Failed to navigate back, cause: ${error}`);
+            }
           })
         Text('历史记录')
           .fontSize(24)
@@ -102,15 +114,19 @@ struct HistoryPage {
         Image($r('app.media.ic_back'))
           .width(24)
           .height(24)
-          .fillColor('#007DFF')
+          .fillColor(Color.Blue)
           .onClick(() => {
-                       router.push({ url: 'pages/WeightChart' });
-                     })
+            try {
+              router.pushUrl({ url: 'pages/WeightChart' });
+            } catch (error) {
+              hilog.error(DOMAIN, TAG, `Failed to navigate to WeightChart, cause: ${error}`);
+            }
+          })
       }
       .width('100%')
       .padding(15)
       .backgroundColor(Color.White)
-      .shadow({ radius: 3, color: '#00000020' })
+      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
 
       if (this.records.length > 0) {
         List({ space: 10 }) {
@@ -168,7 +184,7 @@ struct HistoryPage {
         Image($r('app.media.ic_edit'))
           .width(22)
           .height(22)
-          .fillColor('#007DFF')
+          .fillColor(Color.Blue)
           .margin({ right: 15 })
           .onClick(() => {
             this.editRecord(record);
