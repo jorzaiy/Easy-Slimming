@@ -76,7 +76,7 @@ struct RecordDetailPage {
       .width('100%')
       .padding(AppDimensions.PADDING_MEDIUM)
       .backgroundColor(AppColors.WHITE)
-      .shadow({ radius: 3, color: '#00000020' })
+      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
 
       if (this.record) {
         Column() {
@@ -91,7 +91,7 @@ struct RecordDetailPage {
             Text(`${this.record.weight.toFixed(1)} kg`)
               .fontSize(32)
               .fontWeight(FontWeight.Bold)
-              .fontColor('#007DFF')
+              .fontColor(Color.Blue)
           }
           .width('100%')
           .padding(25)
@@ -149,14 +149,18 @@ struct RecordDetailPage {
               .height(50)
               .fontSize(18)
               .fontWeight(FontWeight.Bold)
-              .backgroundColor('#007DFF')
+              .backgroundColor(Color.Blue)
               .margin({ bottom: 15 })
               .onClick(() => {
-                               router.push({
-                                 url: 'pages/WeightEditForm',
-                                 params: { record: this.record }
-                               });
-                             })
+                try {
+                  router.pushUrl({
+                    url: 'pages/WeightEditForm',
+                    params: { record: this.record }
+                  });
+                } catch (error) {
+                  hilog.error(DOMAIN, TAG, `Failed to navigate to WeightEditForm, cause: ${error}`);
+                }
+              })
           }
           .width('100%')
           .padding({ left: 20, right: 20 })

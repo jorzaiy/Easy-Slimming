@@ -24,7 +24,7 @@ export class NavigationHelper {
       }
       
       const navigationParams = params ? { url, params } : { url };
-      await router.push(navigationParams);
+      await router.pushUrl(navigationParams);
       
       hilog.info(this.DOMAIN, this.TAG, `Successfully navigated to: ${url}`);
     } catch (error) {

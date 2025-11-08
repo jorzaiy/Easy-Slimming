@@ -103,7 +103,7 @@ struct WeightEditForm {
       const notes = this.notesInput.trim() || undefined;
 
       const updatedRecord = new WeightRecord(weight, timestamp, this.recordId, notes);
-      const dao = await getWeightRecordDao(getContext(this));
+      const dao = await getWeightRecordDao(this.getContext());
       const rowsAffected = await dao.update(updatedRecord);
 
       if (rowsAffected > 0) {
@@ -136,7 +136,11 @@ struct WeightEditForm {
           .width(24)
           .height(24)
           .onClick(() => {
-            router.back();
+            try {
+              router.back();
+            } catch (error) {
+              hilog.error(DOMAIN, TAG, `Failed to navigate back, cause: ${error}`);
+            }
           })
         Text('编辑记录')
           .fontSize(24)
@@ -148,7 +152,7 @@ struct WeightEditForm {
       .width('100%')
       .padding(15)
       .backgroundColor(Color.White)
-      .shadow({ radius: 3, color: '#00000020' })
+      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
 
       Column() {
         Column() {
@@ -259,7 +263,7 @@ struct WeightEditForm {
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
           .enabled(!this.isSubmitting && this.isFormValid())
-          .backgroundColor(this.isFormValid() && !this.isSubmitting ? '#007DFF' : '#CCCCCC')
+          .backgroundColor(this.isFormValid() && !this.isSubmitting ? Color.Blue : Color.Gray)
           .onClick(() => {
             this.handleSubmit();
           })

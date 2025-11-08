@@ -46,7 +46,7 @@ struct WeightEntryForm {
       const notes = this.notesInput.trim() || undefined;
 
       const newRecord = new WeightRecord(weight, timestamp, undefined, notes);
-      const dao = await getWeightRecordDao(getContext(this));
+      const dao = await getWeightRecordDao(this.getContext());
       const recordId = await dao.insert(newRecord);
 
       if (recordId > 0) {
@@ -95,7 +95,7 @@ struct WeightEntryForm {
       .width('100%')
       .padding(AppDimensions.PADDING_MEDIUM)
       .backgroundColor(AppColors.WHITE)
-      .shadow({ radius: 3, color: '#00000020' })
+      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
 
       Column() {
         Column() {
