@@ -8,6 +8,8 @@
     "pages/WeightChart",
     "pages/StatisticsDashboard",
     "pages/TargetWeightManagement",
-    "pages/DataManagement"
+    "pages/DataManagement",
+    "pages/HealthSync",
+    "pages/HealthSyncSettings"
   ]
 }
