@@ -11,6 +11,14 @@
     {
       "name": "EntryAbility_label",
       "value": "轻松减重"
+    },
+    {
+      "name": "health_data_read_reason",
+      "value": "需要读取健康数据以实现体重数据同步功能"
+    },
+    {
+      "name": "health_data_write_reason",
+      "value": "需要写入健康数据以同步体重记录到健康应用"
     }
   ]
 }
