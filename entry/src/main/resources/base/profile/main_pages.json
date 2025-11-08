@@ -2,6 +2,8 @@
   "src": [
     "pages/Index",
     "pages/History",
-    "pages/WeightEntryForm"
+    "pages/WeightEntryForm",
+    "pages/RecordDetail",
+    "pages/WeightEditForm"
   ]
 }

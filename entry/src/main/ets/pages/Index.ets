@@ -2,6 +2,7 @@ import hilog from '@ohos.hilog';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import router from '@ohos.router';
+import promptAction from '@ohos.promptAction';
 
 const DOMAIN = 0x0000;
 const TAG = 'WeightApp_Index';
