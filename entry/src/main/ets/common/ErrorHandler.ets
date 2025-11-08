@@ -6,6 +6,11 @@ import promptAction from '@ohos.promptAction';
 import hilog from '@ohos.hilog';
 import { LogConstants, BusinessConstants } from './Constants';
 
+// 自定义错误接口
+interface CustomError extends Error {
+  code?: string;
+}
+
 export class ErrorHandler {
   private static readonly DOMAIN = LogConstants.DOMAIN;
   private static readonly TAG = LogConstants.TAG_PREFIX + 'ErrorHandler';
@@ -132,11 +137,11 @@ export class ErrorHandler {
    * @param context 错误上下文
    * @returns 标准化错误对象
    */
-  static createError(message: string, code?: string, context?: string): Error {
+  static createError(message: string, code?: string, context?: string): CustomError {
     const fullMessage = context ? `[${context}] ${message}` : message;
-    const error = new Error(fullMessage);
+    const error = new Error(fullMessage) as CustomError;
     if (code) {
-      (error as any).code = code;
+      error.code = code;
     }
     return error;
   }

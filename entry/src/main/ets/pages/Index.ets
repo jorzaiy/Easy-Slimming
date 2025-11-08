@@ -34,7 +34,10 @@ struct Index {
 
   async loadLatestRecord() {
     try {
-      const dao = await getWeightRecordDao(this.getContext());
+      const dao = await getWeightRecordDao(this.getUIContext());
+      if (!dao) {
+        throw new Error('Failed to initialize database');
+      }
       const records = await dao.queryAll();
       if (records.length > 0) {
         this.latestRecord = records[0]; // 默认按日期降序，第一个就是最新的
