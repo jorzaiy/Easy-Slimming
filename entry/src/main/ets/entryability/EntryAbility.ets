@@ -6,6 +6,9 @@ import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { initDao } from '../common/Global';
 import { getTargetWeightManager } from '../common/TargetWeightManager';
 import { getTargetWeightService } from '../data/TargetWeightService';
+import { getHealthSyncRecordDao } from '../data/HealthSyncRecordDao';
+import { getSyncSettingsDao } from '../data/SyncSettingsDao';
+import { getHealthSyncService } from '../data/HealthSyncService';
 
 const DOMAIN = LogConstants.DOMAIN;
 
@@ -40,6 +43,16 @@ export default class EntryAbility extends UIAbility {
         hilog.info(DOMAIN, 'testTag', 'Target weight service initialized successfully');
       } else {
         hilog.error(DOMAIN, 'testTag', 'Failed to initialize target weight service: received null');
+      }
+
+      // Initialize health sync services
+      const syncRecordDao = await getHealthSyncRecordDao(this.context);
+      const syncSettingsDao = await getSyncSettingsDao(this.context);
+      if (syncRecordDao && syncSettingsDao && dao) {
+        const healthSyncService = await getHealthSyncService(dao, syncRecordDao, syncSettingsDao);
+        hilog.info(DOMAIN, 'testTag', 'Health sync service initialized successfully');
+      } else {
+        hilog.error(DOMAIN, 'testTag', 'Failed to initialize health sync service: received null');
       }
     } catch (e) {
       hilog.error(DOMAIN, 'testTag', 'Failed to initialize global services, cause: %{public}s', JSON.stringify(e));

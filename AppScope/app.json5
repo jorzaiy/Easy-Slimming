@@ -5,6 +5,10 @@
     "versionCode": 1000000,
     "versionName": "1.0.0",
     "icon": "$media:layered_image",
-    "label": "$string:app_name"
+    "label": "$string:app_name",
+    "permissions": [
+      "ohos.permission.HEALTH_DATA_READ",
+      "ohos.permission.HEALTH_DATA_WRITE"
+    ]
   }
 }
