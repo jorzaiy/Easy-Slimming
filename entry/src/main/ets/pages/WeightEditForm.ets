@@ -24,8 +24,8 @@ struct WeightEditForm {
     try {
       const params = router.getParams();
       hilog.info(DOMAIN, TAG, `Router params type: ${typeof params}, value: ${params}`);
-      
-      if (params && typeof params === 'object' && 'record' in params) {
+
+      if (params && typeof params === 'object' && params && (params as object).hasOwnProperty('record')) {
         const recordParams = params as { record: WeightRecord };
         const record = recordParams.record;
         if (record && record.id) {
@@ -103,7 +103,7 @@ struct WeightEditForm {
       const notes = this.notesInput.trim() || undefined;
 
       const updatedRecord = new WeightRecord(weight, timestamp, this.recordId, notes);
-      const dao = await getWeightRecordDao(this.getContext());
+      const dao = await getWeightRecordDao(this.getUIContext().getApplicationContext());
       const rowsAffected = await dao.update(updatedRecord);
 
       if (rowsAffected > 0) {

@@ -70,13 +70,13 @@ export class FormValidator {
   }
 
   /**
-   * 验证表单整体有效性
-   * @param weightInput 体重输入
-   * @param selectedDate 选择日期
-   * @returns 是否有效
-   */
+    * 验证表单整体有效性
+    * @param weightInput 体重输入
+    * @param selectedDate 选择日期
+    * @returns 是否有效
+    */
   static validateForm(weightInput: string, selectedDate: Date): boolean {
-    const weightValidation = this.validateWeight(weightInput);
-    return weightValidation.isValid && this.validateDate(selectedDate);
+    const weightValidation = FormValidator.validateWeight(weightInput);
+    return weightValidation.isValid && FormValidator.validateDate(selectedDate);
   }
 }

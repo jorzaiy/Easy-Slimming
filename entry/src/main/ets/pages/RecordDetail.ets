@@ -17,8 +17,8 @@ struct RecordDetailPage {
     try {
       const params = router.getParams();
       hilog.info(DOMAIN, TAG, `Router params type: ${typeof params}, value: ${params}`);
-      
-      if (params && typeof params === 'object' && 'record' in params) {
+
+      if (params && typeof params === 'object' && params && (params as object).hasOwnProperty('record')) {
         const recordParams = params as { record: WeightRecord };
         this.record = recordParams.record;
         if (this.record && this.record.id) {

@@ -24,7 +24,7 @@ struct Index {
 
   async loadLatestRecord() {
     try {
-      const dao = await getWeightRecordDao(this.getContext());
+      const dao = await getWeightRecordDao(this.getUIContext().getApplicationContext());
       const records = await dao.queryAll();
       if (records.length > 0) {
         this.latestRecord = records[0]; // 默认按日期降序，第一个就是最新的

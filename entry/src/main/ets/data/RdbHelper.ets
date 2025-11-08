@@ -1,7 +1,7 @@
 import relationalStore from '@ohos.data.relationalStore';
 import hilog from '@ohos.hilog';
 import { LogConstants } from '../common/Constants';
-import { Context } from '@ohos.app.ability.Ability';
+import { Context } from '@ohos.app.ability.common';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'RdbHelper';

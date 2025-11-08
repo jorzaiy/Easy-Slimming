@@ -52,7 +52,7 @@ struct WeightChartPage {
 
   async loadChartData() {
     try {
-      const dao = await getWeightRecordDao(this.getContext());
+      const dao = await getWeightRecordDao(this.getUIContext().getApplicationContext());
       const endDate = new Date();
       let startDate = new Date();
 
