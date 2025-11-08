@@ -2,6 +2,7 @@ import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.Ab
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { LogConstants } from '../common/Constants';
+import { getWeightRecordDao } from '../data/WeightRecordDao';
 
 const DOMAIN = LogConstants.DOMAIN;
 
@@ -13,6 +14,18 @@ export default class EntryAbility extends UIAbility {
       hilog.error(DOMAIN, 'testTag', 'Failed to set colorMode. Cause: %{public}s', JSON.stringify(err));
     }
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate');
+    
+    // Initialize global DAO instance
+    this.initializeGlobalDao();
+  }
+
+  private async initializeGlobalDao() {
+    try {
+      globalThis.dao = await getWeightRecordDao(this.context);
+      hilog.info(DOMAIN, 'testTag', 'Global DAO initialized successfully');
+    } catch (e) {
+      hilog.error(DOMAIN, 'testTag', 'Failed to initialize global DAO, cause: %{public}s', JSON.stringify(e));
+    }
   }
 
   onDestroy(): void {

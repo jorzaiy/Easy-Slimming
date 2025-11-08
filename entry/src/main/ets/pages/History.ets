@@ -1,6 +1,5 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
-import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { ErrorHandler } from '../common/ErrorHandler';
@@ -45,11 +44,10 @@ struct HistoryPage {
 
   async loadHistory() {
     try {
-      const dao = await getWeightRecordDao(this.getUIContext());
-      if (!dao) {
-        throw new Error('Failed to initialize database');
+      if (!globalThis.dao) {
+        throw new Error('Global DAO not initialized');
       }
-      this.records = await dao.queryAll();
+      this.records = await globalThis.dao.queryAll();
       hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} history records.`);
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load history, cause: ${e}`);
@@ -87,11 +85,10 @@ struct HistoryPage {
     if (!this.recordToDelete) return;
 
     try {
-      const dao = await getWeightRecordDao(this.getUIContext());
-      if (!dao) {
-        throw new Error('Failed to initialize database');
+      if (!globalThis.dao) {
+        throw new Error('Global DAO not initialized');
       }
-      const rowsAffected = await dao.deleteById(this.recordToDelete.id);
+      const rowsAffected = await globalThis.dao.deleteById(this.recordToDelete.id);
       
       if (rowsAffected > 0) {
         hilog.info(DOMAIN, TAG, `Deleted record with id: ${this.recordToDelete.id}`);

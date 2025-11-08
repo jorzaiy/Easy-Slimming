@@ -1,6 +1,5 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
-import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
@@ -34,11 +33,10 @@ struct Index {
 
   async loadLatestRecord() {
     try {
-      const dao = await getWeightRecordDao(this.getUIContext());
-      if (!dao) {
-        throw new Error('Failed to initialize database');
+      if (!globalThis.dao) {
+        throw new Error('Global DAO not initialized');
       }
-      const records = await dao.queryAll();
+      const records = await globalThis.dao.queryAll();
       if (records.length > 0) {
         this.latestRecord = records[0]; // 默认按日期降序，第一个就是最新的
         hilog.info(DOMAIN, TAG, 'Loaded latest record.');

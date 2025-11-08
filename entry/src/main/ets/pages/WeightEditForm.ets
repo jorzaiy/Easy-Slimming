@@ -1,6 +1,5 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
-import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { FormValidator } from '../common/FormValidator';
@@ -116,11 +115,10 @@ struct WeightEditForm {
       const notes = this.notesInput.trim() || undefined;
 
       const updatedRecord = new WeightRecord(weight, timestamp, this.recordId, notes);
-      const dao = await getWeightRecordDao(this.getUIContext());
-      if (!dao) {
-        throw new Error('Failed to initialize database');
+      if (!globalThis.dao) {
+        throw new Error('Global DAO not initialized');
       }
-      const rowsAffected = await dao.update(updatedRecord);
+      const rowsAffected = await globalThis.dao.update(updatedRecord);
 
       if (rowsAffected > 0) {
         hilog.info(DOMAIN, TAG, `Successfully updated weight record with id: ${this.recordId}`);

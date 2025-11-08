@@ -1,5 +1,4 @@
 import hilog from '@ohos.hilog';
-import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { FormValidator } from '../common/FormValidator';
@@ -54,11 +53,10 @@ struct WeightEntryForm {
       const notes = this.notesInput.trim() || undefined;
 
       const newRecord = new WeightRecord(weight, timestamp, undefined, notes);
-      const dao = await getWeightRecordDao(this.getUIContext());
-      if (!dao) {
-        throw new Error('Failed to initialize database');
+      if (!globalThis.dao) {
+        throw new Error('Global DAO not initialized');
       }
-      const recordId = await dao.insert(newRecord);
+      const recordId = await globalThis.dao.insert(newRecord);
 
       if (recordId > 0) {
         hilog.info(DOMAIN, TAG, `Successfully saved weight record with id: ${recordId}`);
