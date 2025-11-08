@@ -197,7 +197,7 @@ class WeightRecordDao {
 
 let weightRecordDao: WeightRecordDao | null = null;
 
-export async function getWeightRecordDao(context: common.UIContext | common.UIAbilityContext): Promise<WeightRecordDao | null> {
+export async function getWeightRecordDao(context: common.Context): Promise<WeightRecordDao | null> {
   if (weightRecordDao) {
     return weightRecordDao;
   }
