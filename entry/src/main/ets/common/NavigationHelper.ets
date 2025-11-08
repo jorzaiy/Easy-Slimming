@@ -7,10 +7,8 @@ import { BusinessConstants } from './Constants';
 import hilog from '@ohos.hilog';
 import { LogConstants } from './Constants';
 
-// 路由参数接口
-interface RouteParams {
-  [key: string]: ESObject;
-}
+// 路由参数类型
+type RouteParams = Record<string, ESObject>;
 
 // 导航参数接口
 interface NavigationParams {
@@ -31,7 +29,7 @@ export class NavigationHelper {
   static async navigateToPage(url: string, params?: RouteParams, delay: number = 0): Promise<void> {
     try {
       if (delay > 0) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise<void>(resolve => setTimeout(resolve, delay));
       }
 
       const navigationParams: NavigationParams = params ? { url, params } : { url };
@@ -51,7 +49,7 @@ export class NavigationHelper {
   static async navigateBack(delay: number = 0): Promise<void> {
     try {
       if (delay > 0) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise<void>(resolve => setTimeout(resolve, delay));
       }
 
       await router.back();

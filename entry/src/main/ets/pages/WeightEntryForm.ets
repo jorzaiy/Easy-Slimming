@@ -54,7 +54,10 @@ struct WeightEntryForm {
       const notes = this.notesInput.trim() || undefined;
 
       const newRecord = new WeightRecord(weight, timestamp, undefined, notes);
-      const dao = await getWeightRecordDao(this.getContext());
+      const dao = await getWeightRecordDao(this.getUIContext());
+      if (!dao) {
+        throw new Error('Failed to initialize database');
+      }
       const recordId = await dao.insert(newRecord);
 
       if (recordId > 0) {

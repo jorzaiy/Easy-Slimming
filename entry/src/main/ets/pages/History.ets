@@ -45,7 +45,10 @@ struct HistoryPage {
 
   async loadHistory() {
     try {
-      const dao = await getWeightRecordDao(this.getContext());
+      const dao = await getWeightRecordDao(this.getUIContext());
+      if (!dao) {
+        throw new Error('Failed to initialize database');
+      }
       this.records = await dao.queryAll();
       hilog.info(DOMAIN, TAG, `Loaded ${this.records.length} history records.`);
     } catch (e) {
@@ -84,7 +87,10 @@ struct HistoryPage {
     if (!this.recordToDelete) return;
 
     try {
-      const dao = await getWeightRecordDao(this.getContext());
+      const dao = await getWeightRecordDao(this.getUIContext());
+      if (!dao) {
+        throw new Error('Failed to initialize database');
+      }
       const rowsAffected = await dao.deleteById(this.recordToDelete.id);
       
       if (rowsAffected > 0) {
