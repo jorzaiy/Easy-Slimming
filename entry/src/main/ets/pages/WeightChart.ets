@@ -1,4 +1,5 @@
 import hilog from '@ohos.hilog';
+import router from '@ohos.router';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
@@ -176,7 +177,7 @@ struct WeightChartPage {
       .width('100%')
       .padding(15)
       .backgroundColor(Color.White)
-      .shadow({ radius: 3, color: '#000000', opacity: 0.1 })
+      .shadow({ radius: 3, color: '#00000020' })
 
       // 时间范围选择器
       Row() {
@@ -342,7 +343,7 @@ struct WeightChartPage {
             .backgroundColor(Color.White)
             .borderRadius(10)
             .margin({ top: 15 })
-            .shadow({ radius: 3, color: '#000000', opacity: 0.1 })
+            .shadow({ radius: 3, color: '#00000020' })
           }
         } else {
           Column() {
@@ -462,7 +463,7 @@ struct WeightChartPage {
       .backgroundColor(Color.White)
       .borderRadius(10)
       .margin({ bottom: 15 })
-      .shadow({ radius: 3, color: '#000000', opacity: 0.1 })
+      .shadow({ radius: 3, color: '#00000020' })
     }
   }
 

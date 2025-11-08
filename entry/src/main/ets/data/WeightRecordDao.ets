@@ -3,6 +3,7 @@ import { WeightRecord } from '../model/WeightRecord';
 import { rdbHelper, TABLE_NAME } from './RdbHelper';
 import hilog from '@ohos.hilog';
 import { LogConstants } from '../common/Constants';
+import { Context } from '@ohos.app.ability.Ability';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'WeightRecordDao';
@@ -20,27 +21,31 @@ class WeightRecordDao {
    * @returns 插入记录的ID，失败返回-1
    */
   async insert(record: WeightRecord): Promise<number> {
-    // 验证记录数据
-    const validation = record.validate();
-    if (!validation.isValid) {
-      hilog.error(DOMAIN, TAG, `Invalid record data: ${validation.errors.join(', ')}`);
-      return -1;
-    }
-
-    const valueBucket: relationalStore.ValuesBucket = {
-      'weight': record.weight,
-      'date': record.date,
-      'notes': record.notes || ''
-    };
-    
     try {
+      // 验证记录数据
+      const validation = record.validate();
+      if (!validation.isValid) {
+        hilog.error(DOMAIN, TAG, `Invalid record data: ${validation.errors.join(', ')}`);
+        return -1;
+      }
+
+      const valueBucket: relationalStore.ValuesBucket = {
+        'weight': record.weight,
+        'date': record.date,
+        'notes': record.notes || ''
+      };
+      
       await this.rdbStore.executeSql('BEGIN TRANSACTION');
       let id = await this.rdbStore.insert(TABLE_NAME, valueBucket);
       await this.rdbStore.executeSql('COMMIT');
       hilog.info(DOMAIN, TAG, `Successfully inserted record with id: ${id}`);
       return id;
     } catch (e) {
-      await this.rdbStore.executeSql('ROLLBACK');
+      try {
+        await this.rdbStore.executeSql('ROLLBACK');
+      } catch (rollbackError) {
+        hilog.error(DOMAIN, TAG, `Failed to rollback transaction: ${rollbackError}`);
+      }
       hilog.error(DOMAIN, TAG, `Failed to insert record, cause: ${e}`);
       return -1;
     }
@@ -53,7 +58,7 @@ class WeightRecordDao {
     try {
       let resultSet = await this.rdbStore.query(predicates);
       let records: WeightRecord[] = [];
-      if (resultSet.rowCount > 0) {
+      if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
           let id = resultSet.getLong(resultSet.getColumnIndex('id'));
           let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
@@ -62,7 +67,9 @@ class WeightRecordDao {
           records.push(new WeightRecord(weight, date, id, notes));
         }
       }
-      resultSet.close();
+      if (resultSet) {
+        resultSet.close();
+      }
       hilog.info(DOMAIN, TAG, `Queried ${records.length} records.`);
       return records;
     } catch (e) {
@@ -111,7 +118,7 @@ class WeightRecordDao {
     try {
       let resultSet = await this.rdbStore.query(predicates);
       let record: WeightRecord | null = null;
-      if (resultSet.rowCount > 0) {
+      if (resultSet && resultSet.rowCount > 0) {
         if (resultSet.goToFirstRow()) {
           let recordId = resultSet.getLong(resultSet.getColumnIndex('id'));
           let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
@@ -120,7 +127,9 @@ class WeightRecordDao {
           record = new WeightRecord(weight, date, recordId, notes);
         }
       }
-      resultSet.close();
+      if (resultSet) {
+        resultSet.close();
+      }
       hilog.info(DOMAIN, TAG, `Queried record with id: ${id}, found: ${record ? 'yes' : 'no'}`);
       return record;
     } catch (e) {
@@ -137,7 +146,7 @@ class WeightRecordDao {
     try {
       let resultSet = await this.rdbStore.query(predicates);
       let records: WeightRecord[] = [];
-      if (resultSet.rowCount > 0) {
+      if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
           let id = resultSet.getLong(resultSet.getColumnIndex('id'));
           let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
@@ -146,7 +155,9 @@ class WeightRecordDao {
           records.push(new WeightRecord(weight, date, id, notes));
         }
       }
-      resultSet.close();
+      if (resultSet) {
+        resultSet.close();
+      }
       hilog.info(DOMAIN, TAG, `Queried ${records.length} records for date range.`);
       return records;
     } catch (e) {
@@ -163,7 +174,7 @@ class WeightRecordDao {
     try {
       let resultSet = await this.rdbStore.query(predicates);
       let records: WeightRecord[] = [];
-      if (resultSet.rowCount > 0) {
+      if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
           let id = resultSet.getLong(resultSet.getColumnIndex('id'));
           let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
@@ -172,7 +183,9 @@ class WeightRecordDao {
           records.push(new WeightRecord(weight, date, id, notes));
         }
       }
-      resultSet.close();
+      if (resultSet) {
+        resultSet.close();
+      }
       hilog.info(DOMAIN, TAG, `Queried ${records.length} recent records.`);
       return records.reverse(); // 返回按时间正序排列的记录
     } catch (e) {
@@ -184,7 +197,7 @@ class WeightRecordDao {
 
 let weightRecordDao: WeightRecordDao | null = null;
 
-export async function getWeightRecordDao(context): Promise<WeightRecordDao> {
+export async function getWeightRecordDao(context: Context): Promise<WeightRecordDao> {
   if (weightRecordDao) {
     return weightRecordDao;
   }

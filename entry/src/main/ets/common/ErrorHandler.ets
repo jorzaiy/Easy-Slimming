@@ -16,7 +16,7 @@ export class ErrorHandler {
    * @param operation 操作名称
    * @param userMessage 用户显示的消息
    */
-  static handleDatabaseError(error: any, operation: string, userMessage?: string): void {
+  static handleDatabaseError(error: Error | string, operation: string, userMessage?: string): void {
     const errorMessage = error?.message || error || 'Unknown error';
     hilog.error(this.DOMAIN, this.TAG, `Database operation '${operation}' failed: ${errorMessage}`);
     
@@ -29,7 +29,7 @@ export class ErrorHandler {
    * @param error 错误对象
    * @param targetPage 目标页面
    */
-  static handleNavigationError(error: any, targetPage: string): void {
+  static handleNavigationError(error: Error | string, targetPage: string): void {
     const errorMessage = error?.message || error || 'Unknown error';
     hilog.error(this.DOMAIN, this.TAG, `Navigation to '${targetPage}' failed: ${errorMessage}`);
     this.showToast('页面跳转失败，请重试');
@@ -51,7 +51,7 @@ export class ErrorHandler {
    * @param context 错误上下文
    * @param userMessage 用户显示的消息
    */
-  static handleGenericError(error: any, context: string, userMessage?: string): void {
+  static handleGenericError(error: Error | string, context: string, userMessage?: string): void {
     const errorMessage = error?.message || error || 'Unknown error';
     hilog.error(this.DOMAIN, this.TAG, `Error in '${context}': ${errorMessage}`);
     
@@ -104,7 +104,7 @@ export class ErrorHandler {
     const fullMessage = context ? `[${context}] ${message}` : message;
     const error = new Error(fullMessage);
     if (code) {
-      (error as any).code = code;
+      (error as Error & { code?: string }).code = code;
     }
     return error;
   }
@@ -114,7 +114,7 @@ export class ErrorHandler {
    * @param error 错误对象
    * @returns 是否为网络错误
    */
-  static isNetworkError(error: any): boolean {
+  static isNetworkError(error: Error | string): boolean {
     const errorMessage = error?.message?.toLowerCase() || '';
     return errorMessage.includes('network') || 
            errorMessage.includes('connection') || 
@@ -126,7 +126,7 @@ export class ErrorHandler {
    * @param error 错误对象
    * @returns 是否为权限错误
    */
-  static isPermissionError(error: any): boolean {
+  static isPermissionError(error: Error | string): boolean {
     const errorMessage = error?.message?.toLowerCase() || '';
     return errorMessage.includes('permission') || 
            errorMessage.includes('access denied') ||

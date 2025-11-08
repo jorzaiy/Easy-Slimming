@@ -1,4 +1,5 @@
 import hilog from '@ohos.hilog';
+import router from '@ohos.router';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
@@ -75,7 +76,7 @@ struct RecordDetailPage {
       .width('100%')
       .padding(AppDimensions.PADDING_MEDIUM)
       .backgroundColor(AppColors.WHITE)
-      .shadow({ radius: 3, color: '#000000', opacity: 0.1 })
+      .shadow({ radius: 3, color: '#00000020' })
 
       if (this.record) {
         Column() {
@@ -151,11 +152,11 @@ struct RecordDetailPage {
               .backgroundColor('#007DFF')
               .margin({ bottom: 15 })
               .onClick(() => {
-                router.pushUrl({
-                  url: 'pages/WeightEditForm',
-                  params: { record: this.record }
-                });
-              })
+                               router.push({
+                                 url: 'pages/WeightEditForm',
+                                 params: { record: this.record }
+                               });
+                             })
           }
           .width('100%')
           .padding({ left: 20, right: 20 })

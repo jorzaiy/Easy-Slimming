@@ -24,7 +24,7 @@ export class NavigationHelper {
       }
       
       const navigationParams = params ? { url, params } : { url };
-      await router.pushUrl(navigationParams);
+      await router.push(navigationParams);
       
       hilog.info(this.DOMAIN, this.TAG, `Successfully navigated to: ${url}`);
     } catch (error) {
@@ -70,7 +70,8 @@ export class NavigationHelper {
    */
   static getRouteParams(): object | undefined {
     try {
-      return router.getParams();
+      const params = router.getParams();
+      return params !== null ? params : undefined;
     } catch (error) {
       hilog.error(this.DOMAIN, this.TAG, `Failed to get route params, cause: ${error}`);
       return undefined;

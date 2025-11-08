@@ -1,4 +1,5 @@
 import hilog from '@ohos.hilog';
+import router from '@ohos.router';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
@@ -64,7 +65,7 @@ struct WeightEditForm {
     if (isNaN(weight)) {
       return false;
     }
-    return weight >= MIN_WEIGHT && weight <= MAX_WEIGHT;
+    return weight >= BusinessConstants.MIN_WEIGHT && weight <= BusinessConstants.MAX_WEIGHT;
   }
 
   isDateValid(): boolean {
@@ -83,8 +84,8 @@ struct WeightEditForm {
     if (isNaN(weight)) {
       return '请输入有效的数字';
     }
-    if (weight < MIN_WEIGHT || weight > MAX_WEIGHT) {
-      return `体重应在 ${MIN_WEIGHT}-${MAX_WEIGHT} kg 范围内`;
+    if (weight < BusinessConstants.MIN_WEIGHT || weight > BusinessConstants.MAX_WEIGHT) {
+      return `体重应在 ${BusinessConstants.MIN_WEIGHT}-${BusinessConstants.MAX_WEIGHT} kg 范围内`;
     }
     return '';
   }
@@ -147,7 +148,7 @@ struct WeightEditForm {
       .width('100%')
       .padding(15)
       .backgroundColor(Color.White)
-      .shadow({ radius: 3, color: '#000000', opacity: 0.1 })
+      .shadow({ radius: 3, color: '#00000020' })
 
       Column() {
         Column() {
@@ -208,7 +209,7 @@ struct WeightEditForm {
               .fontColor(Color.Red)
               .margin({ top: 8 })
           } else if (this.weightInput) {
-            Text(`范围：${MIN_WEIGHT}-${MAX_WEIGHT} kg`)
+            Text(`范围：${BusinessConstants.MIN_WEIGHT}-${BusinessConstants.MAX_WEIGHT} kg`)
               .fontSize(14)
               .fontColor(Color.Gray)
               .margin({ top: 8 })
@@ -232,12 +233,12 @@ struct WeightEditForm {
             .height(120)
             .fontSize(16)
             .placeholderFont({ size: 16 })
-            .maxLength(200)
+            .maxLength(BusinessConstants.MAX_NOTES_LENGTH)
             .onChange((value: string) => {
               this.notesInput = value;
             })
 
-          Text(`${this.notesInput.length}/200`)
+          Text(`${this.notesInput.length}/${BusinessConstants.MAX_NOTES_LENGTH}`)
             .fontSize(14)
             .fontColor(Color.Gray)
             .margin({ top: 8 })
