@@ -1,4 +1,5 @@
 import hilog from '@ohos.hilog';
+import router from '@ohos.router';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
@@ -35,14 +36,14 @@ struct HistoryPage {
   }
 
   showRecordDetail(record: WeightRecord) {
-    router.pushUrl({
+    router.push({
       url: 'pages/RecordDetail',
       params: { record: record }
     });
   }
 
   editRecord(record: WeightRecord) {
-    router.pushUrl({
+    router.push({
       url: 'pages/WeightEditForm',
       params: { record: record }
     });
@@ -103,13 +104,13 @@ struct HistoryPage {
           .height(24)
           .fillColor('#007DFF')
           .onClick(() => {
-            router.pushUrl({ url: 'pages/WeightChart' });
-          })
+                       router.push({ url: 'pages/WeightChart' });
+                     })
       }
       .width('100%')
       .padding(15)
       .backgroundColor(Color.White)
-      .shadow({ radius: 3, color: '#000000', opacity: 0.1 })
+      .shadow({ radius: 3, color: '#00000020' })
 
       if (this.records.length > 0) {
         List({ space: 10 }) {

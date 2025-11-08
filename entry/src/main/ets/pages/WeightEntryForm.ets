@@ -95,7 +95,7 @@ struct WeightEntryForm {
       .width('100%')
       .padding(AppDimensions.PADDING_MEDIUM)
       .backgroundColor(AppColors.WHITE)
-      .shadow({ radius: 3, color: '#000000', opacity: 0.1 })
+      .shadow({ radius: 3, color: '#00000020' })
 
       Column() {
         Column() {

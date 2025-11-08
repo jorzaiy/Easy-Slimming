@@ -1,4 +1,5 @@
 import hilog from '@ohos.hilog';
+import router from '@ohos.router';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
 import { WeightRecord } from '../model/WeightRecord';
 import { NavigationHelper } from '../common/NavigationHelper';
@@ -48,7 +49,7 @@ struct Index {
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
         .onClick(() => {
-          router.pushUrl({ url: 'pages/WeightEntryForm' });
+          router.push({ url: 'pages/WeightEntryForm' });
         })
 
       Button('查看历史')
@@ -62,7 +63,7 @@ struct Index {
         .fontColor(Color.Black)
         .border({ width: 1, color: Color.Gray, radius: 25 })
         .onClick(() => {
-          router.pushUrl({ url: 'pages/History' });
+          router.push({ url: 'pages/History' });
         })
 
       Button('趋势图表')
@@ -74,7 +75,7 @@ struct Index {
         .margin({ top: 20 })
         .backgroundColor('#007DFF')
         .onClick(() => {
-          router.pushUrl({ url: 'pages/WeightChart' });
+          router.push({ url: 'pages/WeightChart' });
         })
 
       if (this.latestRecord) {
