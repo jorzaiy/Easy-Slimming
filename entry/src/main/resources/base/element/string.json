@@ -2,15 +2,15 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "module description"
+      "value": "轻松减重应用模块"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "description"
+      "value": "轻松减重应用入口"
     },
     {
       "name": "EntryAbility_label",
-      "value": "label"
+      "value": "轻松减重"
     }
   ]
 }
