@@ -14,6 +14,10 @@ export class AppColors {
   static readonly ERROR = '#FF0000';
   static readonly SUCCESS = '#4CAF50';
   static readonly WARNING = '#FF9800';
+  static readonly BLUE = '#2196F3';
+  static readonly GREEN = '#4CAF50';
+  static readonly ORANGE = '#FF9800';
+  static readonly RED = '#F44336';
 }
 
 // 尺寸常量

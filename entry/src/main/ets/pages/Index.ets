@@ -1,7 +1,6 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
 import { WeightRecord } from '../model/WeightRecord';
-import { NavigationHelper } from '../common/NavigationHelper';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
@@ -100,6 +99,22 @@ struct Index {
             router.pushUrl({ url: 'pages/WeightChart' });
           } catch (error) {
             hilog.error(DOMAIN, TAG, `Failed to navigate to WeightChart, cause: ${error}`);
+          }
+        })
+
+      Button('统计仪表板')
+        .type(ButtonType.Capsule)
+        .width('80%')
+        .height(50)
+        .fontSize(22)
+        .fontWeight(FontWeight.Bold)
+        .margin({ top: 20 })
+        .backgroundColor(Color.Green)
+        .onClick(() => {
+          try {
+            router.pushUrl({ url: 'pages/StatisticsDashboard' });
+          } catch (error) {
+            hilog.error(DOMAIN, TAG, `Failed to navigate to StatisticsDashboard, cause: ${error}`);
           }
         })
 
