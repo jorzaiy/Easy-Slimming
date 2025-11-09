@@ -10,7 +10,7 @@ import { getAppDao } from '../common/Global';
 import { RemarkSummary } from '../components/RemarkDisplay';
 import { RemarkFilter } from '../components/RemarkFilter';
 import { getTargetWeightService, TargetWeightRecord } from '../data/TargetWeightService';
-import { common } from '@kit.AbilityKit';
+import { resolveAbilityContext } from '../common/ContextUtils';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'History';
@@ -38,11 +38,11 @@ struct HistoryPage {
 
   async loadTargetWeight() {
     try {
-      const context = this.getUIContext();
-      if (!context) {
+      const abilityContext = resolveAbilityContext(this.getUIContext());
+      if (!abilityContext) {
         return;
       }
-      const service = await getTargetWeightService(context as unknown as common.Context);
+      const service = await getTargetWeightService(abilityContext);
       if (service) {
         this.currentTarget = await service.getCurrentTarget();
       }

@@ -1,4 +1,5 @@
 import hilog from '@ohos.hilog';
+import relationalStore from '@ohos.data.relationalStore';
 import { WeightRecord } from '../model/WeightRecord';
 import { Remark, RemarkType } from '../model/Remark';
 import { NavigationHelper } from '../common/NavigationHelper';
@@ -51,23 +52,23 @@ struct WeightEntryForm {
 
     this.isSubmitting = true;
 
+    let dao = getAppDao();
+    let rdbStore: relationalStore.RdbStore | null = null;
+
     try {
       const weight = parseFloat(this.weightInput);
       const timestamp = this.selectedDate.getTime();
       const notes = this.notesInput.trim() || undefined;
 
       const newRecord = new WeightRecord(weight, timestamp, undefined, notes);
-      const dao = getAppDao();
       if (!dao) {
         throw new Error('Global DAO not initialized');
       }
-      
-      // 开始事务
-      const rdbStore = (dao as any).rdbStore;
-      if (rdbStore) {
-        await rdbStore.executeSql('BEGIN TRANSACTION');
-      }
-      
+
+      const store = dao.getRdbStore();
+      rdbStore = store;
+      await store.executeSql('BEGIN TRANSACTION');
+
       const recordId = await dao.insert(newRecord);
 
       if (recordId > 0) {
@@ -83,7 +84,7 @@ struct WeightEntryForm {
           }
         }
         
-        await rdbStore.executeSql('COMMIT');
+        await store.executeSql('COMMIT');
         hilog.info(DOMAIN, TAG, `Successfully saved ${savedRemarks} remarks for record: ${recordId}`);
         
         promptAction.showToast({
@@ -98,17 +99,13 @@ struct WeightEntryForm {
 
         await NavigationHelper.navigateBackWithFeedback();
       } else {
-        await rdbStore.executeSql('ROLLBACK');
+        await store.executeSql('ROLLBACK');
         throw new Error('Failed to insert record');
       }
     } catch (e) {
-      const dao = getAppDao();
-      if (dao) {
+      if (rdbStore) {
         try {
-          const errorRdbStore = (dao as any).rdbStore;
-          if (errorRdbStore) {
-            await errorRdbStore.executeSql('ROLLBACK');
-          }
+          await rdbStore.executeSql('ROLLBACK');
         } catch (rollbackError) {
           hilog.error(DOMAIN, TAG, `Failed to rollback transaction: ${rollbackError}`);
         }

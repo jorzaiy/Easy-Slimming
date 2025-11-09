@@ -14,10 +14,14 @@ export interface WeightRecordWithRemarks {
 }
 
 export class WeightRecordDao {
-  rdbStore: relationalStore.RdbStore;
+  private readonly rdbStore: relationalStore.RdbStore;
 
   constructor(rdbStore: relationalStore.RdbStore) {
     this.rdbStore = rdbStore;
+  }
+
+  getRdbStore(): relationalStore.RdbStore {
+    return this.rdbStore;
   }
 
   /**
