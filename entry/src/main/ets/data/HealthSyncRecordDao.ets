@@ -269,8 +269,8 @@ export async function getHealthSyncRecordDao(context: common.Context): Promise<H
   }
 
   try {
-    const { rdbHelper } = await import('./RdbHelper');
-    const rdbStore = await rdbHelper.initRdbStore(context);
+    const helperModule = await import('./RdbHelper');
+    const rdbStore = await helperModule.rdbHelper.initRdbStore(context);
     if (rdbStore) {
       healthSyncRecordDao = new HealthSyncRecordDao(rdbStore);
       return healthSyncRecordDao;

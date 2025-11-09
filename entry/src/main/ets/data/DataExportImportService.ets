@@ -2,6 +2,7 @@
  * 数据导出导入服务
  * 支持CSV、Excel、JSON格式的数据导出和导入
  */
+import relationalStore from '@ohos.data.relationalStore';
 import { WeightRecord, ValidationResult } from '../model/WeightRecord';
 import { TargetWeightRecord } from './TargetWeightService';
 import { WeightRecordDao } from './WeightRecordDao';
@@ -89,7 +90,7 @@ export class DataExportImportService {
       return JSON.stringify(content, null, 2);
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to export to JSON, cause: ${e}`);
-      throw e;
+      throw new Error(`Failed to export to JSON: ${e}`);
     }
   }
 
@@ -140,7 +141,7 @@ export class DataExportImportService {
       return csv;
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to export to CSV, cause: ${e}`);
-      throw e;
+      throw new Error(`Failed to export to CSV: ${e}`);
     }
   }
 
@@ -461,7 +462,7 @@ export class DataExportImportService {
    * 获取数据库的RdbStore
    */
   get rdbStore(): relationalStore.RdbStore {
-    return this.dao.rdbStore;
+    return this.dao.getRdbStore();
   }
 }
 

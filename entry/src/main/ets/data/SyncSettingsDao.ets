@@ -253,8 +253,8 @@ export async function getSyncSettingsDao(context: common.Context): Promise<SyncS
   }
 
   try {
-    const { rdbHelper } = await import('./RdbHelper');
-    const rdbStore = await rdbHelper.initRdbStore(context);
+    const helperModule = await import('./RdbHelper');
+    const rdbStore = await helperModule.rdbHelper.initRdbStore(context);
     if (rdbStore) {
       syncSettingsDao = new SyncSettingsDao(rdbStore);
       return syncSettingsDao;
