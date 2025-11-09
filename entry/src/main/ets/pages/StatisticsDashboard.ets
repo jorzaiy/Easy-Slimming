@@ -26,7 +26,7 @@ struct StatisticsDashboard {
   @State showHeightDialog: boolean = false;
   @State selectedTimeRange: TimeRange = 'all';
   @State rangeStats: RangeStatistics | null = null;
-  private scroller: Scroller = new Scroller();
+  private dashboardScroller = new Scroller();
 
   async aboutToAppear(): Promise<void> {
     await this.loadStatistics();
@@ -87,6 +87,7 @@ struct StatisticsDashboard {
         if (abilityContext) {
           this.rangeStats = await StatisticsService.getTimeRangeStatistics(abilityContext, this.selectedTimeRange);
         }
+      }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load range statistics: ${e}`);
     }
@@ -165,7 +166,7 @@ struct StatisticsDashboard {
           .margin({ top: 20 })
           .fontColor(AppColors.GRAY)
       } else if (this.statistics) {
-        Scroll(this.scroller) {
+        Scroll(this.dashboardScroller) {
           Column({ space: AppDimensions.MARGIN_MEDIUM }) {
             // 时间范围选择器
             TimeRangeSelector({
@@ -225,16 +226,18 @@ struct StatisticsDashboard {
     .backgroundColor(AppColors.BACKGROUND)
     
     // 身高设置对话框
-    HeightSettingDialog({
-      isVisible: this.showHeightDialog,
-      currentHeight: this.userHeight,
-      onHeightChange: (height: number) => this.onHeightChange(height),
-      onDismiss: () => { this.showHeightDialog = false }
-    })
+    if (this.showHeightDialog) {
+      HeightSettingDialog({
+        isVisible: this.showHeightDialog,
+        currentHeight: this.userHeight,
+        onHeightChange: (height: number) => this.onHeightChange(height),
+        onDismiss: () => { this.showHeightDialog = false }
+      })
+    }
   }
 
   @Builder
-  buildRangeStatsCard(): void {
+  buildRangeStatsCard() {
     if (!this.rangeStats) {
       return;
     }
@@ -253,7 +256,7 @@ struct StatisticsDashboard {
             Text('记录数')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(this.rangeStats!.count.toString())
+            Text(this.rangeStats?.count.toString() ?? '0')
               .fontSize(AppText.FONT_SIZE_TITLE)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.PRIMARY)
@@ -265,7 +268,7 @@ struct StatisticsDashboard {
             Text('平均体重')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(`${this.rangeStats!.average.toFixed(1)} kg`)
+            Text(`${this.rangeStats?.average.toFixed(1) ?? '0.0'} kg`)
               .fontSize(AppText.FONT_SIZE_TITLE)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.WARNING)
@@ -278,13 +281,13 @@ struct StatisticsDashboard {
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
             Row({ space: 4 }) {
-              Text(this.rangeStats!.change >= 0 ? '↑' : '↓')
+              Text(this.rangeStats?.change >= 0 ? '↑' : '↓')
                 .fontSize(16)
-                .fontColor(this.rangeStats!.change >= 0 ? '#F44336' : '#4CAF50')
-              Text(`${Math.abs(this.rangeStats!.change).toFixed(1)} kg`)
+                .fontColor(this.rangeStats?.change >= 0 ? AppColors.RED : AppColors.GREEN)
+              Text(`${Math.abs(this.rangeStats?.change ?? 0).toFixed(1)} kg`)
                 .fontSize(AppText.FONT_SIZE_BODY)
                 .fontWeight(FontWeight.Bold)
-                .fontColor(this.rangeStats!.change >= 0 ? '#F44336' : '#4CAF50')
+                .fontColor(this.rangeStats?.change >= 0 ? AppColors.RED : AppColors.GREEN)
             }
           }
           .layoutWeight(1)
@@ -300,10 +303,10 @@ struct StatisticsDashboard {
             Text('最高体重')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(`${this.rangeStats!.max.toFixed(1)} kg`)
+            Text(`${this.rangeStats?.max.toFixed(1) ?? '0.0'} kg`)
               .fontSize(AppText.FONT_SIZE_BODY)
               .fontWeight(FontWeight.Bold)
-              .fontColor('#F44336')
+              .fontColor(AppColors.RED)
           }
           .layoutWeight(1)
 
@@ -312,10 +315,10 @@ struct StatisticsDashboard {
             Text('最低体重')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(`${this.rangeStats!.min.toFixed(1)} kg`)
+            Text(`${this.rangeStats?.min.toFixed(1) ?? '0.0'} kg`)
               .fontSize(AppText.FONT_SIZE_BODY)
               .fontWeight(FontWeight.Bold)
-              .fontColor('#4CAF50')
+              .fontColor(AppColors.GREEN)
           }
           .layoutWeight(1)
         }
@@ -337,7 +340,7 @@ struct StatisticsDashboard {
   }
 
   @Builder
-  buildMainMetricsCard(): void {
+  buildMainMetricsCard() {
     if (!this.statistics) {
       return;
     }
@@ -356,7 +359,7 @@ struct StatisticsDashboard {
             Text('当前体重')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(`${this.statistics!.currentWeight.toFixed(1)} kg`)
+            Text(`${this.statistics?.currentWeight.toFixed(1) ?? '0.0'} kg`)
               .fontSize(AppText.FONT_SIZE_TITLE)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.PRIMARY)
@@ -368,7 +371,7 @@ struct StatisticsDashboard {
             Text('目标体重')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(`${this.statistics!.targetWeight.toFixed(1)} kg`)
+            Text(`${this.statistics?.targetWeight.toFixed(1) ?? '0.0'} kg`)
               .fontSize(AppText.FONT_SIZE_TITLE)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.SUCCESS)
@@ -380,7 +383,7 @@ struct StatisticsDashboard {
             Text('平均体重')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(`${this.statistics!.averageWeight.toFixed(1)} kg`)
+            Text(`${this.statistics?.averageWeight.toFixed(1) ?? '0.0'} kg`)
               .fontSize(AppText.FONT_SIZE_TITLE)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.WARNING)
@@ -402,7 +405,7 @@ struct StatisticsDashboard {
   }
 
   @Builder
-  buildBMICard(): void {
+  buildBMICard() {
     if (!this.statistics) {
       return;
     }
@@ -427,14 +430,14 @@ struct StatisticsDashboard {
 
         Row({ space: AppDimensions.MARGIN_MEDIUM }) {
           Column({ space: 10 }) {
-            Text(this.statistics!.bmi.toFixed(1))
+            Text(this.statistics?.bmi.toFixed(1) ?? '0.0')
               .fontSize(48)
               .fontWeight(FontWeight.Bold)
-              .fontColor(this.statistics!.getBmiStatusColor())
+              .fontColor(this.statistics?.getBmiStatusColor() ?? AppColors.GRAY)
             
-            Text(this.statistics!.getBmiStatus())
+            Text(this.statistics?.getBmiStatus() ?? '未知')
               .fontSize(AppText.FONT_SIZE_BODY)
-              .fontColor(this.statistics!.getBmiStatusColor())
+              .fontColor(this.statistics?.getBmiStatusColor() ?? AppColors.GRAY)
           }
           .alignItems(HorizontalAlign.Center)
 
@@ -450,13 +453,13 @@ struct StatisticsDashboard {
               .fontColor(AppColors.GRAY)
             Text('正常 18.5-24')
               .fontSize(12)
-              .fontColor('#4CAF50')
+              .fontColor(AppColors.GREEN)
             Text('偏胖 24-28')
               .fontSize(12)
               .fontColor(AppColors.WARNING)
             Text('肥胖 ≥ 28')
               .fontSize(12)
-              .fontColor('#F44336')
+              .fontColor(AppColors.RED)
           }
           .alignItems(HorizontalAlign.End)
         }
@@ -467,7 +470,7 @@ struct StatisticsDashboard {
   }
 
   @Builder
-  buildTrendCard(): void {
+  buildTrendCard() {
     if (!this.statistics) {
       return;
     }
@@ -486,10 +489,10 @@ struct StatisticsDashboard {
             Text('最近7天')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(this.statistics!.formatTrendText(this.statistics!.trend7Days))
+            Text(this.statistics?.formatTrendText(this.statistics?.trend7Days) ?? '无数据')
               .fontSize(AppText.FONT_SIZE_BODY)
               .fontWeight(FontWeight.Bold)
-              .fontColor(this.statistics!.getTrendColor(this.statistics!.trend7Days))
+              .fontColor(this.statistics?.getTrendColor(this.statistics?.trend7Days) ?? AppColors.GRAY)
           }
           .layoutWeight(1)
 
@@ -498,10 +501,10 @@ struct StatisticsDashboard {
             Text('最近30天')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(this.statistics!.formatTrendText(this.statistics!.trend30Days))
+            Text(this.statistics?.formatTrendText(this.statistics?.trend30Days) ?? '无数据')
               .fontSize(AppText.FONT_SIZE_BODY)
               .fontWeight(FontWeight.Bold)
-              .fontColor(this.statistics!.getTrendColor(this.statistics!.trend30Days))
+              .fontColor(this.statistics?.getTrendColor(this.statistics?.trend30Days) ?? AppColors.GRAY)
           }
           .layoutWeight(1)
         }
@@ -516,10 +519,10 @@ struct StatisticsDashboard {
             Text('最高体重')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(`${this.statistics!.maxWeight.toFixed(1)} kg`)
+            Text(`${this.statistics?.maxWeight.toFixed(1) ?? '0.0'} kg`)
               .fontSize(AppText.FONT_SIZE_BODY)
               .fontWeight(FontWeight.Bold)
-              .fontColor('#F44336')
+              .fontColor(AppColors.RED)
           }
           .layoutWeight(1)
 
@@ -528,10 +531,10 @@ struct StatisticsDashboard {
             Text('最低体重')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(`${this.statistics!.minWeight.toFixed(1)} kg`)
+            Text(`${this.statistics?.minWeight.toFixed(1) ?? '0.0'} kg`)
               .fontSize(AppText.FONT_SIZE_BODY)
               .fontWeight(FontWeight.Bold)
-              .fontColor('#4CAF50')
+              .fontColor(AppColors.GREEN)
           }
           .layoutWeight(1)
         }
@@ -542,7 +545,7 @@ struct StatisticsDashboard {
   }
 
   @Builder
-  buildProgressCard(): void {
+  buildProgressCard() {
     if (!this.statistics) {
       return;
     }
@@ -557,27 +560,27 @@ struct StatisticsDashboard {
 
         Column({ space: 10 }) {
           Row() {
-            Text(`已减重: ${Math.abs(this.statistics!.weightLoss).toFixed(1)} kg`)
+            Text(`已减重: ${Math.abs(this.statistics?.weightLoss ?? 0).toFixed(1)} kg`)
               .fontSize(AppText.FONT_SIZE_BODY)
-              .fontColor(this.statistics!.getProgressStatusColor())
+              .fontColor(this.statistics?.getProgressStatusColor() ?? AppColors.GRAY)
             
             Blank()
             
-            Text(`${this.statistics!.progressPercentage.toFixed(1)}%`)
+            Text(`${this.statistics?.progressPercentage.toFixed(1) ?? '0.0'}%`)
               .fontSize(AppText.FONT_SIZE_BODY)
               .fontWeight(FontWeight.Bold)
-              .fontColor(this.statistics!.getProgressStatusColor())
+              .fontColor(this.statistics?.getProgressStatusColor() ?? AppColors.GRAY)
           }
           .width('100%')
 
           Progress({
-            value: Math.max(0, Math.min(100, this.statistics!.progressPercentage)),
+            value: Math.max(0, Math.min(100, this.statistics?.progressPercentage ?? 0)),
             total: 100,
             type: ProgressType.Linear
           })
             .width('100%')
             .height(8)
-            .color(this.statistics!.getProgressStatusColor())
+            .color(this.statistics?.getProgressStatusColor() ?? AppColors.PRIMARY)
             .backgroundColor(AppColors.LIGHT_GRAY)
             .borderRadius(4)
 
@@ -601,7 +604,7 @@ struct StatisticsDashboard {
   }
 
   @Builder
-  buildHistoryCard(): void {
+  buildHistoryCard() {
     if (!this.statistics) {
       return;
     }
@@ -619,7 +622,7 @@ struct StatisticsDashboard {
             Text('总记录数')
               .fontSize(AppText.FONT_SIZE_SMALL)
               .fontColor(AppColors.GRAY)
-            Text(this.statistics!.totalRecords.toString())
+            Text(this.statistics?.totalRecords.toString() ?? '0')
               .fontSize(AppText.FONT_SIZE_TITLE)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.PRIMARY)
@@ -638,7 +641,7 @@ struct StatisticsDashboard {
                 router.pushUrl({ url: 'pages/History' });
               })
           }
-          .justifyContent(FlexAlign.End)
+          .alignItems(HorizontalAlign.End)
           .layoutWeight(1)
         }
         .width('100%')
