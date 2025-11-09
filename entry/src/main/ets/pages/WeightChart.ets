@@ -648,8 +648,8 @@ struct WeightChartPage {
 
   private calculateStatistics(): Statistics {
     const weights = this.records.map(r => r.weight);
-    const currentWeight = this.records[0].weight; // 最新的体重
-    const startWeight = this.records[this.records.length - 1].weight; // 最早的体重
+    const currentWeight = this.records[0].weight;
+    const startWeight = this.records[this.records.length - 1].weight;
     const minWeight = Math.min(...weights);
     const maxWeight = Math.max(...weights);
     const avgWeight = weights.reduce((sum, w) => sum + w, 0) / weights.length;

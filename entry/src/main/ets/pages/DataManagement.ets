@@ -17,14 +17,18 @@ import relationalStore from '@ohos.data.relationalStore';
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'DataManagement';
 
+interface ConflictResolution {
+  type: 'override' | 'merge' | 'skip';
+}
+
 @Entry
 @Component
 struct DataManagement {
   @State showExportDialog: boolean = false;
   @State showImportDialog: boolean = false;
-  @State exportFormat: string = 'json';
+  @State exportFormat: 'json' | 'csv' | 'excel' = 'json';
   @State includeStatistics: boolean = true;
-  @State conflictResolution: string = 'skip';
+  @State conflictResolution: 'override' | 'merge' | 'skip' = 'skip';
   @State isProcessing: boolean = false;
   @State progressMessage: string = '';
 
@@ -188,273 +192,282 @@ struct DataManagement {
   private async saveExportFile(fileName: string, content: string): Promise<void> {
     try {
       const filePath = `/data/storage/el2/base/files/${fileName}`;
-      fs.writeTextSync(filePath, content);
+      const file = fs.openSync(filePath, fs.OpenMode.CREATE | fs.OpenMode.WRITE);
+      try {
+        fs.writeSync(file.fd, content);
+      } finally {
+        fs.closeSync(file);
+      }
       hilog.info(DOMAIN, TAG, `File saved: ${filePath}`);
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to save file: ${e}`);
-      throw e;
+      throw new Error(`Failed to save export file: ${e}`);
     }
   }
 
   build() {
-    Column() {
-      // 顶部栏
-      Row() {
-        Button('返回')
-          .type(ButtonType.Normal)
-          .height(40)
-          .width(80)
-          .fontSize(AppText.FONT_SIZE_BODY)
-          .onClick(() => {
-            router.back();
-          })
-
-        Text('数据管理')
-          .fontSize(AppText.FONT_SIZE_TITLE)
-          .fontWeight(FontWeight.Bold)
-          .layoutWeight(1)
-          .textAlign(TextAlign.Center)
-
-        Button()
-          .width(40)
-          .height(40)
-          .opacity(0)
-      }
-      .width('100%')
-      .height(56)
-      .padding({ left: AppDimensions.PADDING_MEDIUM, right: AppDimensions.PADDING_MEDIUM })
-      .alignItems(VerticalAlign.Center)
-      .backgroundColor(AppColors.WHITE)
-      .shadow({ radius: 2, color: Color.Gray, offsetX: 0, offsetY: 1 })
-
-      Scroll() {
-        Column({ space: AppDimensions.MARGIN_LARGE }) {
-          // 导出功能卡片
-          Column({ space: AppDimensions.MARGIN_MEDIUM }) {
-            Text('导出数据')
-              .fontSize(AppText.FONT_SIZE_SUBTITLE)
-              .fontWeight(FontWeight.Bold)
-              .width('100%')
-
-            Text('将应用中的体重记录导出为CSV、Excel或JSON格式')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-              .width('100%')
-
-            Button('导出数据')
-              .type(ButtonType.Capsule)
-              .width('100%')
-              .height(50)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontWeight(FontWeight.Bold)
-              .enabled(!this.isProcessing)
-              .onClick(() => {
-                this.showExportDialog = true;
-              })
-          }
-          .width('90%')
-          .padding(AppDimensions.PADDING_LARGE)
-          .backgroundColor(AppColors.WHITE)
-          .borderRadius(AppDimensions.BORDER_RADIUS)
-          .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 1 })
-
-          // 导入功能卡片
-          Column({ space: AppDimensions.MARGIN_MEDIUM }) {
-            Text('导入数据')
-              .fontSize(AppText.FONT_SIZE_SUBTITLE)
-              .fontWeight(FontWeight.Bold)
-              .width('100%')
-
-            Text('从导出的CSV、Excel或JSON文件中导入体重记录')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-              .width('100%')
-
-            Button('选择文件导入')
-              .type(ButtonType.Capsule)
-              .width('100%')
-              .height(50)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontWeight(FontWeight.Bold)
-              .enabled(!this.isProcessing)
-              .onClick(() => {
-                this.onImport();
-              })
-          }
-          .width('90%')
-          .padding(AppDimensions.PADDING_LARGE)
-          .backgroundColor(AppColors.WHITE)
-          .borderRadius(AppDimensions.BORDER_RADIUS)
-          .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 1 })
-
-          // 帮助信息
-          Column({ space: AppDimensions.MARGIN_SMALL }) {
-            Text('使用说明')
-              .fontSize(AppText.FONT_SIZE_SUBTITLE)
-              .fontWeight(FontWeight.Bold)
-              .width('100%')
-
-            Text('• 导出：选择格式和范围，导出应用中的数据备份\n• 导入：选择包含数据的文件进行导入\n• 支持格式：JSON、CSV、Excel\n• 导入冲突处理：跳过（默认）、覆盖、合并')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-              .width('100%')
-              .lineHeight(1.6)
-          }
-          .width('90%')
-          .padding(AppDimensions.PADDING_LARGE)
-          .backgroundColor(AppColors.BACKGROUND)
-          .borderRadius(AppDimensions.BORDER_RADIUS)
-
-          Divider()
-            .width('90%')
-            .height(1)
-            .color(AppColors.BORDER_GRAY)
-        }
-        .width('100%')
-        .padding({ top: AppDimensions.PADDING_MEDIUM, bottom: AppDimensions.PADDING_MEDIUM })
-        .alignItems(HorizontalAlign.Center)
-      }
-      .layoutWeight(1)
-
-      if (this.isProcessing) {
-        Row({ space: AppDimensions.MARGIN_SMALL }) {
-          LoadingProgress()
-            .width(30)
-            .height(30)
-            .color(AppColors.PRIMARY)
-
-          Text(this.progressMessage)
+    Stack() {
+      Column() {
+        // 顶部栏
+        Row() {
+          Button('返回')
+            .type(ButtonType.Normal)
+            .height(40)
+            .width(80)
             .fontSize(AppText.FONT_SIZE_BODY)
-            .fontColor(AppColors.GRAY)
-        }
-        .width('100%')
-        .height(60)
-        .backgroundColor(AppColors.BACKGROUND)
-        .justifyContent(FlexAlign.Center)
-        .alignItems(VerticalAlign.Center)
-      }
-    }
-    .width('100%')
-    .height('100%')
-    .backgroundColor(AppColors.BACKGROUND)
+            .onClick(() => {
+              router.back();
+            })
 
-    // 导出对话框
-    if (this.showExportDialog) {
-      Stack() {
-        Column()
-          .width('100%')
-          .height('100%')
-          .backgroundColor('rgba(0, 0, 0, 0.5)')
-          .onClick(() => {
-            this.showExportDialog = false;
-          })
-
-        Column({ space: AppDimensions.MARGIN_MEDIUM }) {
-          Text('导出选项')
+          Text('数据管理')
             .fontSize(AppText.FONT_SIZE_TITLE)
             .fontWeight(FontWeight.Bold)
-            .width('100%')
+            .layoutWeight(1)
             .textAlign(TextAlign.Center)
 
-          Column({ space: AppDimensions.MARGIN_SMALL }) {
-            Text('导出格式')
-              .fontSize(AppText.FONT_SIZE_SMALL)
+          Button()
+            .width(40)
+            .height(40)
+            .opacity(0)
+        }
+        .width('100%')
+        .height(56)
+        .padding({ left: AppDimensions.PADDING_MEDIUM, right: AppDimensions.PADDING_MEDIUM })
+        .alignItems(VerticalAlign.Center)
+        .backgroundColor(AppColors.WHITE)
+        .shadow({ radius: 2, color: Color.Gray, offsetX: 0, offsetY: 1 })
+
+        Scroller() {
+          Column({ space: AppDimensions.MARGIN_LARGE }) {
+            // 导出功能卡片
+            Column({ space: AppDimensions.MARGIN_MEDIUM }) {
+              Text('导出数据')
+                .fontSize(AppText.FONT_SIZE_SUBTITLE)
+                .fontWeight(FontWeight.Bold)
+                .width('100%')
+
+              Text('将应用中的体重记录导出为CSV、Excel或JSON格式')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+                .width('100%')
+
+              Button('导出数据')
+                .type(ButtonType.Capsule)
+                .width('100%')
+                .height(50)
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontWeight(FontWeight.Bold)
+                .enabled(!this.isProcessing)
+                .onClick(() => {
+                  this.showExportDialog = true;
+                })
+            }
+            .width('90%')
+            .padding(AppDimensions.PADDING_LARGE)
+            .backgroundColor(AppColors.WHITE)
+            .borderRadius(AppDimensions.BORDER_RADIUS)
+            .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 1 })
+
+            // 导入功能卡片
+            Column({ space: AppDimensions.MARGIN_MEDIUM }) {
+              Text('导入数据')
+                .fontSize(AppText.FONT_SIZE_SUBTITLE)
+                .fontWeight(FontWeight.Bold)
+                .width('100%')
+
+              Text('从导出的CSV、Excel或JSON文件中导入体重记录')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+                .width('100%')
+
+              Button('选择文件导入')
+                .type(ButtonType.Capsule)
+                .width('100%')
+                .height(50)
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontWeight(FontWeight.Bold)
+                .enabled(!this.isProcessing)
+                .onClick(() => {
+                  this.onImport();
+                })
+            }
+            .width('90%')
+            .padding(AppDimensions.PADDING_LARGE)
+            .backgroundColor(AppColors.WHITE)
+            .borderRadius(AppDimensions.BORDER_RADIUS)
+            .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 1 })
+
+            // 帮助信息
+            Column({ space: AppDimensions.MARGIN_SMALL }) {
+              Text('使用说明')
+                .fontSize(AppText.FONT_SIZE_SUBTITLE)
+                .fontWeight(FontWeight.Bold)
+                .width('100%')
+
+              Text('• 导出：选择格式和范围，导出应用中的数据备份\n• 导入：选择包含数据的文件进行导入\n• 支持格式：JSON、CSV、Excel\n• 导入冲突处理：跳过（默认）、覆盖、合并')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+                .width('100%')
+                .lineHeight(1.6)
+            }
+            .width('90%')
+            .padding(AppDimensions.PADDING_LARGE)
+            .backgroundColor(AppColors.BACKGROUND)
+            .borderRadius(AppDimensions.BORDER_RADIUS)
+
+            Divider()
+              .width('90%')
+              .height(1)
+              .color(AppColors.BORDER_GRAY)
+          }
+          .width('100%')
+          .padding({ top: AppDimensions.PADDING_MEDIUM, bottom: AppDimensions.PADDING_MEDIUM })
+          .alignItems(HorizontalAlign.Center)
+        }
+        .layoutWeight(1)
+
+        if (this.isProcessing) {
+          Row({ space: AppDimensions.MARGIN_SMALL }) {
+            LoadingProgress()
+              .width(30)
+              .height(30)
+              .color(AppColors.PRIMARY)
+
+            Text(this.progressMessage)
+              .fontSize(AppText.FONT_SIZE_BODY)
               .fontColor(AppColors.GRAY)
+          }
+          .width('100%')
+          .height(60)
+          .backgroundColor(AppColors.BACKGROUND)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(VerticalAlign.Center)
+        }
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor(AppColors.BACKGROUND)
 
-            Row({ space: 10 }) {
-              Button('JSON')
-                .type(this.exportFormat === 'json' ? ButtonType.Capsule : ButtonType.Normal)
-                .layoutWeight(1)
-                .height(40)
-                .fontSize(AppText.FONT_SIZE_BODY)
-                .backgroundColor(this.exportFormat === 'json' ? AppColors.PRIMARY : AppColors.WHITE)
-                .fontColor(this.exportFormat === 'json' ? AppColors.WHITE : AppColors.GRAY)
-                .border({ width: 1, color: AppColors.BORDER_GRAY })
-                .onClick(() => {
-                  this.exportFormat = 'json';
+      // 导出对话框
+      if (this.showExportDialog) {
+        Stack() {
+          Column()
+            .width('100%')
+            .height('100%')
+            .backgroundColor('rgba(0, 0, 0, 0.5)')
+            .onClick(() => {
+              this.showExportDialog = false;
+            })
+
+          Column({ space: AppDimensions.MARGIN_MEDIUM }) {
+            Text('导出选项')
+              .fontSize(AppText.FONT_SIZE_TITLE)
+              .fontWeight(FontWeight.Bold)
+              .width('100%')
+              .textAlign(TextAlign.Center)
+
+            Column({ space: AppDimensions.MARGIN_SMALL }) {
+              Text('导出格式')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+
+              Row({ space: 10 }) {
+                Button('JSON')
+                  .type(this.exportFormat === 'json' ? ButtonType.Capsule : ButtonType.Normal)
+                  .layoutWeight(1)
+                  .height(40)
+                  .fontSize(AppText.FONT_SIZE_BODY)
+                  .backgroundColor(this.exportFormat === 'json' ? AppColors.PRIMARY : AppColors.WHITE)
+                  .fontColor(this.exportFormat === 'json' ? AppColors.WHITE : AppColors.GRAY)
+                  .border({ width: 1, color: AppColors.BORDER_GRAY })
+                  .onClick(() => {
+                    this.exportFormat = 'json';
+                  })
+
+                Button('CSV')
+                  .type(this.exportFormat === 'csv' ? ButtonType.Capsule : ButtonType.Normal)
+                  .layoutWeight(1)
+                  .height(40)
+                  .fontSize(AppText.FONT_SIZE_BODY)
+                  .backgroundColor(this.exportFormat === 'csv' ? AppColors.PRIMARY : AppColors.WHITE)
+                  .fontColor(this.exportFormat === 'csv' ? AppColors.WHITE : AppColors.GRAY)
+                  .border({ width: 1, color: AppColors.BORDER_GRAY })
+                  .onClick(() => {
+                    this.exportFormat = 'csv';
+                  })
+
+                Button('Excel')
+                  .type(this.exportFormat === 'excel' ? ButtonType.Capsule : ButtonType.Normal)
+                  .layoutWeight(1)
+                  .height(40)
+                  .fontSize(AppText.FONT_SIZE_BODY)
+                  .backgroundColor(this.exportFormat === 'excel' ? AppColors.PRIMARY : AppColors.WHITE)
+                  .fontColor(this.exportFormat === 'excel' ? AppColors.WHITE : AppColors.GRAY)
+                  .border({ width: 1, color: AppColors.BORDER_GRAY })
+                  .onClick(() => {
+                    this.exportFormat = 'excel';
+                  })
+              }
+              .width('100%')
+            }
+            .width('100%')
+
+            Row() {
+              Checkbox({ name: 'statistics', group: 'statisticsGroup' })
+                .width(24)
+                .height(24)
+                .select(this.includeStatistics)
+                .onChange((value: boolean) => {
+                  this.includeStatistics = value;
                 })
 
-              Button('CSV')
-                .type(this.exportFormat === 'csv' ? ButtonType.Capsule : ButtonType.Normal)
-                .layoutWeight(1)
-                .height(40)
+              Text('包含统计数据摘要')
                 .fontSize(AppText.FONT_SIZE_BODY)
-                .backgroundColor(this.exportFormat === 'csv' ? AppColors.PRIMARY : AppColors.WHITE)
-                .fontColor(this.exportFormat === 'csv' ? AppColors.WHITE : AppColors.GRAY)
-                .border({ width: 1, color: AppColors.BORDER_GRAY })
+                .fontColor(AppColors.GRAY)
+                .margin({ left: 10 })
+                .layoutWeight(1)
+            }
+            .width('100%')
+
+            Row({ space: AppDimensions.MARGIN_MEDIUM }) {
+              Button('取消')
+                .type(ButtonType.Normal)
+                .layoutWeight(1)
+                .height(45)
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .backgroundColor(AppColors.WHITE)
+                .fontColor(AppColors.GRAY)
+                .border({ width: 1, color: AppColors.BORDER_GRAY, radius: AppDimensions.BORDER_RADIUS_SMALL })
                 .onClick(() => {
-                  this.exportFormat = 'csv';
+                  this.showExportDialog = false;
                 })
 
-              Button('Excel')
-                .type(this.exportFormat === 'excel' ? ButtonType.Capsule : ButtonType.Normal)
+              Button('导出')
+                .type(ButtonType.Capsule)
                 .layoutWeight(1)
-                .height(40)
+                .height(45)
                 .fontSize(AppText.FONT_SIZE_BODY)
-                .backgroundColor(this.exportFormat === 'excel' ? AppColors.PRIMARY : AppColors.WHITE)
-                .fontColor(this.exportFormat === 'excel' ? AppColors.WHITE : AppColors.GRAY)
-                .border({ width: 1, color: AppColors.BORDER_GRAY })
+                .backgroundColor(AppColors.PRIMARY)
+                .enabled(!this.isProcessing)
                 .onClick(() => {
-                  this.exportFormat = 'excel';
+                  this.onExport();
                 })
             }
             .width('100%')
           }
-          .width('100%')
-
-          Row() {
-            Checkbox({ name: 'statistics', group: 'statisticsGroup' })
-              .width(24)
-              .height(24)
-              .select(this.includeStatistics)
-              .onChange((value: boolean) => {
-                this.includeStatistics = value;
-              })
-
-            Text('包含统计数据摘要')
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontColor(AppColors.GRAY)
-              .margin({ left: 10 })
-              .layoutWeight(1)
-          }
-          .width('100%')
-
-          Row({ space: AppDimensions.MARGIN_MEDIUM }) {
-            Button('取消')
-              .type(ButtonType.Normal)
-              .layoutWeight(1)
-              .height(45)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .backgroundColor(AppColors.WHITE)
-              .fontColor(AppColors.GRAY)
-              .border({ width: 1, color: AppColors.BORDER_GRAY, radius: AppDimensions.BORDER_RADIUS_SMALL })
-              .onClick(() => {
-                this.showExportDialog = false;
-              })
-
-            Button('导出')
-              .type(ButtonType.Capsule)
-              .layoutWeight(1)
-              .height(45)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .backgroundColor(AppColors.PRIMARY)
-              .enabled(!this.isProcessing)
-              .onClick(() => {
-                this.onExport();
-              })
-          }
-          .width('100%')
+          .width('85%')
+          .height('auto')
+          .backgroundColor(AppColors.WHITE)
+          .borderRadius(AppDimensions.BORDER_RADIUS)
+          .padding(AppDimensions.PADDING_LARGE)
         }
-        .width('85%')
-        .height('auto')
-        .backgroundColor(AppColors.WHITE)
-        .borderRadius(AppDimensions.BORDER_RADIUS)
-        .padding(AppDimensions.PADDING_LARGE)
+        .width('100%')
+        .height('100%')
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
       }
-      .width('100%')
-      .height('100%')
-      .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Center)
     }
+    .width('100%')
+    .height('100%')
   }
 }

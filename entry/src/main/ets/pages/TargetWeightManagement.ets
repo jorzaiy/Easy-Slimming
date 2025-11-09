@@ -38,8 +38,8 @@ struct TargetWeightManagement {
       }
       const service = await getTargetWeightService(context as unknown as common.Context);
       if (service) {
-        this.currentTarget = await service.getCurrentTarget();
         this.targetHistory = await service.getTargetWeightHistory(20);
+        this.currentTarget = this.targetHistory.length > 0 ? this.targetHistory[0] : null;
         hilog.info(DOMAIN, TAG, `Loaded ${this.targetHistory.length} target records`);
       }
     } catch (e) {
@@ -157,7 +157,7 @@ struct TargetWeightManagement {
             .fontSize(AppText.FONT_SIZE_BODY)
             .fontColor(AppColors.GRAY)
         } else {
-          Scroll() {
+          Scroller() {
             Column({ space: AppDimensions.MARGIN_MEDIUM }) {
               // 当前目标卡片
               if (this.currentTarget) {
