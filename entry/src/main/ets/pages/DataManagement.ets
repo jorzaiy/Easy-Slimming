@@ -10,6 +10,7 @@ import { getAppDao } from '../common/Global';
 import { getTargetWeightService } from '../data/TargetWeightService';
 import { getDataExportImportService, DataExportImportService } from '../data/DataExportImportService';
 import { common } from '@kit.AbilityKit';
+import { resolveAbilityContext } from '../common/ContextUtils';
 import fs from '@ohos.file.fs';
 import picker from '@ohos.file.picker';
 import relationalStore from '@ohos.data.relationalStore';
@@ -31,6 +32,7 @@ struct DataManagement {
   @State conflictResolution: 'override' | 'merge' | 'skip' = 'skip';
   @State isProcessing: boolean = false;
   @State progressMessage: string = '';
+  private scroller: Scroller = new Scroller();
 
   async aboutToAppear() {
   }
@@ -55,8 +57,9 @@ struct DataManagement {
         throw new Error('Export service not initialized');
       }
 
-      const context = this.getUIContext();
-      const targetService = context ? await getTargetWeightService(context as unknown as common.Context) : null;
+      const uiContext = this.getUIContext();
+      const abilityContext = uiContext ? resolveAbilityContext(uiContext) : null;
+      const targetService = abilityContext ? await getTargetWeightService(abilityContext) : null;
       const targets = targetService ? await targetService.getAllTargets() : undefined;
 
       const options = {
@@ -192,7 +195,7 @@ struct DataManagement {
   private async saveExportFile(fileName: string, content: string): Promise<void> {
     try {
       const filePath = `/data/storage/el2/base/files/${fileName}`;
-      const file = fs.openSync(filePath, fs.OpenMode.CREATE | fs.OpenMode.WRITE);
+      const file = fs.openSync(filePath, fs.OpenMode.CREATE | fs.OpenMode.WRITE_ONLY);
       try {
         fs.writeSync(file.fd, content);
       } finally {
@@ -237,7 +240,7 @@ struct DataManagement {
         .backgroundColor(AppColors.WHITE)
         .shadow({ radius: 2, color: Color.Gray, offsetX: 0, offsetY: 1 })
 
-        Scroller() {
+        Scroll(this.scroller) {
           Column({ space: AppDimensions.MARGIN_LARGE }) {
             // 导出功能卡片
             Column({ space: AppDimensions.MARGIN_MEDIUM }) {

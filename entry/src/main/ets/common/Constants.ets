@@ -6,6 +6,7 @@
 // 颜色常量
 export class AppColors {
   static readonly PRIMARY = '#007DFF';
+  static readonly SECONDARY = '#6C757D';
   static readonly WHITE = '#FFFFFF';
   static readonly BACKGROUND = '#F1F3F5';
   static readonly GRAY = '#666666';

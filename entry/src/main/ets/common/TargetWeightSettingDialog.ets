@@ -4,6 +4,7 @@
 import { getTargetWeightService, TargetWeightRecord } from '../data/TargetWeightService';
 import { AppColors, AppDimensions, AppText } from './Constants';
 import { common } from '@kit.AbilityKit';
+import { resolveAbilityContext } from './ContextUtils';
 import promptAction from '@ohos.promptAction';
 import hilog from '@ohos.hilog';
 import { LogConstants } from './Constants';
@@ -23,6 +24,7 @@ export struct TargetWeightSettingDialog {
   @State hasTargetDate: boolean = false;
   @State notes: string = '';
   @State isSaving: boolean = false;
+  private scroller: Scroller = new Scroller();
 
   // 预设目标值
   private readonly presets: readonly number[] = [60, 65, 70, 75, 80];
@@ -63,8 +65,17 @@ export struct TargetWeightSettingDialog {
       return;
     }
 
-    const context = this.getUIContext();
-    if (!context) {
+    const uiContext = this.getUIContext();
+    if (!uiContext) {
+      promptAction.showToast({
+        message: '保存失败，请重试',
+        duration: 2000
+      });
+      return;
+    }
+
+    const abilityContext = resolveAbilityContext(uiContext);
+    if (!abilityContext) {
       promptAction.showToast({
         message: '保存失败，请重试',
         duration: 2000
@@ -74,7 +85,7 @@ export struct TargetWeightSettingDialog {
 
     this.isSaving = true;
     try {
-      const service = await getTargetWeightService(context as unknown as common.Context);
+      const service = await getTargetWeightService(abilityContext);
       if (!service) {
         throw new Error('Service not initialized');
       }
@@ -134,7 +145,7 @@ export struct TargetWeightSettingDialog {
             .textAlign(TextAlign.Center)
 
           // 内容区
-          Scroller() {
+          Scroll(this.scroller) {
            Column({ space: AppDimensions.MARGIN_MEDIUM }) {
               // 预设目标值
               Column({ space: AppDimensions.MARGIN_SMALL }) {
