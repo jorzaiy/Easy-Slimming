@@ -25,7 +25,7 @@ export struct TargetWeightSettingDialog {
   @State isSaving: boolean = false;
 
   // 预设目标值
-  private presets: number[] = [60, 65, 70, 75, 80];
+  private readonly presets: readonly number[] = [60, 65, 70, 75, 80];
 
   aboutToAppear() {
     if (this.currentTarget) {
@@ -134,8 +134,8 @@ export struct TargetWeightSettingDialog {
             .textAlign(TextAlign.Center)
 
           // 内容区
-          Scroll() {
-            Column({ space: AppDimensions.MARGIN_MEDIUM }) {
+          Scroller() {
+           Column({ space: AppDimensions.MARGIN_MEDIUM }) {
               // 预设目标值
               Column({ space: AppDimensions.MARGIN_SMALL }) {
                 Text('快速选择')
@@ -299,8 +299,7 @@ export struct TargetWeightSettingDialog {
           .width('100%')
         }
         .width('85%')
-        .height('auto')
-        .maxHeight('90%')
+        .height('90%')
         .backgroundColor(AppColors.WHITE)
         .borderRadius(AppDimensions.BORDER_RADIUS)
         .padding(AppDimensions.PADDING_LARGE)

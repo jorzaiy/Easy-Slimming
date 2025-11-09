@@ -213,6 +213,53 @@ export class TargetWeightService {
       return false;
     }
   }
+
+  async getTargetWeightHistory(limit: number): Promise<TargetWeightRecord[]> {
+    try {
+      let predicates = new relationalStore.RdbPredicates(TARGET_WEIGHT_TABLE);
+      predicates.orderByDesc('setDate');
+      predicates.limitAs(limit);
+
+      let resultSet = await this.rdbStore.query(predicates);
+      let targets: TargetWeightRecord[] = [];
+
+      if (resultSet && resultSet.rowCount > 0) {
+        while (resultSet.goToNextRow()) {
+          const id = resultSet.getLong(resultSet.getColumnIndex('id'));
+          const targetWeight = resultSet.getDouble(resultSet.getColumnIndex('targetWeight'));
+          const setDate = resultSet.getLong(resultSet.getColumnIndex('setDate'));
+          const targetDate = resultSet.getLong(resultSet.getColumnIndex('targetDate'));
+          const notes = resultSet.getString(resultSet.getColumnIndex('notes'));
+
+          targets.push({
+            id,
+            targetWeight,
+            setDate,
+            targetDate: targetDate || undefined,
+            notes: notes || undefined
+          });
+        }
+      }
+
+      if (resultSet) {
+        resultSet.close();
+      }
+
+      hilog.info(DOMAIN, TAG, `Queried ${targets.length} target weight records from history.`);
+      return targets;
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to query target weight history, cause: ${e}`);
+      return [];
+    }
+  }
+
+  async updateTargetWeight(id: number, weight: number, targetDate?: number, notes?: string): Promise<boolean> {
+    return this.updateTarget(id, weight, targetDate, notes);
+  }
+
+  async deleteTargetWeight(id: number): Promise<boolean> {
+    return this.deleteTarget(id);
+  }
 }
 
 let targetWeightService: TargetWeightService | null = null;
