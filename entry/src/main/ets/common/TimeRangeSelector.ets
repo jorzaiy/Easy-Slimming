@@ -5,12 +5,17 @@ import { AppColors, AppDimensions, AppText } from './Constants';
 
 export type TimeRange = 'all' | 'month' | 'week' | '7days' | '30days';
 
+export interface TimeRangeOption {
+  value: TimeRange;
+  label: string;
+}
+
 @Component
 export struct TimeRangeSelector {
   @Prop selectedRange: TimeRange;
   @Prop onRangeChange: (range: TimeRange) => void;
 
-  private ranges: { value: TimeRange; label: string }[] = [
+  private ranges: readonly TimeRangeOption[] = [
     { value: 'all', label: '全部' },
     { value: 'month', label: '本月' },
     { value: 'week', label: '本周' },
@@ -20,7 +25,7 @@ export struct TimeRangeSelector {
 
   build() {
     Row({ space: AppDimensions.MARGIN_SMALL }) {
-      ForEach(this.ranges, (range) => {
+      ForEach(this.ranges, (range: TimeRangeOption) => {
         Button(range.label)
           .type(ButtonType.Normal)
           .height(32)
