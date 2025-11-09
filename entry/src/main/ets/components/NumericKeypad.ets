@@ -7,7 +7,7 @@ const TAG = LogConstants.TAG_PREFIX + 'NumericKeypad';
 
 /**
  * Callbacks for NumericKeypad component
- * 
+ *
  * Usage:
  * - onValueChange: Called when user enters/modifies a digit. Parent is responsible for range validation.
  * - onDelete: Called when delete (←) button is pressed.
@@ -25,9 +25,9 @@ export interface NumericKeypadCallbacks {
 
 /**
  * NumericKeypad Component
- * 
+ *
  * A reusable numeric input component with a 4×3 keypad layout plus control buttons.
- * 
+ *
  * Features:
  * - Digit input (0-9) with leading zero handling
  * - Decimal point support (single decimal point per value)
@@ -37,7 +37,7 @@ export interface NumericKeypadCallbacks {
  * - Cancel button (✗) to abort input
  * - Error message display with color highlighting
  * - Optional disabled state for all buttons
- * 
+ *
  * Behavior:
  * 1. Digit Entry: Automatically replaces leading zeros when new digit entered (except 0.x pattern)
  * 2. Decimal Point: Only one decimal point allowed; auto-prefixes "0." if entered without integer part
@@ -45,12 +45,12 @@ export interface NumericKeypadCallbacks {
  * 4. Clear (C): Resets displayValue and errorMessage, triggers onClear callback
  * 5. Cancel (✗): Clears everything and triggers onCancel callback
  * 6. Confirm (✓): Validates value is non-empty and within range, triggers onConfirm callback
- * 
+ *
  * Range Validation:
  * - Component performs basic checks (non-empty, valid number, within 0-200kg)
  * - Parent components should implement additional business logic validation
  * - Parent can set showErrorMessage to display custom error states
- * 
+ *
  * Props:
  * - callbacks: NumericKeypadCallbacks interface with optional handlers
  * - disabled: boolean to disable all button interactions
@@ -195,7 +195,6 @@ export struct NumericKeypad {
         }
         .width('100%')
         .justifyContent(FlexAlign.SpaceBetween)
-        .gap(10)
         .margin({ bottom: 10 })
 
         // Row 2: 4, 5, 6
@@ -215,7 +214,6 @@ export struct NumericKeypad {
         }
         .width('100%')
         .justifyContent(FlexAlign.SpaceBetween)
-        .gap(10)
         .margin({ bottom: 10 })
 
         // Row 3: 7, 8, 9
@@ -235,7 +233,6 @@ export struct NumericKeypad {
         }
         .width('100%')
         .justifyContent(FlexAlign.SpaceBetween)
-        .gap(10)
         .margin({ bottom: 10 })
 
         // Row 4: 0, ., delete (←)
@@ -275,7 +272,6 @@ export struct NumericKeypad {
         }
         .width('100%')
         .justifyContent(FlexAlign.SpaceBetween)
-        .gap(10)
         .margin({ bottom: 10 })
 
         // Row 5: confirm ✓, clear C, cancel ✗
@@ -315,7 +311,6 @@ export struct NumericKeypad {
         }
         .width('100%')
         .justifyContent(FlexAlign.SpaceBetween)
-        .gap(10)
       }
       .width('100%')
       .padding(AppDimensions.PADDING_MEDIUM)

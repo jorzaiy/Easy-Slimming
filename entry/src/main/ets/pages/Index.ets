@@ -7,6 +7,12 @@ import { WeightRecord } from '../model/WeightRecord';
 import { NumericKeypad } from '../components/NumericKeypad';
 import { getAppTargetWeightService } from '../common/Global';
 
+interface KeypadCallbacks {
+  onValueChange?: (value: string) => void;
+  onConfirm?: (value: string) => void;
+  onCancel?: () => void;
+}
+
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'Index';
 
@@ -18,7 +24,7 @@ struct Index {
   @State error: string = '';
   @State isSaving: boolean = false;
   @State currentTargetWeight: number = 70.0;
-  @Provide callbacks: any = {};
+  @Provide callbacks: KeypadCallbacks = {};
 
   async aboutToAppear() {
     await this.loadLatestRecord();
