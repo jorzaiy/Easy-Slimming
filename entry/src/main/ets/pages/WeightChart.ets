@@ -440,12 +440,7 @@ struct WeightChartPage {
       TargetWeightSettingDialog({
         isVisible: this.showSettingDialog,
         currentTarget: this.currentTarget,
-        onTargetChange: (target: TargetWeightRecord) => {
-          this.onTargetChange(target);
-        },
-        onDismiss: () => {
-          this.showSettingDialog = false;
-        }
+        dialogVisible: $showSettingDialog
       })
     }
     .width('100%')

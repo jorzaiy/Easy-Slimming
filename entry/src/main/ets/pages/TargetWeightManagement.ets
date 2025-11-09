@@ -321,12 +321,7 @@ struct TargetWeightManagement {
       TargetWeightSettingDialog({
         isVisible: this.showDialog,
         currentTarget: this.currentTarget,
-        onTargetChange: (target: TargetWeightRecord) => {
-          this.onTargetChange(target);
-        },
-        onDismiss: () => {
-          this.showDialog = false;
-        }
+        dialogVisible: $showDialog
       })
     }
     .width('100%')
