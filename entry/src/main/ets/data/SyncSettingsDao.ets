@@ -3,6 +3,7 @@
  * 管理同步配置的持久化
  */
 import relationalStore from '@ohos.data.relationalStore';
+import { ResolutionOption } from '../model/HealthSyncConflict';
 import { SyncSettings, SyncMode } from '../model/SyncSettings';
 import { SYNC_SETTINGS_TABLE } from './RdbHelper';
 import hilog from '@ohos.hilog';
@@ -125,7 +126,8 @@ export class SyncSettingsDao {
         let autoSyncEnabled = resultSet.getLong(resultSet.getColumnIndex('auto_sync_enabled')) === 1;
         let lastSyncTime = resultSet.getLong(resultSet.getColumnIndex('last_sync_time'));
         let syncOnAppStart = resultSet.getLong(resultSet.getColumnIndex('sync_on_app_start')) === 1;
-        let conflictResolution = resultSet.getString(resultSet.getColumnIndex('conflict_resolution')) as 'LOCAL' | 'HEALTH' | 'MERGE';
+        const conflictResolutionValue = resultSet.getString(resultSet.getColumnIndex('conflict_resolution')) || '';
+        const conflictResolution: ResolutionOption = SyncSettings.normalizeConflictResolution(conflictResolutionValue);
         let enableDetailedLogs = resultSet.getLong(resultSet.getColumnIndex('enable_detailed_logs')) === 1;
         let maxSyncRetries = resultSet.getLong(resultSet.getColumnIndex('max_sync_retries'));
         let requestTimeout = resultSet.getLong(resultSet.getColumnIndex('request_timeout'));
@@ -182,7 +184,8 @@ export class SyncSettingsDao {
           let autoSyncEnabled = resultSet.getLong(resultSet.getColumnIndex('auto_sync_enabled')) === 1;
           let lastSyncTime = resultSet.getLong(resultSet.getColumnIndex('last_sync_time'));
           let syncOnAppStart = resultSet.getLong(resultSet.getColumnIndex('sync_on_app_start')) === 1;
-          let conflictResolution = resultSet.getString(resultSet.getColumnIndex('conflict_resolution')) as 'LOCAL' | 'HEALTH' | 'MERGE';
+          const conflictResolutionValue = resultSet.getString(resultSet.getColumnIndex('conflict_resolution')) || '';
+          const conflictResolution: ResolutionOption = SyncSettings.normalizeConflictResolution(conflictResolutionValue);
           let enableDetailedLogs = resultSet.getLong(resultSet.getColumnIndex('enable_detailed_logs')) === 1;
           let maxSyncRetries = resultSet.getLong(resultSet.getColumnIndex('max_sync_retries'));
           let requestTimeout = resultSet.getLong(resultSet.getColumnIndex('request_timeout'));

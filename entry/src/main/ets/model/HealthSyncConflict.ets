@@ -23,7 +23,7 @@ export class HealthSyncConflict {
   id: number;
   conflictType: ConflictType;
   localRecord: WeightRecord;       // 本地记录
-  healthRecord: WeightRecord | any; // 鸿蒙健康记录（可能包含额外字段）
+  healthRecord: WeightRecord;         // 鸿蒙健康记录（可能包含额外字段）
   createdTime: number;             // 冲突检测时间
   resolvedTime?: number;           // 冲突解决时间
   resolutionOption?: ResolutionOption; // 选择的解决方案
@@ -32,7 +32,7 @@ export class HealthSyncConflict {
   constructor(
     conflictType: ConflictType,
     localRecord: WeightRecord,
-    healthRecord: WeightRecord | any,
+    healthRecord: WeightRecord,
     description: string,
     id?: number
   ) {

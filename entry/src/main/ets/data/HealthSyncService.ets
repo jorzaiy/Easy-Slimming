@@ -23,6 +23,8 @@ export interface SyncResult {
   conflictCount: number;
   errors: string[];
   duration: number;
+  status: SyncStatus;
+  direction: SyncDirection;
   message: string;
 }
 
@@ -114,10 +116,13 @@ export class HealthSyncService {
       conflictCount: 0,
       errors: [],
       duration: 0,
+      status: SyncStatus.PENDING,
+      direction: SyncDirection.TO_HEALTH,
       message: ''
     };
 
     if (this.isSyncing) {
+      result.status = SyncStatus.SYNCING;
       result.message = '同步正在进行中';
       return result;
     }
@@ -141,35 +146,62 @@ export class HealthSyncService {
       this.syncProgress.total = records.length;
 
       for (const record of records) {
-        try {
-          const syncRecord = new HealthSyncRecord(
-            record.id,
-            SyncDirection.TO_HEALTH
-          );
+        const syncRecord = new HealthSyncRecord(
+          record.id,
+          SyncDirection.TO_HEALTH,
+          undefined,
+          SyncStatus.SYNCING,
+          Date.now()
+        );
+        let insertedId = -1;
 
-          // 模拟健康应用同步（实际需要调用真实API）
+        try {
+          insertedId = await this.syncRecordDao.insert(syncRecord);
+          if (insertedId > 0) {
+            syncRecord.id = insertedId;
+          }
+
           const syncSuccess = await this.performHealthAppSync(record, syncRecord);
+          syncRecord.endTime = Date.now();
 
           if (syncSuccess) {
             syncRecord.status = SyncStatus.SUCCESS;
-            syncRecord.endTime = Date.now();
-            await this.syncRecordDao.insert(syncRecord);
             result.syncedCount++;
           } else {
             syncRecord.status = SyncStatus.FAILED;
-            syncRecord.endTime = Date.now();
             syncRecord.errorMessage = '同步到鸿蒙健康应用失败';
-            await this.syncRecordDao.insert(syncRecord);
             result.failedCount++;
             result.errors.push(`Record ${record.id}: ${syncRecord.errorMessage}`);
+            this.syncProgress.failed++;
           }
-        } catch (e) {
+        } catch (error) {
+          syncRecord.status = SyncStatus.FAILED;
+          syncRecord.endTime = Date.now();
+          const errorMessage = `同步到鸿蒙健康应用失败: ${error}`;
+          syncRecord.errorMessage = errorMessage;
           result.failedCount++;
-          result.errors.push(`Record ${record.id}: ${e}`);
-        }
+          result.errors.push(`Record ${record.id}: ${error}`);
+          this.syncProgress.failed++;
+          hilog.error(DOMAIN, TAG, errorMessage);
+        } finally {
+          try {
+            if (syncRecord.id > 0) {
+              await this.syncRecordDao.update(syncRecord);
+            } else if (insertedId <= 0) {
+              const fallbackId = await this.syncRecordDao.insert(syncRecord);
+              if (fallbackId > 0) {
+                syncRecord.id = fallbackId;
+              }
+            }
+          } catch (persistError) {
+            hilog.error(DOMAIN, TAG, `Failed to persist sync record, cause: ${persistError}`);
+          }
 
-        this.syncProgress.completed++;
-        this.syncProgress.percentage = Math.round((this.syncProgress.completed / this.syncProgress.total) * 100);
+          this.syncProgress.completed++;
+          this.syncProgress.percentage = this.syncProgress.total > 0
+            ? Math.round((this.syncProgress.completed / this.syncProgress.total) * 100)
+            : 0;
+        }
       }
 
       if (this.syncSettings) {
@@ -179,14 +211,20 @@ export class HealthSyncService {
 
       result.success = result.failedCount === 0;
       result.duration = Date.now() - startTime;
+      result.status = result.success ? SyncStatus.SUCCESS : SyncStatus.FAILED;
       result.message = `同步完成: ${result.syncedCount}条成功, ${result.failedCount}条失败`;
       hilog.info(DOMAIN, TAG, `Sync to health completed: ${result.message}`);
     } catch (e) {
       result.errors.push(`Sync failed: ${e}`);
       result.message = `同步失败: ${e}`;
+      result.status = SyncStatus.FAILED;
+      result.duration = Date.now() - startTime;
       hilog.error(DOMAIN, TAG, `Failed to sync to health, cause: ${e}`);
     } finally {
       this.isSyncing = false;
+      if (result.duration === 0) {
+        result.duration = Date.now() - startTime;
+      }
     }
 
     return result;
@@ -204,10 +242,13 @@ export class HealthSyncService {
       conflictCount: 0,
       errors: [],
       duration: 0,
+      status: SyncStatus.PENDING,
+      direction: SyncDirection.FROM_HEALTH,
       message: ''
     };
 
     if (this.isSyncing) {
+      result.status = SyncStatus.SYNCING;
       result.message = '同步正在进行中';
       return result;
     }
@@ -216,7 +257,6 @@ export class HealthSyncService {
     this.syncProgress = { total: 0, completed: 0, failed: 0, percentage: 0 };
 
     try {
-      // 模拟从健康应用获取数据
       const healthRecords = await this.fetchFromHealthApp();
       this.syncProgress.total = healthRecords.length;
 
@@ -225,19 +265,37 @@ export class HealthSyncService {
           const localRecord = await this.findDuplicateRecord(healthRecord);
 
           if (localRecord) {
-            // 检测冲突
             const conflict = this.detectConflict(localRecord, healthRecord);
             if (conflict) {
               this.conflicts.set(localRecord.id, conflict);
               result.conflictCount++;
+
+              const conflictRecord = new HealthSyncRecord(
+                localRecord.id,
+                SyncDirection.FROM_HEALTH,
+                undefined,
+                SyncStatus.CONFLICT,
+                Date.now()
+              );
+              conflictRecord.endTime = Date.now();
+              conflictRecord.errorMessage = conflict.description;
+              await this.syncRecordDao.insert(conflictRecord);
               hilog.info(DOMAIN, TAG, `Conflict detected for record ${localRecord.id}`);
             } else {
-              // 无冲突，更新本地记录
+              healthRecord.id = localRecord.id;
               await this.weightRecordDao.update(healthRecord);
+              const successRecord = new HealthSyncRecord(
+                localRecord.id,
+                SyncDirection.FROM_HEALTH,
+                undefined,
+                SyncStatus.SUCCESS,
+                Date.now()
+              );
+              successRecord.endTime = Date.now();
+              await this.syncRecordDao.insert(successRecord);
               result.syncedCount++;
             }
           } else {
-            // 新记录，直接插入
             const insertId = await this.weightRecordDao.insert(healthRecord);
             if (insertId > 0) {
               const syncRecord = new HealthSyncRecord(
@@ -247,20 +305,26 @@ export class HealthSyncService {
                 SyncStatus.SUCCESS,
                 Date.now()
               );
+              syncRecord.endTime = Date.now();
               await this.syncRecordDao.insert(syncRecord);
               result.syncedCount++;
             } else {
               result.failedCount++;
-              result.errors.push(`Failed to insert record from health app`);
+              result.errors.push('Failed to insert record from health app');
+              this.syncProgress.failed++;
             }
           }
-        } catch (e) {
+        } catch (error) {
           result.failedCount++;
-          result.errors.push(`Record processing failed: ${e}`);
+          result.errors.push(`Record processing failed: ${error}`);
+          this.syncProgress.failed++;
+          hilog.error(DOMAIN, TAG, `Sync from health processing failed, cause: ${error}`);
         }
 
         this.syncProgress.completed++;
-        this.syncProgress.percentage = Math.round((this.syncProgress.completed / this.syncProgress.total) * 100);
+        this.syncProgress.percentage = this.syncProgress.total > 0
+          ? Math.round((this.syncProgress.completed / this.syncProgress.total) * 100)
+          : 0;
       }
 
       if (this.syncSettings) {
@@ -270,14 +334,24 @@ export class HealthSyncService {
 
       result.success = result.failedCount === 0;
       result.duration = Date.now() - startTime;
+      if (result.conflictCount > 0) {
+        result.status = SyncStatus.CONFLICT;
+      } else {
+        result.status = result.success ? SyncStatus.SUCCESS : SyncStatus.FAILED;
+      }
       result.message = `导入完成: ${result.syncedCount}条成功, ${result.failedCount}条失败, ${result.conflictCount}条冲突`;
       hilog.info(DOMAIN, TAG, `Sync from health completed: ${result.message}`);
     } catch (e) {
       result.errors.push(`Sync failed: ${e}`);
       result.message = `导入失败: ${e}`;
+      result.status = SyncStatus.FAILED;
+      result.duration = Date.now() - startTime;
       hilog.error(DOMAIN, TAG, `Failed to sync from health, cause: ${e}`);
     } finally {
       this.isSyncing = false;
+      if (result.duration === 0) {
+        result.duration = Date.now() - startTime;
+      }
     }
 
     return result;
@@ -287,29 +361,92 @@ export class HealthSyncService {
    * 双向同步
    */
   async bidirectionalSync(): Promise<SyncResult> {
+    const startTime = Date.now();
     try {
       const syncToResult = await this.syncToHealth();
       const syncFromResult = await this.syncFromHealth();
 
-      return {
-        success: syncToResult.success && syncFromResult.success,
+      const success = syncToResult.success && syncFromResult.success;
+      const totalConflicts = syncToResult.conflictCount + syncFromResult.conflictCount;
+      const totalFailed = syncToResult.failedCount + syncFromResult.failedCount;
+      const mergedErrors = [...syncToResult.errors, ...syncFromResult.errors];
+      const mergedDuration = syncToResult.duration + syncFromResult.duration;
+
+      const result: SyncResult = {
+        success,
         syncedCount: syncToResult.syncedCount + syncFromResult.syncedCount,
-        failedCount: syncToResult.failedCount + syncFromResult.failedCount,
-        conflictCount: syncFromResult.conflictCount,
-        errors: [...syncToResult.errors, ...syncFromResult.errors],
-        duration: syncToResult.duration + syncFromResult.duration,
-        message: `双向同步完成: ${syncToResult.message}, ${syncFromResult.message}`
+        failedCount: totalFailed,
+        conflictCount: totalConflicts,
+        errors: mergedErrors,
+        duration: mergedDuration,
+        status: SyncStatus.PENDING,
+        direction: SyncDirection.BIDIRECTIONAL,
+        message: ''
       };
+
+      if (totalFailed > 0) {
+        result.status = SyncStatus.FAILED;
+      } else if (totalConflicts > 0) {
+        result.status = SyncStatus.CONFLICT;
+      } else if (success) {
+        result.status = SyncStatus.SUCCESS;
+      } else {
+        result.status = SyncStatus.FAILED;
+      }
+
+      result.message = success
+        ? `双向同步完成: ${syncToResult.message}; ${syncFromResult.message}`
+        : `双向同步完成但存在问题: ${syncToResult.message}; ${syncFromResult.message}`;
+
+      try {
+        const summaryRecord = new HealthSyncRecord(
+          0,
+          SyncDirection.BIDIRECTIONAL,
+          undefined,
+          result.status,
+          startTime
+        );
+        summaryRecord.endTime = startTime + result.duration;
+        if (result.status === SyncStatus.FAILED && result.errors.length > 0) {
+          summaryRecord.errorMessage = result.errors.join('; ');
+        } else if (result.status === SyncStatus.CONFLICT) {
+          summaryRecord.errorMessage = '同步过程中存在冲突，需手动处理';
+        }
+        await this.syncRecordDao.insert(summaryRecord);
+      } catch (persistError) {
+        hilog.error(DOMAIN, TAG, `Failed to persist bidirectional sync summary, cause: ${persistError}`);
+      }
+
+      return result;
     } catch (e) {
-      return {
+      const errorResult: SyncResult = {
         success: false,
         syncedCount: 0,
         failedCount: 0,
         conflictCount: 0,
         errors: [`Bidirectional sync failed: ${e}`],
-        duration: 0,
+        duration: Date.now() - startTime,
+        status: SyncStatus.FAILED,
+        direction: SyncDirection.BIDIRECTIONAL,
         message: `双向同步失败: ${e}`
       };
+
+      try {
+        const summaryRecord = new HealthSyncRecord(
+          0,
+          SyncDirection.BIDIRECTIONAL,
+          undefined,
+          SyncStatus.FAILED,
+          startTime
+        );
+        summaryRecord.endTime = Date.now();
+        summaryRecord.errorMessage = `双向同步失败: ${e}`;
+        await this.syncRecordDao.insert(summaryRecord);
+      } catch (persistError) {
+        hilog.error(DOMAIN, TAG, `Failed to record bidirectional sync failure, cause: ${persistError}`);
+      }
+
+      return errorResult;
     }
   }
 
