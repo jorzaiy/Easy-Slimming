@@ -163,11 +163,11 @@ export struct NumericKeypad {
         }
 
         Text(this.displayValue || '0')
-          .fontSize(48)
+          .fontSize(36)
           .fontWeight(FontWeight.Bold)
           .textAlign(TextAlign.Center)
           .width('100%')
-          .padding({ top: 20, bottom: 20 })
+          .padding({ top: 15, bottom: 15 })
           .fontColor(this.errorMessage ? AppColors.ERROR : AppColors.BLUE)
       }
       .width('100%')
@@ -176,143 +176,143 @@ export struct NumericKeypad {
       .padding(AppDimensions.PADDING_MEDIUM)
       .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
 
-      // Number pad grid
-      Column() {
+      // Number pad grid - 极简布局
+      Grid() {
         // Row 1: 1, 2, 3
-        Row() {
-          ForEach(['1', '2', '3'], (key: string) => {
+        ForEach(['1', '2', '3'], (key: string) => {
+          GridItem() {
             Button(key)
               .width('100%')
-              .height(60)
-              .fontSize(AppText.FONT_SIZE_BODY)
+              .height(38)
+              .fontSize(13)
               .fontWeight(FontWeight.Bold)
               .backgroundColor(AppColors.PRIMARY)
               .fontColor(AppColors.WHITE)
-              .borderRadius(8)
+              .borderRadius(6)
               .enabled(!this.disabled)
               .onClick(() => this.handleButtonClick(key))
-          }, (key: string) => key)
-        }
-        .width('100%')
-        .justifyContent(FlexAlign.SpaceBetween)
-        .margin({ bottom: 10 })
+          }
+        }, (key: string) => key)
 
         // Row 2: 4, 5, 6
-        Row() {
-          ForEach(['4', '5', '6'], (key: string) => {
+        ForEach(['4', '5', '6'], (key: string) => {
+          GridItem() {
             Button(key)
               .width('100%')
-              .height(60)
-              .fontSize(AppText.FONT_SIZE_BODY)
+              .height(38)
+              .fontSize(13)
               .fontWeight(FontWeight.Bold)
               .backgroundColor(AppColors.PRIMARY)
               .fontColor(AppColors.WHITE)
-              .borderRadius(8)
+              .borderRadius(6)
               .enabled(!this.disabled)
               .onClick(() => this.handleButtonClick(key))
-          }, (key: string) => key)
-        }
-        .width('100%')
-        .justifyContent(FlexAlign.SpaceBetween)
-        .margin({ bottom: 10 })
+          }
+        }, (key: string) => key)
 
         // Row 3: 7, 8, 9
-        Row() {
-          ForEach(['7', '8', '9'], (key: string) => {
+        ForEach(['7', '8', '9'], (key: string) => {
+          GridItem() {
             Button(key)
               .width('100%')
-              .height(60)
-              .fontSize(AppText.FONT_SIZE_BODY)
+              .height(38)
+              .fontSize(13)
               .fontWeight(FontWeight.Bold)
               .backgroundColor(AppColors.PRIMARY)
               .fontColor(AppColors.WHITE)
-              .borderRadius(8)
+              .borderRadius(6)
               .enabled(!this.disabled)
               .onClick(() => this.handleButtonClick(key))
-          }, (key: string) => key)
-        }
-        .width('100%')
-        .justifyContent(FlexAlign.SpaceBetween)
-        .margin({ bottom: 10 })
+          }
+        }, (key: string) => key)
 
         // Row 4: 0, ., delete (←)
-        Row() {
+        GridItem() {
           Button('0')
             .width('100%')
-            .height(60)
-            .fontSize(AppText.FONT_SIZE_BODY)
+            .height(38)
+            .fontSize(13)
             .fontWeight(FontWeight.Bold)
             .backgroundColor(AppColors.PRIMARY)
             .fontColor(AppColors.WHITE)
-            .borderRadius(8)
+            .borderRadius(6)
             .enabled(!this.disabled)
             .onClick(() => this.handleButtonClick('0'))
+        }
 
+        GridItem() {
           Button('.')
             .width('100%')
-            .height(60)
-            .fontSize(AppText.FONT_SIZE_BODY)
+            .height(38)
+            .fontSize(13)
             .fontWeight(FontWeight.Bold)
             .backgroundColor(AppColors.PRIMARY)
             .fontColor(AppColors.WHITE)
-            .borderRadius(8)
+            .borderRadius(6)
             .enabled(!this.disabled)
             .onClick(() => this.handleButtonClick('.'))
+        }
 
-          Button('← 删除')
+        GridItem() {
+          Button('←')
             .width('100%')
-            .height(60)
-            .fontSize(AppText.FONT_SIZE_BODY)
+            .height(38)
+            .fontSize(13)
             .fontWeight(FontWeight.Bold)
             .backgroundColor(AppColors.WARNING)
             .fontColor(AppColors.WHITE)
-            .borderRadius(8)
+            .borderRadius(6)
             .enabled(!this.disabled)
             .onClick(() => this.handleButtonClick('delete'))
         }
-        .width('100%')
-        .justifyContent(FlexAlign.SpaceBetween)
-        .margin({ bottom: 10 })
 
         // Row 5: confirm ✓, clear C, cancel ✗
-        Row() {
-          Button('✓ 确认')
+        GridItem() {
+          Button('✓')
             .width('100%')
-            .height(60)
-            .fontSize(AppText.FONT_SIZE_BODY)
+            .height(38)
+            .fontSize(13)
             .fontWeight(FontWeight.Bold)
             .backgroundColor(AppColors.SUCCESS)
             .fontColor(AppColors.WHITE)
-            .borderRadius(8)
+            .borderRadius(6)
             .enabled(!this.disabled)
             .onClick(() => this.handleConfirm())
+        }
 
-          Button('C 清空')
+        GridItem() {
+          Button('C')
             .width('100%')
-            .height(60)
-            .fontSize(AppText.FONT_SIZE_BODY)
+            .height(38)
+            .fontSize(13)
             .fontWeight(FontWeight.Bold)
             .backgroundColor(AppColors.SECONDARY)
             .fontColor(AppColors.WHITE)
-            .borderRadius(8)
+            .borderRadius(6)
             .enabled(!this.disabled)
             .onClick(() => this.handleButtonClick('clear'))
+        }
 
-          Button('✗ 取消')
+        GridItem() {
+          Button('✗')
             .width('100%')
-            .height(60)
-            .fontSize(AppText.FONT_SIZE_BODY)
+            .height(38)
+            .fontSize(13)
             .fontWeight(FontWeight.Bold)
             .backgroundColor(AppColors.ERROR)
             .fontColor(AppColors.WHITE)
-            .borderRadius(8)
+            .borderRadius(6)
             .enabled(!this.disabled)
             .onClick(() => this.handleCancel())
         }
-        .width('100%')
-        .justifyContent(FlexAlign.SpaceBetween)
       }
-      .width('100%')
+      .columnsTemplate('1fr 1fr 1fr')
+      .rowsTemplate('1fr 1fr 1fr 1fr 1fr')
+      .columnsGap(3)
+      .rowsGap(3)
+      .width('90%')
+      .height(202) // 5行×38vp + 4×3vp间距 = 202vp
+      .margin({ left: 5, right: 5 })
       .padding(AppDimensions.PADDING_MEDIUM)
       .backgroundColor(AppColors.WHITE)
       .borderRadius(AppDimensions.BORDER_RADIUS)
