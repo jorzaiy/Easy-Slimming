@@ -45,7 +45,7 @@ export class WeightRecordDao {
       };
       
       await this.rdbStore.executeSql('BEGIN TRANSACTION');
-      let id = await this.rdbStore.insert(TABLE_NAME, valueBucket);
+      let id: number = await this.rdbStore.insert(TABLE_NAME, valueBucket);
       await this.rdbStore.executeSql('COMMIT');
       hilog.info(DOMAIN, TAG, `Successfully inserted record with id: ${id}`);
       return id;
@@ -62,17 +62,17 @@ export class WeightRecordDao {
 
   // 查询所有数据
   async queryAll(): Promise<WeightRecord[]> {
-    let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(TABLE_NAME);
     predicates.orderByDesc('date');
     try {
       let resultSet = await this.rdbStore.query(predicates);
       let records: WeightRecord[] = [];
       if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
-          let id = resultSet.getLong(resultSet.getColumnIndex('id'));
-          let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
-          let date = resultSet.getLong(resultSet.getColumnIndex('date'));
-          let notes = resultSet.getString(resultSet.getColumnIndex('notes'));
+          let id: number = resultSet.getLong(resultSet.getColumnIndex('id'));
+          let weight: number = resultSet.getDouble(resultSet.getColumnIndex('weight'));
+          let date: number = resultSet.getLong(resultSet.getColumnIndex('date'));
+          let notes: string = resultSet.getString(resultSet.getColumnIndex('notes'));
           records.push(new WeightRecord(weight, date, id, notes));
         }
       }
@@ -94,10 +94,10 @@ export class WeightRecordDao {
       'date': record.date,
       'notes': record.notes || ''
     };
-    let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(TABLE_NAME);
     predicates.equalTo('id', record.id);
     try {
-      let rows = await this.rdbStore.update(valueBucket, predicates);
+      let rows: number = await this.rdbStore.update(valueBucket, predicates);
       hilog.info(DOMAIN, TAG, `Updated ${rows} records.`);
       return rows;
     } catch (e) {
@@ -112,14 +112,14 @@ export class WeightRecordDao {
       await this.rdbStore.executeSql('BEGIN TRANSACTION');
       
       // 先删除关联的备注
-      let remarkPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+      let remarkPredicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
       remarkPredicates.equalTo('record_id', id);
       await this.rdbStore.delete(remarkPredicates);
       
       // 再删除体重记录
-      let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+      let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(TABLE_NAME);
       predicates.equalTo('id', id);
-      let rows = await this.rdbStore.delete(predicates);
+      let rows: number = await this.rdbStore.delete(predicates);
       
       await this.rdbStore.executeSql('COMMIT');
       hilog.info(DOMAIN, TAG, `Deleted ${rows} records and associated remarks.`);
@@ -137,17 +137,17 @@ export class WeightRecordDao {
 
   // 根据ID查询单条记录
   async queryById(id: number): Promise<WeightRecord | null> {
-    let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(TABLE_NAME);
     predicates.equalTo('id', id);
     try {
       let resultSet = await this.rdbStore.query(predicates);
       let record: WeightRecord | null = null;
       if (resultSet && resultSet.rowCount > 0) {
         if (resultSet.goToFirstRow()) {
-          let recordId = resultSet.getLong(resultSet.getColumnIndex('id'));
-          let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
-          let date = resultSet.getLong(resultSet.getColumnIndex('date'));
-          let notes = resultSet.getString(resultSet.getColumnIndex('notes'));
+          let recordId: number = resultSet.getLong(resultSet.getColumnIndex('id'));
+          let weight: number = resultSet.getDouble(resultSet.getColumnIndex('weight'));
+          let date: number = resultSet.getLong(resultSet.getColumnIndex('date'));
+          let notes: string = resultSet.getString(resultSet.getColumnIndex('notes'));
           record = new WeightRecord(weight, date, recordId, notes);
         }
       }
@@ -164,7 +164,7 @@ export class WeightRecordDao {
 
   // 根据日期范围查询记录
   async queryByDateRange(startDate: number, endDate: number): Promise<WeightRecord[]> {
-    let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(TABLE_NAME);
     predicates.between('date', startDate, endDate);
     predicates.orderByAsc('date');
     try {
@@ -172,10 +172,10 @@ export class WeightRecordDao {
       let records: WeightRecord[] = [];
       if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
-          let id = resultSet.getLong(resultSet.getColumnIndex('id'));
-          let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
-          let date = resultSet.getLong(resultSet.getColumnIndex('date'));
-          let notes = resultSet.getString(resultSet.getColumnIndex('notes'));
+          let id: number = resultSet.getLong(resultSet.getColumnIndex('id'));
+          let weight: number = resultSet.getDouble(resultSet.getColumnIndex('weight'));
+          let date: number = resultSet.getLong(resultSet.getColumnIndex('date'));
+          let notes: string = resultSet.getString(resultSet.getColumnIndex('notes'));
           records.push(new WeightRecord(weight, date, id, notes));
         }
       }
@@ -192,7 +192,7 @@ export class WeightRecordDao {
 
   // 获取最近的N条记录
   async queryRecentRecords(limit: number): Promise<WeightRecord[]> {
-    let predicates = new relationalStore.RdbPredicates(TABLE_NAME);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(TABLE_NAME);
     predicates.orderByDesc('date');
     predicates.limitAs(limit);
     try {
@@ -200,10 +200,10 @@ export class WeightRecordDao {
       let records: WeightRecord[] = [];
       if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
-          let id = resultSet.getLong(resultSet.getColumnIndex('id'));
-          let weight = resultSet.getDouble(resultSet.getColumnIndex('weight'));
-          let date = resultSet.getLong(resultSet.getColumnIndex('date'));
-          let notes = resultSet.getString(resultSet.getColumnIndex('notes'));
+          let id: number = resultSet.getLong(resultSet.getColumnIndex('id'));
+          let weight: number = resultSet.getDouble(resultSet.getColumnIndex('weight'));
+          let date: number = resultSet.getLong(resultSet.getColumnIndex('date'));
+          let notes: string = resultSet.getString(resultSet.getColumnIndex('notes'));
           records.push(new WeightRecord(weight, date, id, notes));
         }
       }
@@ -229,16 +229,16 @@ export class WeightRecordDao {
    */
   async addRemark(recordId: number, type: RemarkType, content: string): Promise<number> {
     try {
-      const remark = new Remark(recordId, type, content);
+      const remark: Remark = new Remark(recordId, type, content);
       const valueBucket: relationalStore.ValuesBucket = {
         'record_id': recordId,
-        'type': type,
+        'type': type as string,
         'content': content,
         'timestamp': remark.timestamp
       };
       
       await this.rdbStore.executeSql('BEGIN TRANSACTION');
-      let id = await this.rdbStore.insert(REMARKS_TABLE_NAME, valueBucket);
+      let id: number = await this.rdbStore.insert(REMARKS_TABLE_NAME, valueBucket);
       await this.rdbStore.executeSql('COMMIT');
       hilog.info(DOMAIN, TAG, `Successfully added remark with id: ${id} for record: ${recordId}`);
       return id;
@@ -259,7 +259,7 @@ export class WeightRecordDao {
    * @returns 备注列表
    */
   async queryRemarksByRecordId(recordId: number): Promise<Remark[]> {
-    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
     predicates.equalTo('record_id', recordId);
     predicates.orderByDesc('timestamp');
     try {
@@ -267,11 +267,11 @@ export class WeightRecordDao {
       let remarks: Remark[] = [];
       if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
-          let id = resultSet.getLong(resultSet.getColumnIndex('id'));
-          let rid = resultSet.getLong(resultSet.getColumnIndex('record_id'));
-          let type = resultSet.getString(resultSet.getColumnIndex('type')) as RemarkType;
-          let content = resultSet.getString(resultSet.getColumnIndex('content'));
-          let timestamp = resultSet.getLong(resultSet.getColumnIndex('timestamp'));
+          let id: number = resultSet.getLong(resultSet.getColumnIndex('id'));
+          let rid: number = resultSet.getLong(resultSet.getColumnIndex('record_id'));
+          let type: RemarkType = resultSet.getString(resultSet.getColumnIndex('type')) as RemarkType;
+          let content: string = resultSet.getString(resultSet.getColumnIndex('content'));
+          let timestamp: number = resultSet.getLong(resultSet.getColumnIndex('timestamp'));
           remarks.push(new Remark(rid, type, content, timestamp, id));
         }
       }
@@ -295,16 +295,16 @@ export class WeightRecordDao {
    */
   async updateRemark(remarkId: number, type: RemarkType, content: string): Promise<number> {
     try {
-      const timestamp = Date.now();
+      const timestamp: number = Date.now();
       const valueBucket: relationalStore.ValuesBucket = {
-        'type': type,
+        'type': type as string,
         'content': content,
         'timestamp': timestamp
       };
-      let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+      let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
       predicates.equalTo('id', remarkId);
       
-      let rows = await this.rdbStore.update(valueBucket, predicates);
+      let rows: number = await this.rdbStore.update(valueBucket, predicates);
       hilog.info(DOMAIN, TAG, `Updated ${rows} remark(s) with id: ${remarkId}.`);
       return rows;
     } catch (e) {
@@ -319,10 +319,10 @@ export class WeightRecordDao {
    * @returns 删除的行数
    */
   async deleteRemark(remarkId: number): Promise<number> {
-    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
     predicates.equalTo('id', remarkId);
     try {
-      let rows = await this.rdbStore.delete(predicates);
+      let rows: number = await this.rdbStore.delete(predicates);
       hilog.info(DOMAIN, TAG, `Deleted ${rows} remark(s) with id: ${remarkId}.`);
       return rows;
     } catch (e) {
@@ -337,10 +337,10 @@ export class WeightRecordDao {
    * @returns 删除的行数
    */
   async deleteRemarksByRecordId(recordId: number): Promise<number> {
-    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
     predicates.equalTo('record_id', recordId);
     try {
-      let rows = await this.rdbStore.delete(predicates);
+      let rows: number = await this.rdbStore.delete(predicates);
       hilog.info(DOMAIN, TAG, `Deleted ${rows} remark(s) for record id: ${recordId}.`);
       return rows;
     } catch (e) {
@@ -355,15 +355,15 @@ export class WeightRecordDao {
    * @returns 包含指定类型备注的体重记录ID列表
    */
   async queryRecordIdsByRemarkType(type: RemarkType): Promise<number[]> {
-    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
-    predicates.equalTo('type', type);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    predicates.equalTo('type', type as string);
     predicates.distinct('record_id');
     try {
       let resultSet = await this.rdbStore.query(predicates);
       let recordIds: number[] = [];
       if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
-          let recordId = resultSet.getLong(resultSet.getColumnIndex('record_id'));
+          let recordId: number = resultSet.getLong(resultSet.getColumnIndex('record_id'));
           recordIds.push(recordId);
         }
       }
@@ -384,7 +384,7 @@ export class WeightRecordDao {
    * @returns 包含关键词的备注对应的体重记录ID列表
    */
   async searchRecordIdsByRemarkContent(keyword: string): Promise<number[]> {
-    let predicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
+    let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
     predicates.contains('content', keyword);
     predicates.distinct('record_id');
     try {
@@ -392,7 +392,7 @@ export class WeightRecordDao {
       let recordIds: number[] = [];
       if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
-          let recordId = resultSet.getLong(resultSet.getColumnIndex('record_id'));
+          let recordId: number = resultSet.getLong(resultSet.getColumnIndex('record_id'));
           if (!recordIds.includes(recordId)) {
             recordIds.push(recordId);
           }
@@ -414,8 +414,8 @@ export class WeightRecordDao {
    * @returns 包含备注的体重记录对象
    */
   async queryWithRemarks(recordId: number): Promise<WeightRecordWithRemarks> {
-    const record = await this.queryById(recordId);
-    const remarks = await this.queryRemarksByRecordId(recordId);
+    const record: WeightRecord | null = await this.queryById(recordId);
+    const remarks: Remark[] = await this.queryRemarksByRecordId(recordId);
     
     hilog.info(DOMAIN, TAG, `Queried record ${recordId} with ${remarks.length} remarks.`);
     return { record, remarks };

@@ -3,7 +3,7 @@
  * 负责获取、计算和缓存统计数据
  */
 import { WeightRecord } from '../model/WeightRecord';
-import { WeightStatistics, StatisticsCalculator } from '../model/WeightStatistics';
+import { WeightStatistics, StatisticsCalculator, TrendData } from '../model/WeightStatistics';
 import { getWeightRecordDao } from './WeightRecordDao';
 import { common } from '@kit.AbilityKit';
 import hilog from '@ohos.hilog';
@@ -12,6 +12,14 @@ import preferences from '@ohos.data.preferences';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'StatisticsService';
+
+/**
+ * 时间范围接口
+ */
+export interface DateRange {
+  startDate: number;
+  endDate: number;
+}
 
 /**
  * 时间范围统计数据接口
@@ -101,30 +109,30 @@ export class StatisticsService {
   private static async getCachedStatistics(context: common.Context): Promise<WeightStatistics | null> {
     try {
       const dataStore = await preferences.getPreferences(context, 'weight_app_stats');
-      const cachedData = await dataStore.get(StatisticsService.CACHE_KEY, '') as string;
+      const cachedData: string = await dataStore.get(StatisticsService.CACHE_KEY, '') as string;
       
       if (!cachedData) {
         return null;
       }
 
-      const data = JSON.parse(cachedData);
+      const data: Record<string, any> = JSON.parse(cachedData);
       if (!data) {
         return null;
       }
       
       return new WeightStatistics(
-        data.currentWeight,
-        data.targetWeight,
-        data.weightLoss,
-        data.averageWeight,
-        data.bmi,
-        data.maxWeight,
-        data.minWeight,
-        data.totalRecords,
-        data.trend7Days,
-        data.trend30Days,
-        data.progressPercentage,
-        data.lastUpdated
+        data.currentWeight as number,
+        data.targetWeight as number,
+        data.weightLoss as number,
+        data.averageWeight as number,
+        data.bmi as number,
+        data.maxWeight as number,
+        data.minWeight as number,
+        data.totalRecords as number,
+        data.trend7Days as TrendData,
+        data.trend30Days as TrendData,
+        data.progressPercentage as number,
+        data.lastUpdated as number
       );
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to get cached statistics: ${e}`);
@@ -199,25 +207,27 @@ export class StatisticsService {
         throw new Error('Failed to get WeightRecordDao');
       }
 
-      const records = await dao.queryByDateRange(startDate, endDate);
+      const records: WeightRecord[] = await dao.queryByDateRange(startDate, endDate);
       
       if (records.length === 0) {
         return null;
       }
 
-      const weights = records.map(r => r.weight);
-      const average = weights.reduce((sum, w) => sum + w, 0) / weights.length;
-      const min = Math.min(...weights);
-      const max = Math.max(...weights);
-      const change = records.length > 1 ? records[records.length - 1].weight - records[0].weight : 0;
+      const weights: number[] = records.map(r => r.weight);
+      const average: number = weights.reduce((sum, w) => sum + w, 0) / weights.length;
+      const min: number = Math.min(...weights);
+      const max: number = Math.max(...weights);
+      const change: number = records.length > 1 ? records[records.length - 1].weight - records[0].weight : 0;
 
-      return {
+      const result: RangeStatistics = {
         count: records.length,
         average: Math.round(average * 10) / 10,
         min: Math.round(min * 10) / 10,
         max: Math.round(max * 10) / 10,
         change: Math.round(change * 10) / 10
       };
+      
+      return result;
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to get range statistics: ${e}`);
       return null;
@@ -227,11 +237,11 @@ export class StatisticsService {
   /**
    * 根据时间范围类型获取日期范围
    */
-  static getDateRange(range: string): { startDate: number; endDate: number } {
-    const now = Date.now();
-    const today = new Date(now);
+  static getDateRange(range: string): DateRange {
+    const now: number = Date.now();
+    const today: Date = new Date(now);
     today.setHours(0, 0, 0, 0);
-    const endDate = today.getTime() + 24 * 60 * 60 * 1000 - 1; // 今天结束
+    const endDate: number = today.getTime() + 24 * 60 * 60 * 1000 - 1; // 今天结束
 
     let startDate: number;
 
@@ -243,11 +253,11 @@ export class StatisticsService {
         startDate = now - 30 * 24 * 60 * 60 * 1000;
         break;
       case 'week':
-        const dayOfWeek = today.getDay();
+        const dayOfWeek: number = today.getDay();
         startDate = today.getTime() - dayOfWeek * 24 * 60 * 60 * 1000;
         break;
       case 'month':
-        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const firstDayOfMonth: Date = new Date(today.getFullYear(), today.getMonth(), 1);
         startDate = firstDayOfMonth.getTime();
         break;
       case 'all':
@@ -266,9 +276,9 @@ export class StatisticsService {
     context: common.Context,
     range: string
   ): Promise<RangeStatistics | null> {
-    const dateRange = StatisticsService.getDateRange(range);
-    const startDate = dateRange.startDate;
-    const endDate = dateRange.endDate;
+    const dateRange: DateRange = StatisticsService.getDateRange(range);
+    const startDate: number = dateRange.startDate;
+    const endDate: number = dateRange.endDate;
     return await StatisticsService.getRangeStatistics(context, startDate, endDate);
   }
 }
