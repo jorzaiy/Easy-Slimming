@@ -3,7 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { LogConstants } from '../common/Constants';
 import { getWeightRecordDao } from '../data/WeightRecordDao';
-import { initDao } from '../common/Global';
+import { initDao, initTargetWeightService } from '../common/Global';
 import { getTargetWeightManager } from '../common/TargetWeightManager';
 import { getTargetWeightService } from '../data/TargetWeightService';
 import { getHealthSyncRecordDao } from '../data/HealthSyncRecordDao';
@@ -38,6 +38,7 @@ export default class EntryAbility extends UIAbility {
       // Initialize target weight service
       const targetService = await getTargetWeightService(this.context);
       if (targetService) {
+        initTargetWeightService(targetService);
         const manager = getTargetWeightManager();
         await manager.initialize(this.context);
         hilog.info(DOMAIN, 'testTag', 'Target weight service initialized successfully');

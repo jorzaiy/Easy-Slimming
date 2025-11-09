@@ -1,8 +1,11 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
-import { LogConstants } from '../common/Constants';
+import promptAction from '@ohos.promptAction';
+import { AppColors, AppDimensions, AppText, BusinessConstants, LogConstants } from '../common/Constants';
 import { getAppDao } from '../common/Global';
 import { WeightRecord } from '../model/WeightRecord';
+import { NumericKeypad } from '../components/NumericKeypad';
+import { getAppTargetWeightService } from '../common/Global';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'Index';
@@ -11,13 +14,83 @@ const TAG = LogConstants.TAG_PREFIX + 'Index';
 @Component
 struct Index {
   @State latestRecord: WeightRecord | null = null;
+  @State weightInput: string = '';
+  @State error: string = '';
+  @State isSaving: boolean = false;
+  @State currentTargetWeight: number = 70.0;
+  @Provide keypadCallbacks: any = {};
 
   async aboutToAppear() {
     await this.loadLatestRecord();
+    await this.loadCurrentTargetWeight();
+    this.setupKeypadCallbacks();
   }
 
   onPageShow() {
     this.loadLatestRecord();
+  }
+
+  private setupKeypadCallbacks() {
+    this.keypadCallbacks = {
+      onValueChange: (value: string) => {
+        this.weightInput = value;
+        this.error = '';
+      },
+      onConfirm: async (value: string) => {
+        await this.handleConfirmWeight(value);
+      },
+      onCancel: () => {
+        this.weightInput = '';
+        this.error = '';
+      }
+    };
+  }
+
+  private async handleConfirmWeight(weightStr: string) {
+    this.error = '';
+    if (this.isSaving) {
+      return;
+    }
+
+    const weight = parseFloat(weightStr);
+    if (isNaN(weight) || weight <= 0 || weight > BusinessConstants.MAX_WEIGHT) {
+      this.error = `体重应在 0-${BusinessConstants.MAX_WEIGHT} kg 范围内`;
+      return;
+    }
+
+    this.isSaving = true;
+    try {
+      const dao = getAppDao();
+      if (!dao) {
+        throw new Error('Global DAO not initialized');
+      }
+
+      const newRecord = new WeightRecord(weight, Date.now());
+      const recordId = await dao.insert(newRecord);
+
+      if (recordId > 0) {
+        hilog.info(DOMAIN, TAG, `Successfully inserted weight record with id: ${recordId}`);
+        promptAction.showToast({
+          message: '体重记录保存成功',
+          duration: 2000
+        });
+
+        await this.loadLatestRecord();
+        this.weightInput = '';
+        this.error = '';
+      } else {
+        throw new Error('Failed to insert weight record');
+      }
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to save weight record, cause: ${e}`);
+      this.error = '保存失败，请重试';
+      promptAction.showToast({
+        message: '保存失败，请重试',
+        duration: 2000
+      });
+    } finally {
+      this.isSaving = false;
+    }
   }
 
   formatDate(timestamp: number): string {
@@ -30,6 +103,36 @@ struct Index {
     return `${year}/${month}/${day} ${hour}:${minute}`;
   }
 
+  private calculateDifferenceFromTarget(): number | null {
+    if (!this.latestRecord) {
+      return null;
+    }
+    return this.latestRecord.weight - this.currentTargetWeight;
+  }
+
+  private getDifferenceColor(): string {
+    const diff = this.calculateDifferenceFromTarget();
+    if (diff === null) {
+      return AppColors.GRAY;
+    }
+    if (diff > 0) {
+      return AppColors.ORANGE; // 超重
+    } else if (diff < 0) {
+      return AppColors.GREEN; // 未达目标
+    } else {
+      return AppColors.SUCCESS; // 达到目标
+    }
+  }
+
+  private getDifferenceText(): string {
+    const diff = this.calculateDifferenceFromTarget();
+    if (diff === null) {
+      return '';
+    }
+    const sign = diff > 0 ? '+' : '';
+    return `${sign}${diff.toFixed(1)} kg`;
+  }
+
   async loadLatestRecord() {
     try {
       const dao = getAppDao();
@@ -38,182 +141,184 @@ struct Index {
       }
       const records = await dao.queryAll();
       if (records.length > 0) {
-        this.latestRecord = records[0]; // 默认按日期降序，第一个就是最新的
+        this.latestRecord = records[0];
         hilog.info(DOMAIN, TAG, 'Loaded latest record.');
+      } else {
+        this.latestRecord = null;
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load latest record, cause: ${e}`);
     }
   }
 
-  build() {
-    Stack() {
-      Column() {
-        Column() {
-          Text('轻松减重')
-            .fontSize(38)
-            .fontWeight(FontWeight.Bold)
-            .margin({ top: 40, bottom: 30 })
-
-          Button('记录体重')
-            .type(ButtonType.Capsule)
-            .width('80%')
-            .height(50)
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .onClick(() => {
-              try {
-                router.pushUrl({ url: 'pages/WeightEntryForm' });
-              } catch (error) {
-                hilog.error(DOMAIN, TAG, `Failed to navigate to WeightEntryForm, cause: ${error}`);
-              }
-            })
-
-          Button('查看历史')
-            .type(ButtonType.Normal)
-            .width('80%')
-            .height(50)
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .margin({ top: 20 })
-            .backgroundColor(Color.White)
-            .fontColor(Color.Black)
-            .border({ width: 1, color: Color.Gray, radius: 25 })
-            .onClick(() => {
-              try {
-                router.pushUrl({ url: 'pages/History' });
-              } catch (error) {
-                hilog.error(DOMAIN, TAG, `Failed to navigate to History, cause: ${error}`);
-              }
-            })
-
-          Button('趋势图表')
-            .type(ButtonType.Capsule)
-            .width('80%')
-            .height(50)
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .margin({ top: 20 })
-            .backgroundColor(Color.Blue)
-            .onClick(() => {
-              try {
-                router.pushUrl({ url: 'pages/WeightChart' });
-              } catch (error) {
-                hilog.error(DOMAIN, TAG, `Failed to navigate to WeightChart, cause: ${error}`);
-              }
-            })
-
-          Button('统计仪表板')
-            .type(ButtonType.Capsule)
-            .width('80%')
-            .height(50)
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .margin({ top: 20 })
-            .backgroundColor(Color.Green)
-            .onClick(() => {
-              try {
-                router.pushUrl({ url: 'pages/StatisticsDashboard' });
-              } catch (error) {
-                hilog.error(DOMAIN, TAG, `Failed to navigate to StatisticsDashboard, cause: ${error}`);
-              }
-            })
-
-          Button('目标管理')
-            .type(ButtonType.Normal)
-            .width('80%')
-            .height(50)
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .margin({ top: 20 })
-            .backgroundColor(Color.White)
-            .fontColor(Color.Black)
-            .border({ width: 1, color: Color.Gray, radius: 25 })
-            .onClick(() => {
-              try {
-                router.pushUrl({ url: 'pages/TargetWeightManagement' });
-              } catch (error) {
-                hilog.error(DOMAIN, TAG, `Failed to navigate to TargetWeightManagement, cause: ${error}`);
-              }
-            })
-
-          Button('数据管理')
-            .type(ButtonType.Normal)
-            .width('80%')
-            .height(50)
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .margin({ top: 20 })
-            .backgroundColor(Color.White)
-            .fontColor(Color.Black)
-            .border({ width: 1, color: Color.Gray, radius: 25 })
-            .onClick(() => {
-              try {
-                router.pushUrl({ url: 'pages/DataManagement' });
-              } catch (error) {
-                hilog.error(DOMAIN, TAG, `Failed to navigate to DataManagement, cause: ${error}`);
-              }
-            })
-
-          Button('鸿蒙同步')
-            .type(ButtonType.Normal)
-            .width('80%')
-            .height(50)
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .margin({ top: 20 })
-            .backgroundColor(Color.White)
-            .fontColor(Color.Black)
-            .border({ width: 1, color: Color.Gray, radius: 25 })
-            .onClick(() => {
-              try {
-                router.pushUrl({ url: 'pages/HealthSync' });
-              } catch (error) {
-                hilog.error(DOMAIN, TAG, `Failed to navigate to HealthSync, cause: ${error}`);
-              }
-            })
-
-          Button('设置')
-            .type(ButtonType.Normal)
-            .width('80%')
-            .height(50)
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .margin({ top: 20 })
-            .backgroundColor(Color.White)
-            .fontColor(Color.Black)
-            .border({ width: 1, color: Color.Gray, radius: 25 })
-            .onClick(() => {
-              try {
-                router.pushUrl({ url: 'pages/Settings' });
-              } catch (error) {
-                hilog.error(DOMAIN, TAG, `Failed to navigate to Settings, cause: ${error}`);
-              }
-            })
-          }
-
-        Divider()
-          .margin({ top: 20, bottom: 20 })
-
-        if (this.latestRecord) {
-          Text(`最近体重: ${this.latestRecord.weight.toFixed(1)} kg`)
-            .fontSize(24)
-            .fontColor(Color.Gray)
-          Text(`记录于: ${this.formatDate(this.latestRecord.date)}`)
-            .fontSize(16)
-            .margin({ top: 10 })
-            .fontColor(Color.Gray)
-        } else {
-          Text('暂无记录')
-            .fontSize(24)
-            .fontColor(Color.Gray)
+  private async loadCurrentTargetWeight() {
+    try {
+      const service = getAppTargetWeightService();
+      if (service) {
+        const targetRecord = await service.getCurrentTarget();
+        if (targetRecord) {
+          this.currentTargetWeight = targetRecord.targetWeight;
         }
       }
-      .width('100%')
-      .padding({ left: 20, right: 20 })
-      .alignItems(HorizontalAlign.Center)
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, `Failed to load target weight, cause: ${e}`);
+    }
+  }
+
+  private navigateToEditRecord() {
+    if (!this.latestRecord) {
+      return;
+    }
+    try {
+      router.pushUrl({
+        url: 'pages/WeightEditForm',
+        params: { record: this.latestRecord }
+      });
+    } catch (error) {
+      hilog.error(DOMAIN, TAG, `Failed to navigate to WeightEditForm, cause: ${error}`);
+    }
+  }
+
+  private navigateToPage(url: string) {
+    try {
+      router.pushUrl({ url });
+    } catch (error) {
+      hilog.error(DOMAIN, TAG, `Failed to navigate to ${url}, cause: ${error}`);
+    }
+  }
+
+  build() {
+    Row() {
+      // Column 1: Latest Record Card
+      Column() {
+        Text('最近记录')
+          .fontSize(AppText.FONT_SIZE_SUBTITLE)
+          .fontWeight(FontWeight.Bold)
+          .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
+
+        if (this.latestRecord) {
+          Column() {
+            Text(this.latestRecord.weight.toFixed(1))
+              .fontSize(48)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(AppColors.PRIMARY)
+
+            Text('kg')
+              .fontSize(AppText.FONT_SIZE_BODY)
+              .fontColor(AppColors.GRAY)
+              .margin({ top: 5 })
+
+            Divider()
+              .margin({ top: AppDimensions.MARGIN_MEDIUM, bottom: AppDimensions.MARGIN_MEDIUM })
+
+            Text(this.formatDate(this.latestRecord.date))
+              .fontSize(AppText.FONT_SIZE_SMALL)
+              .fontColor(AppColors.GRAY)
+              .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
+
+            if (this.getDifferenceText()) {
+              Column() {
+                Text('差值')
+                  .fontSize(AppText.FONT_SIZE_SMALL)
+                  .fontColor(AppColors.GRAY)
+
+                Text(this.getDifferenceText())
+                  .fontSize(AppText.FONT_SIZE_SUBTITLE)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(this.getDifferenceColor())
+                  .margin({ top: 5 })
+              }
+              .alignItems(HorizontalAlign.Center)
+              .margin({ top: AppDimensions.MARGIN_MEDIUM })
+            }
+          }
+          .width('100%')
+          .padding(AppDimensions.PADDING_LARGE)
+          .backgroundColor(AppColors.WHITE)
+          .borderRadius(AppDimensions.BORDER_RADIUS)
+          .alignItems(HorizontalAlign.Center)
+          .onClick(() => this.navigateToEditRecord())
+        } else {
+          Column() {
+            Text('暂无记录')
+              .fontSize(AppText.FONT_SIZE_BODY)
+              .fontColor(AppColors.GRAY)
+              .textAlign(TextAlign.Center)
+          }
+          .width('100%')
+          .height(180)
+          .padding(AppDimensions.PADDING_LARGE)
+          .backgroundColor(AppColors.WHITE)
+          .borderRadius(AppDimensions.BORDER_RADIUS)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+        }
+      }
+      .width('25%')
+      .height('100%')
+      .padding(AppDimensions.PADDING_SMALL)
+
+      // Column 2: Quick Actions
+      Column() {
+        Text('快速操作')
+          .fontSize(AppText.FONT_SIZE_SUBTITLE)
+          .fontWeight(FontWeight.Bold)
+          .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
+
+        Column() {
+          Button('趋势图表')
+            .width('100%')
+            .height(AppDimensions.BUTTON_HEIGHT)
+            .fontSize(AppText.FONT_SIZE_SMALL)
+            .fontWeight(FontWeight.Bold)
+            .backgroundColor(AppColors.BLUE)
+            .fontColor(AppColors.WHITE)
+            .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
+            .onClick(() => this.navigateToPage('pages/WeightChart'))
+            .margin({ bottom: AppDimensions.MARGIN_SMALL })
+
+          Button('统计仪表板')
+            .width('100%')
+            .height(AppDimensions.BUTTON_HEIGHT)
+            .fontSize(AppText.FONT_SIZE_SMALL)
+            .fontWeight(FontWeight.Bold)
+            .backgroundColor(AppColors.GREEN)
+            .fontColor(AppColors.WHITE)
+            .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
+            .onClick(() => this.navigateToPage('pages/StatisticsDashboard'))
+            .margin({ bottom: AppDimensions.MARGIN_SMALL })
+
+          Button('设置')
+            .width('100%')
+            .height(AppDimensions.BUTTON_HEIGHT)
+            .fontSize(AppText.FONT_SIZE_SMALL)
+            .fontWeight(FontWeight.Bold)
+            .backgroundColor(AppColors.SECONDARY)
+            .fontColor(AppColors.WHITE)
+            .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
+            .onClick(() => this.navigateToPage('pages/Settings'))
+        }
+        .width('100%')
+      }
+      .width('25%')
+      .height('100%')
+      .padding(AppDimensions.PADDING_SMALL)
+
+      // Column 3: Numeric Keypad
+      Column() {
+        Text('体重输入')
+          .fontSize(AppText.FONT_SIZE_SUBTITLE)
+          .fontWeight(FontWeight.Bold)
+          .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
+
+        NumericKeypad({ callbacks: this.keypadCallbacks })
+      }
+      .width('50%')
+      .height('100%')
+      .padding(AppDimensions.PADDING_SMALL)
     }
     .width('100%')
     .height('100%')
+    .backgroundColor(AppColors.BACKGROUND)
   }
 }
