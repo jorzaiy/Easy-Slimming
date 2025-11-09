@@ -52,6 +52,7 @@ struct WeightChartPage {
   @State records: WeightRecord[] = [];
   @State timeRange: TimeRange = TimeRange.MONTH;
   @State targetWeight: number = WeightRecord.getTargetWeight();
+  @Watch('onTargetChanged')
   @State currentTarget: TargetWeightRecord | null = null;
   @State selectedPoint: ChartDataPoint | null = null;
   @State chartWidth: number = 350;
@@ -210,6 +211,14 @@ struct WeightChartPage {
     this.targetWeight = target.targetWeight;
     WeightRecord.setTargetWeight(target.targetWeight);
     this.loadChartData();
+  }
+
+  onTargetChanged() {
+    if (this.currentTarget) {
+      this.targetWeight = this.currentTarget.targetWeight;
+      WeightRecord.setTargetWeight(this.currentTarget.targetWeight);
+      this.loadChartData();
+    }
   }
 
   build() {
@@ -439,13 +448,8 @@ struct WeightChartPage {
       // 目标体重设置对话框
       TargetWeightSettingDialog({
         isVisible: this.showSettingDialog,
-        currentTarget: this.currentTarget,
-        onTargetChange: (target: TargetWeightRecord) => {
-          this.onTargetChange(target);
-        },
-        onDismiss: () => {
-          this.showSettingDialog = false;
-        }
+        currentTarget: $currentTarget,
+        dialogVisible: $showSettingDialog
       })
     }
     .width('100%')

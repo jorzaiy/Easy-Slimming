@@ -19,6 +19,7 @@ const TAG = LogConstants.TAG_PREFIX + 'TargetManagement';
 @Component
 struct TargetWeightManagement {
   @State targetHistory: TargetWeightRecord[] = [];
+  @Watch('onTargetChanged')
   @State currentTarget: TargetWeightRecord | null = null;
   @State showDialog: boolean = false;
   @State isLoading: boolean = true;
@@ -117,6 +118,10 @@ struct TargetWeightManagement {
 
   onTargetChange(target: TargetWeightRecord) {
     this.currentTarget = target;
+    this.loadTargets();
+  }
+
+  onTargetChanged() {
     this.loadTargets();
   }
 
@@ -320,13 +325,8 @@ struct TargetWeightManagement {
       // 目标体重设置对话框
       TargetWeightSettingDialog({
         isVisible: this.showDialog,
-        currentTarget: this.currentTarget,
-        onTargetChange: (target: TargetWeightRecord) => {
-          this.onTargetChange(target);
-        },
-        onDismiss: () => {
-          this.showDialog = false;
-        }
+        currentTarget: $currentTarget,
+        dialogVisible: $showDialog
       })
     }
     .width('100%')
