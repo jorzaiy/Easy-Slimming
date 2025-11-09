@@ -58,25 +58,27 @@ export class DataExportImportService {
 
       let exportStatistics: ExportStatisticsData | undefined;
       if (options.includeStatistics && records.length > 0) {
-        const weights = records.map(r => r.weight);
+        const weights: number[] = records.map(r => r.weight);
         exportStatistics = {
           totalRecords: records.length,
           latestWeight: records[0]?.weight,
           averageWeight: weights.reduce((a, b) => a + b, 0) / weights.length,
           minWeight: Math.min(...weights),
           maxWeight: Math.max(...weights),
-          currentTarget: targets?.length > 0 ? targets[0]?.targetWeight : undefined
+          currentTarget: targets && targets.length > 0 ? targets[0].targetWeight : undefined
         };
       }
 
-      const exportTargets: ExportTargetData[] | undefined = targets?.map(t => ({
-        id: t.id,
-        targetWeight: t.targetWeight,
-        setDate: t.setDate,
-        formattedDate: new Date(t.setDate).toISOString(),
-        targetDate: t.targetDate,
-        notes: t.notes
-      }));
+      const exportTargets: ExportTargetData[] | undefined = targets && targets.length > 0
+        ? targets.map(t => ({
+            id: t.id,
+            targetWeight: t.targetWeight,
+            setDate: t.setDate,
+            formattedDate: new Date(t.setDate).toISOString(),
+            targetDate: t.targetDate,
+            notes: t.notes
+          }))
+        : undefined;
 
       const content: ExportDataContent = {
         exportDate: new Date().toISOString(),
@@ -113,12 +115,12 @@ export class DataExportImportService {
         });
       }
 
-      let csv = '日期,体重(kg),备注\n';
+      let csv: string = '日期,体重(kg),备注\n';
 
       for (const record of records) {
-        const date = record.getFormattedDate();
-        const weight = record.weight.toFixed(1);
-        const notes = (record.notes || '').replace(/,/g, '，').replace(/\n/g, ' ');
+        const date: string = record.getFormattedDate();
+        const weight: string = record.weight.toFixed(1);
+        const notes: string = (record.notes || '').replace(/,/g, '，').replace(/\n/g, ' ');
         csv += `${date},${weight},"${notes}"\n`;
       }
 
@@ -126,7 +128,7 @@ export class DataExportImportService {
         csv += '\n统计数据\n';
         csv += `总记录数,${records.length}\n`;
         if (records.length > 0) {
-          const weights = records.map(r => r.weight);
+          const weights: number[] = records.map(r => r.weight);
           csv += `最新体重,${records[0].weight.toFixed(1)}\n`;
           csv += `平均体重,${(weights.reduce((a, b) => a + b, 0) / weights.length).toFixed(1)}\n`;
           csv += `最小体重,${Math.min(...weights).toFixed(1)}\n`;
@@ -184,14 +186,14 @@ export class DataExportImportService {
 
       for (const recordData of data.records) {
         try {
-          const record = new WeightRecord(
+          const record: WeightRecord = new WeightRecord(
             recordData.weight,
             recordData.date,
             undefined,
             recordData.notes
           );
 
-          const validation = record.validate();
+          const validation: ValidationResult = record.validate();
           if (!validation.isValid) {
             result.skippedCount++;
             result.errors.push(
@@ -201,7 +203,7 @@ export class DataExportImportService {
           }
 
           // 检查是否存在
-          const existing = await this.dao.queryById(recordData.id);
+          const existing: WeightRecord | null = await this.dao.queryById(recordData.id);
           if (existing) {
             if (options.conflictResolution === 'override') {
               await this.dao.update(record);
@@ -213,7 +215,7 @@ export class DataExportImportService {
               result.skippedCount++;
             }
           } else {
-            const insertId = await this.dao.insert(record);
+            const insertId: number = await this.dao.insert(record);
             if (insertId > 0) {
               result.importedCount++;
             } else {
@@ -267,8 +269,8 @@ export class DataExportImportService {
     const rdbStore = this.dao.getRdbStore();
 
     try {
-      const lines = csvContent.split('\n').filter(line => line.trim());
-      const headerLine = lines[0];
+      const lines: string[] = csvContent.split('\n').filter(line => line.trim());
+      const headerLine: string = lines[0];
 
       // 检查标题行
       if (!headerLine.includes('日期') || !headerLine.includes('体重')) {
@@ -276,9 +278,9 @@ export class DataExportImportService {
         return result;
       }
 
-      const headers = headerLine.split(',');
-      const dateIndex = headers.findIndex(h => h.includes('日期'));
-      const weightIndex = headers.findIndex(h => h.includes('体重'));
+      const headers: string[] = headerLine.split(',');
+      const dateIndex: number = headers.findIndex(h => h.includes('日期'));
+      const weightIndex: number = headers.findIndex(h => h.includes('体重'));
 
       if (dateIndex === -1 || weightIndex === -1) {
         result.errors.push('Invalid CSV format: missing date or weight column');
@@ -288,23 +290,23 @@ export class DataExportImportService {
       await rdbStore.executeSql('BEGIN TRANSACTION');
 
       for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
+        const line: string = lines[i].trim();
         if (!line || line.startsWith('统计') || line.startsWith('总')) {
           continue; // Skip statistics and empty lines
         }
 
         try {
-          const values = this.parseCSVLine(line);
+          const values: string[] = this.parseCSVLine(line);
 
           if (values.length <= Math.max(dateIndex, weightIndex)) {
             result.skippedCount++;
             continue;
           }
 
-          const dateStr = values[dateIndex];
-          const weightStr = values[weightIndex];
+          const dateStr: string = values[dateIndex];
+          const weightStr: string = values[weightIndex];
 
-          const weight = parseFloat(weightStr);
+          const weight: number = parseFloat(weightStr);
           if (isNaN(weight)) {
             result.skippedCount++;
             result.errors.push(`Line ${i + 1}: Invalid weight value`);
@@ -314,7 +316,7 @@ export class DataExportImportService {
           // 尝试解析日期
           let date: number;
           try {
-            const parsedDate = new Date(dateStr);
+            const parsedDate: Date = new Date(dateStr);
             if (isNaN(parsedDate.getTime())) {
               result.skippedCount++;
               result.errors.push(`Line ${i + 1}: Invalid date format`);
@@ -327,11 +329,12 @@ export class DataExportImportService {
             continue;
           }
 
-          const notes = values[headers.findIndex(h => h.includes('备注'))] || '';
+          const noteIndex: number = headers.findIndex(h => h.includes('备注'));
+          const notes: string = noteIndex >= 0 ? (values[noteIndex] || '') : '';
 
           try {
-            const record = new WeightRecord(weight, date, undefined, notes);
-            const validation = record.validate();
+            const record: WeightRecord = new WeightRecord(weight, date, undefined, notes);
+            const validation: ValidationResult = record.validate();
 
             if (!validation.isValid) {
               result.skippedCount++;
@@ -339,7 +342,7 @@ export class DataExportImportService {
               continue;
             }
 
-            const insertId = await this.dao.insert(record);
+            const insertId: number = await this.dao.insert(record);
             if (insertId > 0) {
               result.importedCount++;
             } else {
@@ -403,7 +406,7 @@ export class DataExportImportService {
         errors.push('No records to import');
       } else {
         for (let i = 0; i < Math.min(5, data.records.length); i++) {
-          const recordData = data.records[i];
+          const recordData: ExportRecordData = data.records[i];
 
           if (typeof recordData.weight !== 'number') {
             errors.push(`Record ${i}: Invalid weight type`);
@@ -433,11 +436,11 @@ export class DataExportImportService {
    */
   private parseCSVLine(line: string): string[] {
     const result: string[] = [];
-    let current = '';
-    let inQuotes = false;
+    let current: string = '';
+    let inQuotes: boolean = false;
 
     for (let i = 0; i < line.length; i++) {
-      const char = line[i];
+      const char: string = line[i];
 
       if (char === '"') {
         if (inQuotes && line[i + 1] === '"') {
@@ -461,7 +464,7 @@ export class DataExportImportService {
   /**
    * 获取数据库的RdbStore
    */
-  get rdbStore(): relationalStore.RdbStore {
+  getRdbStore(): relationalStore.RdbStore {
     return this.dao.getRdbStore();
   }
 }

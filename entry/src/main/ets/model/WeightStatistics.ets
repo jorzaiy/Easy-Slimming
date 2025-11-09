@@ -138,7 +138,7 @@ export class StatisticsCalculator {
     const averageWeight = totalWeight / records.length;
 
     // 计算BMI
-    const userHeight = height || this.DEFAULT_HEIGHT;
+    const userHeight = height || StatisticsCalculator.DEFAULT_HEIGHT;
     const bmi = currentWeight / Math.pow(userHeight / 100, 2);
 
     // 找出最高和最低体重
@@ -147,8 +147,8 @@ export class StatisticsCalculator {
     const minWeight = Math.min(...weights);
 
     // 计算趋势
-    const trend7Days = this.calculateTrend(records, 7);
-    const trend30Days = this.calculateTrend(records, 30);
+    const trend7Days = StatisticsCalculator.calculateTrend(records, 7);
+    const trend30Days = StatisticsCalculator.calculateTrend(records, 30);
 
     // 计算进度百分比
     const initialWeight = records[records.length - 1].weight; // 最初始体重
@@ -176,8 +176,8 @@ export class StatisticsCalculator {
    * 计算指定天数内的趋势
    */
   private static calculateTrend(records: WeightRecord[], days: number): TrendData {
-    const now = Date.now();
-    const daysAgo = now - (days * 24 * 60 * 60 * 1000);
+    const now: number = Date.now();
+    const daysAgo: number = now - (days * 24 * 60 * 60 * 1000);
 
     // 筛选指定天数内的记录
     const recentRecords = records.filter(record => record.date >= daysAgo);
