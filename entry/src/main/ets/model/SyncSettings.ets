@@ -16,6 +16,16 @@ export interface SyncFrequency {
   enabled: boolean;            // 是否启用定时同步
 }
 
+export interface SyncModeOption {
+  label: string;
+  value: SyncMode;
+}
+
+export interface ConflictResolutionStrategyOption {
+  label: string;
+  value: ResolutionOption;
+}
+
 export class SyncSettings {
   id: number;
   syncEnabled: boolean;        // 是否启用同步功能
@@ -94,5 +104,21 @@ export class SyncSettings {
       default:
         return ResolutionOption.USE_LOCAL;
     }
+  }
+
+  static getSyncModeOptions(): SyncModeOption[] {
+    return [
+      { label: '手动同步', value: SyncMode.MANUAL },
+      { label: '自动同步', value: SyncMode.AUTO },
+      { label: '后台同步', value: SyncMode.AUTO_BACKGROUND }
+    ];
+  }
+
+  static getConflictResolutionOptions(): ConflictResolutionStrategyOption[] {
+    return [
+      { label: '保留本地数据', value: ResolutionOption.USE_LOCAL },
+      { label: '使用鸿蒙数据', value: ResolutionOption.USE_HEALTH },
+      { label: '合并数据', value: ResolutionOption.MERGE_AVERAGE }
+    ];
   }
 }

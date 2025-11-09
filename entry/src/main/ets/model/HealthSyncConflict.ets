@@ -19,11 +19,19 @@ export enum ResolutionOption {
   SKIP = 'SKIP'                    // 跳过
 }
 
+export interface HealthAppRecord {
+  weight: number;
+  date: number;
+  notes?: string;
+  id?: number | string;
+  syncId?: string;
+}
+
 export class HealthSyncConflict {
   id: number;
   conflictType: ConflictType;
   localRecord: WeightRecord;       // 本地记录
-  healthRecord: WeightRecord;         // 鸿蒙健康记录（可能包含额外字段）
+  healthRecord: WeightRecord | HealthAppRecord;  // 鸿蒙健康记录
   createdTime: number;             // 冲突检测时间
   resolvedTime?: number;           // 冲突解决时间
   resolutionOption?: ResolutionOption; // 选择的解决方案
@@ -32,7 +40,7 @@ export class HealthSyncConflict {
   constructor(
     conflictType: ConflictType,
     localRecord: WeightRecord,
-    healthRecord: WeightRecord,
+    healthRecord: WeightRecord | HealthAppRecord,
     description: string,
     id?: number
   ) {
@@ -68,19 +76,25 @@ export class HealthSyncConflict {
       case ResolutionOption.USE_LOCAL:
         return this.localRecord;
       case ResolutionOption.USE_HEALTH:
+        const healthNotes = 'notes' in this.healthRecord && this.healthRecord.notes
+          ? this.healthRecord.notes
+          : this.localRecord.notes;
         return new WeightRecord(
           this.healthRecord.weight,
           this.healthRecord.date,
           this.localRecord.id,
-          this.healthRecord.notes || this.localRecord.notes
+          healthNotes
         );
       case ResolutionOption.MERGE_AVERAGE:
         const avgWeight = (this.localRecord.weight + this.healthRecord.weight) / 2;
+        const localNotesForMerge = this.localRecord.notes || '';
+        const healthNotesForMerge = 'notes' in this.healthRecord ? (this.healthRecord.notes || '') : '';
+        const mergedNotes = `${localNotesForMerge} [合并]`;
         return new WeightRecord(
           avgWeight,
           Math.max(this.localRecord.date, this.healthRecord.date),
           this.localRecord.id,
-          `${this.localRecord.notes || ''} [合并]`
+          mergedNotes
         );
       case ResolutionOption.SKIP:
       default:
