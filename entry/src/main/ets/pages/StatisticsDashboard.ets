@@ -11,7 +11,7 @@ import { HeightSettingDialog } from '../common/HeightSettingDialog';
 import { TimeRangeSelector, TimeRange } from '../common/TimeRangeSelector';
 import promptAction from '@ohos.promptAction';
 import { common } from '@kit.AbilityKit';
-import { resolveAbilityContext } from '../common/ContextUtils';
+import { getComponentContext } from '../common/ContextUtils';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'StatisticsDashboard';
@@ -41,12 +41,11 @@ struct StatisticsDashboard {
 
   async loadStatistics(): Promise<void> {
     try {
-      const uiContext = this.getUIContext();
-      if (uiContext) {
-        const abilityContext = resolveAbilityContext(uiContext);
-        if (abilityContext) {
-          this.statistics = await StatisticsService.getStatistics(abilityContext);
-        }
+      const abilityContext = getComponentContext(this);
+      if (abilityContext) {
+        this.statistics = await StatisticsService.getStatistics(abilityContext);
+      } else {
+        hilog.error(DOMAIN, TAG, 'Failed to get ability context for statistics');
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load statistics: ${e}`);
@@ -61,12 +60,11 @@ struct StatisticsDashboard {
 
   async loadUserHeight(): Promise<void> {
     try {
-      const uiContext = this.getUIContext();
-      if (uiContext) {
-        const abilityContext = resolveAbilityContext(uiContext);
-        if (abilityContext) {
-          this.userHeight = await StatisticsService.getUserHeight(abilityContext);
-        }
+      const abilityContext = getComponentContext(this);
+      if (abilityContext) {
+        this.userHeight = await StatisticsService.getUserHeight(abilityContext);
+      } else {
+        hilog.error(DOMAIN, TAG, 'Failed to get ability context for user height');
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load user height: ${e}`);
@@ -81,12 +79,11 @@ struct StatisticsDashboard {
 
   async loadRangeStatistics(): Promise<void> {
     try {
-      const uiContext = this.getUIContext();
-      if (uiContext) {
-        const abilityContext = resolveAbilityContext(uiContext);
-        if (abilityContext) {
-          this.rangeStats = await StatisticsService.getTimeRangeStatistics(abilityContext, this.selectedTimeRange);
-        }
+      const abilityContext = getComponentContext(this);
+      if (abilityContext) {
+        this.rangeStats = await StatisticsService.getTimeRangeStatistics(abilityContext, this.selectedTimeRange);
+      } else {
+        hilog.error(DOMAIN, TAG, 'Failed to get ability context for range statistics');
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load range statistics: ${e}`);
@@ -101,10 +98,12 @@ struct StatisticsDashboard {
   async onRefresh(): Promise<void> {
     this.isRefreshing = true;
     try {
-      const context = this.getUIContext() as common.Context | null;
-      if (context) {
-        this.statistics = await StatisticsService.refreshStatistics(context);
+      const abilityContext = getComponentContext(this);
+      if (abilityContext) {
+        this.statistics = await StatisticsService.refreshStatistics(abilityContext);
         await this.loadRangeStatistics();
+      } else {
+        hilog.error(DOMAIN, TAG, 'Failed to get ability context for refresh');
       }
       promptAction.showToast({
         message: '数据已更新',

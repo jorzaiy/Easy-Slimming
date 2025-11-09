@@ -6,7 +6,7 @@ import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
 import { getTargetWeightService, TargetWeightRecord } from '../data/TargetWeightService';
 import { TargetWeightSettingDialog } from '../common/TargetWeightSettingDialog';
-import { resolveAbilityContext } from '../common/ContextUtils';
+import { getComponentContext } from '../common/ContextUtils';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'Index';
@@ -56,8 +56,9 @@ struct Index {
 
   async loadTargetWeight() {
     try {
-      const abilityContext = resolveAbilityContext(this.getUIContext());
+      const abilityContext = getComponentContext(this);
       if (!abilityContext) {
+        hilog.error(DOMAIN, TAG, 'Failed to get ability context');
         return;
       }
       const service = await getTargetWeightService(abilityContext);

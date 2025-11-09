@@ -10,7 +10,7 @@ import { getAppDao } from '../common/Global';
 import { getTargetWeightService } from '../data/TargetWeightService';
 import { getDataExportImportService, DataExportImportService } from '../data/DataExportImportService';
 import { common } from '@kit.AbilityKit';
-import { resolveAbilityContext } from '../common/ContextUtils';
+import { getComponentContext } from '../common/ContextUtils';
 import fs from '@ohos.file.fs';
 import picker from '@ohos.file.picker';
 import relationalStore from '@ohos.data.relationalStore';
@@ -57,8 +57,7 @@ struct DataManagement {
         throw new Error('Export service not initialized');
       }
 
-      const uiContext = this.getUIContext();
-      const abilityContext = uiContext ? resolveAbilityContext(uiContext) : null;
+      const abilityContext = getComponentContext(this);
       const targetService = abilityContext ? await getTargetWeightService(abilityContext) : null;
       const targets = targetService ? await targetService.getAllTargets() : undefined;
 
