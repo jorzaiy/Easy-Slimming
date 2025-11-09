@@ -135,8 +135,8 @@ export struct NumericKeypad {
       return;
     }
 
-    if (weight <= 0 || weight > BusinessConstants.MAX_WEIGHT) {
-      this.errorMessage = `体重应在 0-${BusinessConstants.MAX_WEIGHT} kg 范围内`;
+    if (weight < 0 || weight > BusinessConstants.MAX_WEIGHT) {
+      this.errorMessage = `体重应在 ${BusinessConstants.MIN_WEIGHT}-${BusinessConstants.MAX_WEIGHT} kg 范围内`;
       return;
     }
 

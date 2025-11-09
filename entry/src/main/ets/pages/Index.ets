@@ -53,8 +53,8 @@ struct Index {
     }
 
     const weight = parseFloat(weightStr);
-    if (isNaN(weight) || weight <= 0 || weight > BusinessConstants.MAX_WEIGHT) {
-      this.error = `体重应在 0-${BusinessConstants.MAX_WEIGHT} kg 范围内`;
+    if (isNaN(weight) || weight < BusinessConstants.MIN_WEIGHT || weight > BusinessConstants.MAX_WEIGHT) {
+      this.error = `体重应在 ${BusinessConstants.MIN_WEIGHT}-${BusinessConstants.MAX_WEIGHT} kg 范围内`;
       return;
     }
 

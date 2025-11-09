@@ -16,8 +16,8 @@ export class WeightRecord {
   private static targetWeight: number = 70.0; // 默认目标体重
 
   constructor(weight: number, date: number, id?: number, notes?: string) {
-    if (weight <= 0 || weight > 200) {
-      throw new Error(`Invalid weight value: ${weight}. Must be between 0 and 200.`);
+    if (weight < 0 || weight > 200) {
+      throw new Error(`Invalid weight value: ${weight}. Must be between 0 and 200 (inclusive).`);
     }
     if (date <= 0) {
       throw new Error(`Invalid date value: ${date}. Must be a positive timestamp.`);
@@ -88,8 +88,8 @@ export class WeightRecord {
   validate(): ValidationResult {
     const errors: string[] = [];
 
-    if (this.weight <= 0 || this.weight > 200) {
-      errors.push(`Invalid weight: ${this.weight}. Must be between 0 and 200.`);
+    if (this.weight < 0 || this.weight > 200) {
+      errors.push(`Invalid weight: ${this.weight}. Must be between 0 and 200 (inclusive).`);
     }
 
     if (this.date <= 0) {
