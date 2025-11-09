@@ -10,7 +10,7 @@ import { ResolutionOption } from '../model/HealthSyncConflict';
 import { SyncSettingsDao } from '../data/SyncSettingsDao';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import { common } from '@kit.AbilityKit';
-import { resolveAbilityContext } from '../common/ContextUtils';
+import { getComponentContext } from '../common/ContextUtils';
 import promptAction from '@ohos.promptAction';
 
 const DOMAIN = LogConstants.DOMAIN;
@@ -47,11 +47,7 @@ struct HealthSyncSettings {
 
   private async initializeServices() {
     try {
-      const uiContext = this.getUIContext();
-      if (!uiContext) {
-        throw new Error('Context not available');
-      }
-      const abilityContext = resolveAbilityContext(uiContext);
+      const abilityContext = getComponentContext(this);
       if (!abilityContext) {
         throw new Error('Unable to resolve ability context');
       }

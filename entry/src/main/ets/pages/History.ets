@@ -10,7 +10,7 @@ import { getAppDao } from '../common/Global';
 import { RemarkSummary } from '../components/RemarkDisplay';
 import { RemarkFilter } from '../components/RemarkFilter';
 import { getTargetWeightService, TargetWeightRecord } from '../data/TargetWeightService';
-import { resolveAbilityContext } from '../common/ContextUtils';
+import { getComponentContext } from '../common/ContextUtils';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'History';
@@ -38,8 +38,9 @@ struct HistoryPage {
 
   async loadTargetWeight() {
     try {
-      const abilityContext = resolveAbilityContext(this.getUIContext());
+      const abilityContext = getComponentContext(this);
       if (!abilityContext) {
+        hilog.error(DOMAIN, TAG, 'Failed to get ability context');
         return;
       }
       const service = await getTargetWeightService(abilityContext);

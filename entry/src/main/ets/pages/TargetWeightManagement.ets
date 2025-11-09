@@ -10,7 +10,7 @@ import { NavigationHelper } from '../common/NavigationHelper';
 import { TargetWeightSettingDialog } from '../common/TargetWeightSettingDialog';
 import promptAction from '@ohos.promptAction';
 import { common } from '@kit.AbilityKit';
-import { resolveAbilityContext } from '../common/ContextUtils';
+import { getComponentContext } from '../common/ContextUtils';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'TargetManagement';
@@ -34,12 +34,9 @@ struct TargetWeightManagement {
 
   async loadTargets() {
     try {
-      const uiContext = this.getUIContext();
-      if (!uiContext) {
-        return;
-      }
-      const abilityContext = resolveAbilityContext(uiContext);
+      const abilityContext = getComponentContext(this);
       if (!abilityContext) {
+        hilog.error(DOMAIN, TAG, 'Failed to get ability context');
         return;
       }
       const service = await getTargetWeightService(abilityContext);
@@ -88,11 +85,15 @@ struct TargetWeightManagement {
         ]
       }).then(async (data) => {
         if (data.index === 1) {
-          const context = this.getUIContext();
-          if (!context) {
+          const abilityContext = resolveAbilityContext(this.getUIContext());
+          if (!abilityContext) {
+            promptAction.showToast({
+              message: '获取上下文失败，请重试',
+              duration: 2000
+            });
             return;
           }
-          const service = await getTargetWeightService(context as unknown as common.Context);
+          const service = await getTargetWeightService(abilityContext);
           if (service) {
             const success = await service.deleteTargetWeight(id);
             if (success) {

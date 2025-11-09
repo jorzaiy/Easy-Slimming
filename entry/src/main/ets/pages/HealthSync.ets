@@ -14,7 +14,7 @@ import { SyncSettings } from '../model/SyncSettings';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import { getAppDao } from '../common/Global';
 import { common } from '@kit.AbilityKit';
-import { resolveAbilityContext } from '../common/ContextUtils';
+import { getComponentContext } from '../common/ContextUtils';
 import promptAction from '@ohos.promptAction';
 
 const DOMAIN = LogConstants.DOMAIN;
@@ -35,8 +35,7 @@ struct HealthSync {
   private scroller: Scroller = new Scroller();
 
   private getCommonContext(): common.Context | null {
-    const uiContext = this.getUIContext();
-    return uiContext ? resolveAbilityContext(uiContext) : null;
+    return getComponentContext(this);
   }
 
   async aboutToAppear() {

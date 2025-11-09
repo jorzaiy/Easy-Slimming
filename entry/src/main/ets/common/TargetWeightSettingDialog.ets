@@ -4,7 +4,7 @@
 import { getTargetWeightService, TargetWeightRecord } from '../data/TargetWeightService';
 import { AppColors, AppDimensions, AppText } from './Constants';
 import { common } from '@kit.AbilityKit';
-import { resolveAbilityContext } from './ContextUtils';
+import { getComponentContext } from './ContextUtils';
 import promptAction from '@ohos.promptAction';
 import hilog from '@ohos.hilog';
 import { LogConstants } from './Constants';
@@ -65,16 +65,7 @@ export struct TargetWeightSettingDialog {
       return;
     }
 
-    const uiContext = this.getUIContext();
-    if (!uiContext) {
-      promptAction.showToast({
-        message: '保存失败，请重试',
-        duration: 2000
-      });
-      return;
-    }
-
-    const abilityContext = resolveAbilityContext(uiContext);
+    const abilityContext = getComponentContext(this);
     if (!abilityContext) {
       promptAction.showToast({
         message: '保存失败，请重试',

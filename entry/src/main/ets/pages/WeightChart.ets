@@ -10,7 +10,7 @@ import { getAppDao } from '../common/Global';
 import { getTargetWeightService, TargetWeightRecord } from '../data/TargetWeightService';
 import { TargetWeightSettingDialog } from '../common/TargetWeightSettingDialog';
 import { common } from '@kit.AbilityKit';
-import { resolveAbilityContext } from '../common/ContextUtils';
+import { getComponentContext } from '../common/ContextUtils';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'Chart';
@@ -87,12 +87,9 @@ struct WeightChartPage {
 
   async loadTargetWeight() {
     try {
-      const uiContext = this.getUIContext();
-      if (!uiContext) {
-        return;
-      }
-      const abilityContext = resolveAbilityContext(uiContext);
+      const abilityContext = getComponentContext(this);
       if (!abilityContext) {
+        hilog.error(DOMAIN, TAG, 'Failed to get ability context for target weight');
         return;
       }
       const service = await getTargetWeightService(abilityContext);
