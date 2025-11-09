@@ -461,6 +461,17 @@ export class HealthSyncService {
       }
 
       const resolvedRecord = conflict.resolve(option);
+
+      if (!resolvedRecord) {
+        if (option === ResolutionOption.SKIP) {
+          this.conflicts.delete(conflictId);
+          hilog.info(DOMAIN, TAG, `Conflict ${conflictId} skipped.`);
+          return true;
+        }
+        hilog.warn(DOMAIN, TAG, `Conflict ${conflictId} could not produce a resolved record for option ${option}`);
+        return false;
+      }
+
       await this.weightRecordDao.update(resolvedRecord);
       this.conflicts.delete(conflictId);
       hilog.info(DOMAIN, TAG, `Conflict ${conflictId} resolved with option ${option}`);

@@ -27,6 +27,24 @@ export interface HealthAppRecord {
   syncId?: string;
 }
 
+function isWeightRecord(record: WeightRecord | HealthAppRecord): record is WeightRecord {
+  return record instanceof WeightRecord;
+}
+
+export function isHealthAppRecord(record: WeightRecord | HealthAppRecord): record is HealthAppRecord {
+  if (record instanceof WeightRecord) {
+    return false;
+  }
+  if (record === null || typeof record !== 'object') {
+    return false;
+  }
+  const candidate = record as HealthAppRecord;
+  return typeof candidate.weight === 'number' &&
+    Number.isFinite(candidate.weight) &&
+    typeof candidate.date === 'number' &&
+    Number.isFinite(candidate.date);
+}
+
 export class HealthSyncConflict {
   id: number;
   conflictType: ConflictType;
@@ -68,37 +86,89 @@ export class HealthSyncConflict {
     return detail;
   }
 
-  resolve(option: ResolutionOption): WeightRecord {
-    this.resolutionOption = option;
-    this.resolvedTime = Date.now();
-
+  resolve(option: ResolutionOption): WeightRecord | null {
     switch (option) {
       case ResolutionOption.USE_LOCAL:
+        this.markResolved(option);
         return this.localRecord;
-      case ResolutionOption.USE_HEALTH:
-        const healthNotes = 'notes' in this.healthRecord && this.healthRecord.notes
-          ? this.healthRecord.notes
-          : this.localRecord.notes;
+      case ResolutionOption.SKIP:
+        this.markResolved(option);
+        return this.localRecord;
+      case ResolutionOption.USE_HEALTH: {
+        const healthRecord = this.getNormalizedHealthRecord();
+        if (!healthRecord) {
+          return null;
+        }
+        this.markResolved(option);
+        const notes = healthRecord.notes ?? this.localRecord.notes;
         return new WeightRecord(
-          this.healthRecord.weight,
-          this.healthRecord.date,
+          healthRecord.weight,
+          healthRecord.date,
           this.localRecord.id,
-          healthNotes
+          notes
         );
-      case ResolutionOption.MERGE_AVERAGE:
-        const avgWeight = (this.localRecord.weight + this.healthRecord.weight) / 2;
-        const localNotesForMerge = this.localRecord.notes || '';
-        const healthNotesForMerge = 'notes' in this.healthRecord ? (this.healthRecord.notes || '') : '';
-        const mergedNotes = `${localNotesForMerge} [合并]`;
+      }
+      case ResolutionOption.MERGE_AVERAGE: {
+        const healthRecord = this.getNormalizedHealthRecord();
+        if (!healthRecord) {
+          return null;
+        }
+        this.markResolved(option);
+        const avgWeight = (this.localRecord.weight + healthRecord.weight) / 2;
+        const mergedNotes = this.mergeNotes(this.localRecord.notes, healthRecord.notes);
         return new WeightRecord(
           avgWeight,
-          Math.max(this.localRecord.date, this.healthRecord.date),
+          Math.max(this.localRecord.date, healthRecord.date),
           this.localRecord.id,
           mergedNotes
         );
-      case ResolutionOption.SKIP:
+      }
       default:
+        this.markResolved(option);
         return this.localRecord;
     }
+  }
+
+  private getNormalizedHealthRecord(): WeightRecord | null {
+    const record = this.healthRecord;
+    if (isWeightRecord(record)) {
+      return record;
+    }
+
+    if (!isHealthAppRecord(record)) {
+      return null;
+    }
+
+    const notes = typeof record.notes === 'string' ? record.notes : undefined;
+    const resolvedId = typeof record.id === 'number' ? record.id : this.localRecord.id;
+
+    try {
+      return new WeightRecord(record.weight, record.date, resolvedId, notes);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  private mergeNotes(localNotes?: string, healthNotes?: string): string | undefined {
+    const normalizedLocal = localNotes?.trim() ?? '';
+    const normalizedHealth = healthNotes?.trim() ?? '';
+    const parts: string[] = [];
+
+    if (normalizedLocal.length > 0) {
+      parts.push(normalizedLocal);
+    }
+
+    if (normalizedHealth.length > 0 && normalizedHealth !== normalizedLocal) {
+      parts.push(normalizedHealth);
+    }
+
+    parts.push('[合并]');
+    const merged = parts.join(' ').trim();
+    return merged.length > 0 ? merged : undefined;
+  }
+
+  private markResolved(option: ResolutionOption): void {
+    this.resolutionOption = option;
+    this.resolvedTime = Date.now();
   }
 }
