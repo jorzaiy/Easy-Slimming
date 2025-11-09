@@ -269,12 +269,10 @@ struct HistoryPage {
           Text(`${record.weight.toFixed(1)} kg`)
             .fontSize(20)
             .fontWeight(FontWeight.Bold)
-          
           if (this.currentTarget) {
-            const difference = record.weight - this.currentTarget.targetWeight;
-            Text(difference > 0 ? `+${difference.toFixed(1)} kg` : `${difference.toFixed(1)} kg`)
+            Text(this.getWeightDifferenceText(record))
               .fontSize(14)
-              .fontColor(difference > 0 ? AppColors.WARNING : AppColors.SUCCESS)
+              .fontColor(this.getWeightDifferenceColor(record))
               .margin({ left: 10 })
               .fontWeight(FontWeight.Medium)
           }
@@ -294,11 +292,9 @@ struct HistoryPage {
             .maxLines(2)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
         }
-        
         // 结构化备注摘要
-        const remarks = this.remarksMap.get(record.id) || [];
-        if (remarks.length > 0) {
-          RemarkSummary({ remarks: remarks })
+        if (this.hasRemarks(record.id)) {
+          RemarkSummary({ remarks: this.getRemarks(record.id) })
         }
       }
       .layoutWeight(1)
@@ -387,5 +383,26 @@ struct HistoryPage {
     .height('100%')
     .justifyContent(FlexAlign.Center)
     .backgroundColor('rgba(0, 0, 0, 0.5)')
+  }
+
+  getWeightDifferenceText(record: WeightRecord): string {
+    if (!this.currentTarget) return '';
+    const difference = record.weight - this.currentTarget.targetWeight;
+    return difference > 0 ? `+${difference.toFixed(1)} kg` : `${difference.toFixed(1)} kg`;
+  }
+
+  getWeightDifferenceColor(record: WeightRecord): ResourceColor {
+    if (!this.currentTarget) return Color.Gray;
+    const difference = record.weight - this.currentTarget.targetWeight;
+    return difference > 0 ? AppColors.WARNING : AppColors.SUCCESS;
+  }
+
+  hasRemarks(recordId: number): boolean {
+    const remarks = this.remarksMap.get(recordId) || [];
+    return remarks.length > 0;
+  }
+
+  getRemarks(recordId: number): Remark[] {
+    return this.remarksMap.get(recordId) || [];
   }
 }

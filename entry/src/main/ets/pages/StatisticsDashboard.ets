@@ -177,19 +177,19 @@ struct StatisticsDashboard {
             if (this.rangeStats) {
               this.buildRangeStatsCard()
             }
-            
+
             // 主要指标卡片
             this.buildMainMetricsCard()
-            
+
             // BMI卡片
             this.buildBMICard()
-            
+
             // 趋势卡片
             this.buildTrendCard()
-            
+
             // 进度卡片
             this.buildProgressCard()
-            
+
             // 历史记录统计卡片
             this.buildHistoryCard()
           }
@@ -202,12 +202,12 @@ struct StatisticsDashboard {
             .fontSize(AppText.FONT_SIZE_TITLE)
             .fontColor(AppColors.GRAY)
             .margin({ top: 100 })
-          
+
           Text('请先记录一些体重数据')
             .fontSize(AppText.FONT_SIZE_BODY)
             .fontColor(AppColors.GRAY)
             .margin({ top: 20 })
-          
+
           Button('去记录')
             .type(ButtonType.Capsule)
             .margin({ top: 40 })
@@ -219,433 +219,422 @@ struct StatisticsDashboard {
         .width('100%')
         .layoutWeight(1)
       }
+
+      // 身高设置对话框
+      if (this.showHeightDialog) {
+        HeightSettingDialog({
+          isVisible: this.showHeightDialog,
+          currentHeight: this.userHeight,
+          onHeightChange: (height: number) => this.onHeightChange(height),
+          onDismiss: () => {
+            this.showHeightDialog = false
+          }
+        })
+      }
     }
     .width('100%')
     .height('100%')
     .backgroundColor(AppColors.BACKGROUND)
-    
-    // 身高设置对话框
-    if (this.showHeightDialog) {
-      HeightSettingDialog({
-        isVisible: this.showHeightDialog,
-        currentHeight: this.userHeight,
-        onHeightChange: (height: number) => this.onHeightChange(height),
-        onDismiss: () => { this.showHeightDialog = false }
-      })
-    }
   }
 
   @Builder
+  @Builder
   buildRangeStatsCard() {
-    if (!this.rangeStats) {
-      return;
-    }
-    
-    Card() {
-      Column({ space: AppDimensions.MARGIN_SMALL }) {
-        Text(`${this.getTimeRangeLabel(this.selectedTimeRange)}统计`)
-          .fontSize(AppText.FONT_SIZE_SUBTITLE)
-          .fontWeight(FontWeight.Bold)
+    if (this.rangeStats) {
+      Card() {
+        Column({ space: AppDimensions.MARGIN_SMALL }) {
+          Text(`${this.getTimeRangeLabel(this.selectedTimeRange)}统计`)
+            .fontSize(AppText.FONT_SIZE_SUBTITLE)
+            .fontWeight(FontWeight.Bold)
+            .width('100%')
+            .textAlign(TextAlign.Start)
+
+          Row({ space: AppDimensions.MARGIN_MEDIUM }) {
+            // 记录数
+            Column({ space: 5 }) {
+              Text('记录数')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(this.rangeStats?.count.toString() ?? '0')
+                .fontSize(AppText.FONT_SIZE_TITLE)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.PRIMARY)
+            }
+            .layoutWeight(1)
+
+            // 平均体重
+            Column({ space: 5 }) {
+              Text('平均体重')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(`${this.rangeStats?.average.toFixed(1) ?? '0.0'} kg`)
+                .fontSize(AppText.FONT_SIZE_TITLE)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.WARNING)
+            }
+            .layoutWeight(1)
+
+            // 变化量
+            Column({ space: 5 }) {
+              Text('变化量')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Row({ space: 4 }) {
+                Text(this.rangeStats?.change >= 0 ? '↑' : '↓')
+                  .fontSize(16)
+                  .fontColor(this.rangeStats?.change >= 0 ? AppColors.RED : AppColors.GREEN)
+                Text(`${Math.abs(this.rangeStats?.change ?? 0).toFixed(1)} kg`)
+                  .fontSize(AppText.FONT_SIZE_BODY)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(this.rangeStats?.change >= 0 ? AppColors.RED : AppColors.GREEN)
+              }
+            }
+            .layoutWeight(1)
+          }
           .width('100%')
-          .textAlign(TextAlign.Start)
 
-        Row({ space: AppDimensions.MARGIN_MEDIUM }) {
-          // 记录数
-          Column({ space: 5 }) {
-            Text('记录数')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(this.rangeStats?.count.toString() ?? '0')
-              .fontSize(AppText.FONT_SIZE_TITLE)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.PRIMARY)
-          }
-          .layoutWeight(1)
+          Divider()
+            .margin({ top: 5, bottom: 5 })
 
-          // 平均体重
-          Column({ space: 5 }) {
-            Text('平均体重')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(`${this.rangeStats?.average.toFixed(1) ?? '0.0'} kg`)
-              .fontSize(AppText.FONT_SIZE_TITLE)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.WARNING)
-          }
-          .layoutWeight(1)
-
-          // 变化量
-          Column({ space: 5 }) {
-            Text('变化量')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Row({ space: 4 }) {
-              Text(this.rangeStats?.change >= 0 ? '↑' : '↓')
-                .fontSize(16)
-                .fontColor(this.rangeStats?.change >= 0 ? AppColors.RED : AppColors.GREEN)
-              Text(`${Math.abs(this.rangeStats?.change ?? 0).toFixed(1)} kg`)
+          Row({ space: AppDimensions.MARGIN_MEDIUM }) {
+            // 最高体重
+            Column({ space: 5 }) {
+              Text('最高体重')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(`${this.rangeStats?.max.toFixed(1) ?? '0.0'} kg`)
                 .fontSize(AppText.FONT_SIZE_BODY)
                 .fontWeight(FontWeight.Bold)
-                .fontColor(this.rangeStats?.change >= 0 ? AppColors.RED : AppColors.GREEN)
+                .fontColor(AppColors.RED)
             }
+            .layoutWeight(1)
+
+            // 最低体重
+            Column({ space: 5 }) {
+              Text('最低体重')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(`${this.rangeStats?.min.toFixed(1) ?? '0.0'} kg`)
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.GREEN)
+            }
+            .layoutWeight(1)
           }
-          .layoutWeight(1)
+          .width('100%')
         }
-        .width('100%')
-
-        Divider()
-          .margin({ vertical: 5 })
-
-        Row({ space: AppDimensions.MARGIN_MEDIUM }) {
-          // 最高体重
-          Column({ space: 5 }) {
-            Text('最高体重')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(`${this.rangeStats?.max.toFixed(1) ?? '0.0'} kg`)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.RED)
-          }
-          .layoutWeight(1)
-
-          // 最低体重
-          Column({ space: 5 }) {
-            Text('最低体重')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(`${this.rangeStats?.min.toFixed(1) ?? '0.0'} kg`)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.GREEN)
-          }
-          .layoutWeight(1)
-        }
-        .width('100%')
+        .padding(AppDimensions.PADDING_MEDIUM)
       }
-      .padding(AppDimensions.PADDING_MEDIUM)
     }
   }
 
   getTimeRangeLabel(range: TimeRange): string {
     switch (range) {
-      case 'all': return '全部时间';
-      case 'month': return '本月';
-      case 'week': return '本周';
-      case '7days': return '最近7天';
-      case '30days': return '最近30天';
-      default: return '全部时间';
+      case 'all':
+        return '全部时间';
+      case 'month':
+        return '本月';
+      case 'week':
+        return '本周';
+      case '7days':
+        return '最近7天';
+      case '30days':
+        return '最近30天';
+      default:
+        return '全部时间';
     }
   }
 
   @Builder
   buildMainMetricsCard() {
-    if (!this.statistics) {
-      return;
-    }
-    
-    Card() {
-      Column({ space: AppDimensions.MARGIN_SMALL }) {
-        Text('主要指标')
-          .fontSize(AppText.FONT_SIZE_SUBTITLE)
-          .fontWeight(FontWeight.Bold)
+    if (this.statistics) {
+      Card() {
+        Column({ space: AppDimensions.MARGIN_SMALL }) {
+          Text('主要指标')
+            .fontSize(AppText.FONT_SIZE_SUBTITLE)
+            .fontWeight(FontWeight.Bold)
+            .width('100%')
+            .textAlign(TextAlign.Start)
+
+          Row({ space: AppDimensions.MARGIN_MEDIUM }) {
+            // 当前体重
+            Column({ space: 5 }) {
+              Text('当前体重')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(`${this.statistics?.currentWeight.toFixed(1) ?? '0.0'} kg`)
+                .fontSize(AppText.FONT_SIZE_TITLE)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.PRIMARY)
+            }
+            .layoutWeight(1)
+
+            // 目标体重
+            Column({ space: 5 }) {
+              Text('目标体重')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(`${this.statistics?.targetWeight.toFixed(1) ?? '0.0'} kg`)
+                .fontSize(AppText.FONT_SIZE_TITLE)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.SUCCESS)
+            }
+            .layoutWeight(1)
+
+            // 平均体重
+            Column({ space: 5 }) {
+              Text('平均体重')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(`${this.statistics?.averageWeight.toFixed(1) ?? '0.0'} kg`)
+                .fontSize(AppText.FONT_SIZE_TITLE)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.WARNING)
+            }
+            .layoutWeight(1)
+          }
           .width('100%')
-          .textAlign(TextAlign.Start)
-
-        Row({ space: AppDimensions.MARGIN_MEDIUM }) {
-          // 当前体重
-          Column({ space: 5 }) {
-            Text('当前体重')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(`${this.statistics?.currentWeight.toFixed(1) ?? '0.0'} kg`)
-              .fontSize(AppText.FONT_SIZE_TITLE)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.PRIMARY)
-          }
-          .layoutWeight(1)
-
-          // 目标体重
-          Column({ space: 5 }) {
-            Text('目标体重')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(`${this.statistics?.targetWeight.toFixed(1) ?? '0.0'} kg`)
-              .fontSize(AppText.FONT_SIZE_TITLE)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.SUCCESS)
-          }
-          .layoutWeight(1)
-
-          // 平均体重
-          Column({ space: 5 }) {
-            Text('平均体重')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(`${this.statistics?.averageWeight.toFixed(1) ?? '0.0'} kg`)
-              .fontSize(AppText.FONT_SIZE_TITLE)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.WARNING)
-          }
-          .layoutWeight(1)
         }
-        .width('100%')
+        .padding(AppDimensions.PADDING_MEDIUM)
       }
-      .padding(AppDimensions.PADDING_MEDIUM)
     }
-    .onClick(() => {
-      if (this.statistics) {
-        promptAction.showToast({
-          message: `当前: ${this.statistics.currentWeight.toFixed(1)}kg | 目标: ${this.statistics.targetWeight.toFixed(1)}kg | 平均: ${this.statistics.averageWeight.toFixed(1)}kg`,
-          duration: 3000
-        });
-      }
-    })
-  }
+  };
 
   @Builder
   buildBMICard() {
-    if (!this.statistics) {
-      return;
-    }
-    
-    Card() {
-      Column({ space: AppDimensions.MARGIN_SMALL }) {
-        Row() {
-          Text('BMI 指数')
-            .fontSize(AppText.FONT_SIZE_SUBTITLE)
-            .fontWeight(FontWeight.Bold)
-          
-          Blank()
-          
-          Text(`身高: ${this.userHeight}cm`)
-            .fontSize(AppText.FONT_SIZE_SMALL)
-            .fontColor(AppColors.PRIMARY)
-            .onClick(() => {
-              this.showHeightDialog = true;
-            })
-        }
-        .width('100%')
-
-        Row({ space: AppDimensions.MARGIN_MEDIUM }) {
-          Column({ space: 10 }) {
-            Text(this.statistics?.bmi.toFixed(1) ?? '0.0')
-              .fontSize(48)
+    if (this.statistics) {
+      Card() {
+        Column({ space: AppDimensions.MARGIN_SMALL }) {
+          Row() {
+            Text('BMI 指数')
+              .fontSize(AppText.FONT_SIZE_SUBTITLE)
               .fontWeight(FontWeight.Bold)
-              .fontColor(this.statistics?.getBmiStatusColor() ?? AppColors.GRAY)
-            
-            Text(this.statistics?.getBmiStatus() ?? '未知')
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontColor(this.statistics?.getBmiStatusColor() ?? AppColors.GRAY)
-          }
-          .alignItems(HorizontalAlign.Center)
 
-          Blank()
+            Blank()
 
-          Column({ space: 5 }) {
-            Text('BMI 分类')
+            Text(`身高: ${this.userHeight}cm`)
               .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            
-            Text('偏瘦 < 18.5')
-              .fontSize(12)
-              .fontColor(AppColors.GRAY)
-            Text('正常 18.5-24')
-              .fontSize(12)
-              .fontColor(AppColors.GREEN)
-            Text('偏胖 24-28')
-              .fontSize(12)
-              .fontColor(AppColors.WARNING)
-            Text('肥胖 ≥ 28')
-              .fontSize(12)
-              .fontColor(AppColors.RED)
+              .fontColor(AppColors.PRIMARY)
+              .onClick(() => {
+                this.showHeightDialog = true;
+              })
           }
-          .alignItems(HorizontalAlign.End)
+          .width('100%')
+
+          Row({ space: AppDimensions.MARGIN_MEDIUM }) {
+            Column({ space: 10 }) {
+              Text(this.statistics?.bmi.toFixed(1) ?? '0.0')
+                .fontSize(48)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.statistics?.getBmiStatusColor() ?? AppColors.GRAY)
+
+              Text(this.statistics?.getBmiStatus() ?? '未知')
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontColor(this.statistics?.getBmiStatusColor() ?? AppColors.GRAY)
+            }
+            .alignItems(HorizontalAlign.Center)
+
+            Blank()
+
+            Column({ space: 5 }) {
+              Text('BMI 分类')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+
+              Text('偏瘦 < 18.5')
+                .fontSize(12)
+                .fontColor(AppColors.GRAY)
+              Text('正常 18.5-24')
+                .fontSize(12)
+                .fontColor(AppColors.GREEN)
+              Text('偏胖 24-28')
+                .fontSize(12)
+                .fontColor(AppColors.WARNING)
+              Text('肥胖 ≥ 28')
+                .fontSize(12)
+                .fontColor(AppColors.RED)
+            }
+            .alignItems(HorizontalAlign.End)
+          }
+          .width('100%')
         }
-        .width('100%')
+        .padding(AppDimensions.PADDING_MEDIUM)
       }
-      .padding(AppDimensions.PADDING_MEDIUM)
     }
   }
 
   @Builder
   buildTrendCard() {
-    if (!this.statistics) {
-      return;
-    }
-    
-    Card() {
-      Column({ space: AppDimensions.MARGIN_SMALL }) {
-        Text('变化趋势')
-          .fontSize(AppText.FONT_SIZE_SUBTITLE)
-          .fontWeight(FontWeight.Bold)
+    if (this.statistics) {
+      Card() {
+        Column({ space: AppDimensions.MARGIN_SMALL }) {
+          Text('变化趋势')
+            .fontSize(AppText.FONT_SIZE_SUBTITLE)
+            .fontWeight(FontWeight.Bold)
+            .width('100%')
+            .textAlign(TextAlign.Start)
+
+          Row({ space: AppDimensions.MARGIN_MEDIUM }) {
+            // 7天趋势
+            Column({ space: 5 }) {
+              Text('最近7天')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(this.statistics?.formatTrendText(this.statistics?.trend7Days) ?? '无数据')
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.statistics?.getTrendColor(this.statistics?.trend7Days) ?? AppColors.GRAY)
+            }
+            .layoutWeight(1)
+
+            // 30天趋势
+            Column({ space: 5 }) {
+              Text('最近30天')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(this.statistics?.formatTrendText(this.statistics?.trend30Days) ?? '无数据')
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.statistics?.getTrendColor(this.statistics?.trend30Days) ?? AppColors.GRAY)
+            }
+            .layoutWeight(1)
+          }
           .width('100%')
-          .textAlign(TextAlign.Start)
 
-        Row({ space: AppDimensions.MARGIN_MEDIUM }) {
-          // 7天趋势
-          Column({ space: 5 }) {
-            Text('最近7天')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(this.statistics?.formatTrendText(this.statistics?.trend7Days) ?? '无数据')
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(this.statistics?.getTrendColor(this.statistics?.trend7Days) ?? AppColors.GRAY)
-          }
-          .layoutWeight(1)
+          Divider()
+            .margin({ top: 5, bottom: 5 })
 
-          // 30天趋势
-          Column({ space: 5 }) {
-            Text('最近30天')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(this.statistics?.formatTrendText(this.statistics?.trend30Days) ?? '无数据')
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(this.statistics?.getTrendColor(this.statistics?.trend30Days) ?? AppColors.GRAY)
+          Row({ space: AppDimensions.MARGIN_MEDIUM }) {
+            // 最高体重
+            Column({ space: 5 }) {
+              Text('最高体重')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(`${this.statistics?.maxWeight.toFixed(1) ?? '0.0'} kg`)
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.RED)
+            }
+            .layoutWeight(1)
+
+            // 最低体重
+            Column({ space: 5 }) {
+              Text('最低体重')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(`${this.statistics?.minWeight.toFixed(1) ?? '0.0'} kg`)
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.GREEN)
+            }
+            .layoutWeight(1)
           }
-          .layoutWeight(1)
+          .width('100%')
         }
-        .width('100%')
-
-        Divider()
-          .margin({ vertical: 5 })
-
-        Row({ space: AppDimensions.MARGIN_MEDIUM }) {
-          // 最高体重
-          Column({ space: 5 }) {
-            Text('最高体重')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(`${this.statistics?.maxWeight.toFixed(1) ?? '0.0'} kg`)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.RED)
-          }
-          .layoutWeight(1)
-
-          // 最低体重
-          Column({ space: 5 }) {
-            Text('最低体重')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(`${this.statistics?.minWeight.toFixed(1) ?? '0.0'} kg`)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.GREEN)
-          }
-          .layoutWeight(1)
-        }
-        .width('100%')
+        .padding(AppDimensions.PADDING_MEDIUM)
       }
-      .padding(AppDimensions.PADDING_MEDIUM)
     }
   }
 
   @Builder
   buildProgressCard() {
-    if (!this.statistics) {
-      return;
-    }
-    
-    Card() {
-      Column({ space: AppDimensions.MARGIN_SMALL }) {
-        Text('减重进度')
-          .fontSize(AppText.FONT_SIZE_SUBTITLE)
-          .fontWeight(FontWeight.Bold)
-          .width('100%')
-          .textAlign(TextAlign.Start)
-
-        Column({ space: 10 }) {
-          Row() {
-            Text(`已减重: ${Math.abs(this.statistics?.weightLoss ?? 0).toFixed(1)} kg`)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontColor(this.statistics?.getProgressStatusColor() ?? AppColors.GRAY)
-            
-            Blank()
-            
-            Text(`${this.statistics?.progressPercentage.toFixed(1) ?? '0.0'}%`)
-              .fontSize(AppText.FONT_SIZE_BODY)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(this.statistics?.getProgressStatusColor() ?? AppColors.GRAY)
-          }
-          .width('100%')
-
-          Progress({
-            value: Math.max(0, Math.min(100, this.statistics?.progressPercentage ?? 0)),
-            total: 100,
-            type: ProgressType.Linear
-          })
+    if (this.statistics) {
+      Card() {
+        Column({ space: AppDimensions.MARGIN_SMALL }) {
+          Text('减重进度')
+            .fontSize(AppText.FONT_SIZE_SUBTITLE)
+            .fontWeight(FontWeight.Bold)
             .width('100%')
-            .height(8)
-            .color(this.statistics?.getProgressStatusColor() ?? AppColors.PRIMARY)
-            .backgroundColor(AppColors.LIGHT_GRAY)
-            .borderRadius(4)
+            .textAlign(TextAlign.Start)
 
-          Row() {
-            Text('开始')
-              .fontSize(12)
-              .fontColor(AppColors.GRAY)
-            
-            Blank()
-            
-            Text('目标')
-              .fontSize(12)
-              .fontColor(AppColors.GRAY)
+          Column({ space: 10 }) {
+            Row() {
+              Text(`已减重: ${Math.abs(this.statistics?.weightLoss ?? 0).toFixed(1)} kg`)
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontColor(this.statistics?.getProgressStatusColor() ?? AppColors.GRAY)
+
+              Blank()
+
+              Text(`${this.statistics?.progressPercentage.toFixed(1) ?? '0.0'}%`)
+                .fontSize(AppText.FONT_SIZE_BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.statistics?.getProgressStatusColor() ?? AppColors.GRAY)
+            }
+            .width('100%')
+
+            Progress({
+              value: Math.max(0, Math.min(100, this.statistics?.progressPercentage ?? 0)),
+              total: 100,
+              type: ProgressType.Linear
+            })
+              .width('100%')
+              .height(8)
+              .color(this.statistics?.getProgressStatusColor() ?? AppColors.PRIMARY)
+              .backgroundColor(AppColors.LIGHT_GRAY)
+              .borderRadius(4)
+
+            Row() {
+              Text('开始')
+                .fontSize(12)
+                .fontColor(AppColors.GRAY)
+
+              Blank()
+
+              Text('目标')
+                .fontSize(12)
+                .fontColor(AppColors.GRAY)
+            }
+            .width('100%')
           }
           .width('100%')
         }
-        .width('100%')
+        .padding(AppDimensions.PADDING_MEDIUM)
       }
-      .padding(AppDimensions.PADDING_MEDIUM)
     }
   }
 
   @Builder
   buildHistoryCard() {
-    if (!this.statistics) {
-      return;
-    }
-    
-    Card() {
-      Column({ space: AppDimensions.MARGIN_SMALL }) {
-        Text('历史记录')
-          .fontSize(AppText.FONT_SIZE_SUBTITLE)
-          .fontWeight(FontWeight.Bold)
+    if (this.statistics) {
+      Card() {
+        Column({ space: AppDimensions.MARGIN_SMALL }) {
+          Text('历史记录')
+            .fontSize(AppText.FONT_SIZE_SUBTITLE)
+            .fontWeight(FontWeight.Bold)
+            .width('100%')
+            .textAlign(TextAlign.Start)
+
+          Row({ space: AppDimensions.MARGIN_MEDIUM }) {
+            Column({ space: 5 }) {
+              Text('总记录数')
+                .fontSize(AppText.FONT_SIZE_SMALL)
+                .fontColor(AppColors.GRAY)
+              Text(this.statistics?.totalRecords.toString() ?? '0')
+                .fontSize(AppText.FONT_SIZE_TITLE)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.PRIMARY)
+            }
+            .layoutWeight(1)
+
+            Column({ space: 5 }) {
+              Button('查看详情')
+                .type(ButtonType.Normal)
+                .height(36)
+                .fontSize(14)
+                .backgroundColor(AppColors.WHITE)
+                .fontColor(AppColors.PRIMARY)
+                .border({ width: 1, color: AppColors.PRIMARY, radius: 18 })
+                .onClick(() => {
+                  router.pushUrl({ url: 'pages/History' });
+                })
+            }
+            .alignItems(HorizontalAlign.End)
+            .layoutWeight(1)
+          }
           .width('100%')
-          .textAlign(TextAlign.Start)
-
-        Row({ space: AppDimensions.MARGIN_MEDIUM }) {
-          Column({ space: 5 }) {
-            Text('总记录数')
-              .fontSize(AppText.FONT_SIZE_SMALL)
-              .fontColor(AppColors.GRAY)
-            Text(this.statistics?.totalRecords.toString() ?? '0')
-              .fontSize(AppText.FONT_SIZE_TITLE)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.PRIMARY)
-          }
-          .layoutWeight(1)
-
-          Column({ space: 5 }) {
-            Button('查看详情')
-              .type(ButtonType.Normal)
-              .height(36)
-              .fontSize(14)
-              .backgroundColor(AppColors.WHITE)
-              .fontColor(AppColors.PRIMARY)
-              .border({ width: 1, color: AppColors.PRIMARY, radius: 18 })
-              .onClick(() => {
-                router.pushUrl({ url: 'pages/History' });
-              })
-          }
-          .alignItems(HorizontalAlign.End)
-          .layoutWeight(1)
         }
-        .width('100%')
+        .padding(AppDimensions.PADDING_MEDIUM)
       }
-      .padding(AppDimensions.PADDING_MEDIUM)
     }
   }
 }

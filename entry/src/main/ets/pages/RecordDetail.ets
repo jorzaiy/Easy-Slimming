@@ -60,7 +60,9 @@ struct RecordDetailPage {
   }
 
   async loadRemarks() {
-    if (!this.record || !this.record.id) return;
+    if (!this.record || !this.record.id) {
+      return;
+    }
 
     try {
       const dao = getAppDao();
@@ -87,7 +89,9 @@ struct RecordDetailPage {
   }
 
   async handleSaveRemark(type: RemarkType, content: string) {
-    if (!this.record || !this.record.id) return;
+    if (!this.record || !this.record.id) {
+      return;
+    }
 
     try {
       const dao = getAppDao();
@@ -183,7 +187,12 @@ struct RecordDetailPage {
       .width('100%')
       .padding(AppDimensions.PADDING_MEDIUM)
       .backgroundColor(AppColors.WHITE)
-      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
+      .shadow({
+        radius: 3,
+        color: Color.Gray,
+        offsetX: 0,
+        offsetY: 2
+      })
 
       if (this.record) {
         Column() {
@@ -194,7 +203,7 @@ struct RecordDetailPage {
               .fontWeight(FontWeight.Medium)
               .fontColor('#666666')
               .margin({ bottom: 10 })
-            
+
             Text(`${this.record.weight.toFixed(1)} kg`)
               .fontSize(32)
               .fontWeight(FontWeight.Bold)
@@ -214,7 +223,7 @@ struct RecordDetailPage {
               .fontWeight(FontWeight.Medium)
               .fontColor('#666666')
               .margin({ bottom: 10 })
-            
+
             Text(this.formatDate(this.record.date))
               .fontSize(18)
               .fontWeight(FontWeight.Medium)
@@ -234,7 +243,7 @@ struct RecordDetailPage {
                 .fontWeight(FontWeight.Medium)
                 .fontColor('#666666')
                 .margin({ bottom: 10 })
-              
+
               Text(this.record.notes)
                 .fontSize(16)
                 .lineHeight(24)
@@ -332,7 +341,7 @@ struct RecordDetailPage {
   buildEditDialog() {
     RemarkEditDialog({
       isVisible: this.showEditDialog,
-      remark: this.editingRemark,
+      remark: this.editingRemark ?? undefined,
       onSave: (type: RemarkType, content: string) => {
         this.handleSaveRemark(type, content);
       },

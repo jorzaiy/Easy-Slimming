@@ -1,4 +1,4 @@
-import { Remark, RemarkType } from '../model/Remark';
+import { Remark, RemarkType, RemarkTypeInfo } from '../model/Remark';
 import { AppColors, AppDimensions, AppText, BusinessConstants } from '../common/Constants';
 
 @Component
@@ -7,8 +7,8 @@ export struct RemarkEntry {
   @State newRemarkType: RemarkType = RemarkType.OTHER;
   @State newRemarkContent: string = '';
   @State showTypeSelector: boolean = false;
-
-  onRemarksChange: (remarks: Remark[]) => void = () => {};
+  onRemarksChange: (remarks: Remark[]) => void = () => {
+  };
 
   private addRemark() {
     if (!this.newRemarkContent.trim()) {
@@ -99,12 +99,17 @@ export struct RemarkEntry {
                 Text(remark.getTypeIcon())
                   .fontSize(16)
                   .margin({ right: 4 })
-                
+
                 Text(remark.getTypeDisplayName())
                   .fontSize(AppText.FONT_SIZE_TINY)
                   .fontColor(remark.getTypeColor())
                   .backgroundColor(remark.getTypeColor() + '20')
-                  .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                  .padding({
+                    left: 6,
+                    right: 6,
+                    top: 2,
+                    bottom: 2
+                  })
                   .borderRadius(4)
               }
               .margin({ right: AppDimensions.MARGIN_SMALL })
@@ -152,7 +157,7 @@ export struct RemarkEntry {
           Text(typeInfo.icon)
             .fontSize(18)
             .margin({ right: 8 })
-          
+
           Text(typeInfo.displayName)
             .fontSize(AppText.FONT_SIZE_SMALL)
             .layoutWeight(1)
@@ -167,7 +172,12 @@ export struct RemarkEntry {
     }
     .backgroundColor(AppColors.WHITE)
     .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
-    .shadow({ radius: 4, color: Color.Gray, offsetX: 0, offsetY: 2 })
+    .shadow({
+      radius: 4,
+      color: Color.Gray,
+      offsetX: 0,
+      offsetY: 2
+    })
   }
 
   private getTypeDisplayName(type: RemarkType): string {

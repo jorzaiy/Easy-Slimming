@@ -48,7 +48,7 @@ struct WeightEditForm {
           this.notesInput = record.notes || '';
           this.isEditMode = true;
           hilog.info(DOMAIN, TAG, `Loaded record for editing, id: ${this.recordId}`);
-          
+
           // 加载现有备注
           await this.loadRemarks();
         } else {
@@ -101,7 +101,9 @@ struct WeightEditForm {
   }
 
   async loadRemarks() {
-    if (!this.isEditMode || this.recordId <= 0) return;
+    if (!this.isEditMode || this.recordId <= 0) {
+      return;
+    }
 
     try {
       const dao = getAppDao();
@@ -128,7 +130,9 @@ struct WeightEditForm {
   }
 
   async handleSaveRemark(type: RemarkType, content: string) {
-    if (!this.isEditMode || this.recordId <= 0) return;
+    if (!this.isEditMode || this.recordId <= 0) {
+      return;
+    }
 
     try {
       const dao = getAppDao();
@@ -229,7 +233,7 @@ struct WeightEditForm {
 
       if (rowsAffected > 0) {
         hilog.info(DOMAIN, TAG, `Successfully updated weight record with id: ${this.recordId}`);
-        
+
         promptAction.showToast({
           message: '体重记录更新成功',
           duration: 2000
@@ -273,7 +277,12 @@ struct WeightEditForm {
       .width('100%')
       .padding(15)
       .backgroundColor(Color.White)
-      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
+      .shadow({
+        radius: 3,
+        color: Color.Gray,
+        offsetX: 0,
+        offsetY: 2
+      })
 
       Column() {
         Column() {
@@ -442,7 +451,7 @@ struct WeightEditForm {
   buildEditDialog() {
     RemarkEditDialog({
       isVisible: this.showEditDialog,
-      remark: this.editingRemark,
+      remark: this.editingRemark ?? undefined,
       onSave: (type: RemarkType, content: string) => {
         this.handleSaveRemark(type, content);
       },

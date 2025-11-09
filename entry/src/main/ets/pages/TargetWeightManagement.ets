@@ -85,7 +85,7 @@ struct TargetWeightManagement {
         ]
       }).then(async (data) => {
         if (data.index === 1) {
-          const abilityContext = resolveAbilityContext(this.getUIContext());
+          const abilityContext = getComponentContext(this);
           if (!abilityContext) {
             promptAction.showToast({
               message: '获取上下文失败，请重试',
@@ -141,7 +141,12 @@ struct TargetWeightManagement {
         .width('100%')
         .padding(AppDimensions.PADDING_MEDIUM)
         .backgroundColor(AppColors.WHITE)
-        .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
+        .shadow({
+          radius: 3,
+          color: Color.Gray,
+          offsetX: 0,
+          offsetY: 2
+        })
 
         if (this.isLoading) {
           Column()
@@ -226,7 +231,12 @@ struct TargetWeightManagement {
                 .padding(AppDimensions.PADDING_LARGE)
                 .backgroundColor(AppColors.WHITE)
                 .borderRadius(AppDimensions.BORDER_RADIUS)
-                .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 1 })
+                .shadow({
+                  radius: 3,
+                  color: Color.Gray,
+                  offsetX: 0,
+                  offsetY: 1
+                })
               }
 
               // 历史记录标题
@@ -276,7 +286,12 @@ struct TargetWeightManagement {
                   .padding(AppDimensions.PADDING_LARGE)
                   .backgroundColor(AppColors.WHITE)
                   .borderRadius(AppDimensions.BORDER_RADIUS)
-                  .shadow({ radius: 2, color: Color.Gray, offsetX: 0, offsetY: 1 })
+                  .shadow({
+                    radius: 2,
+                    color: Color.Gray,
+                    offsetX: 0,
+                    offsetY: 1
+                  })
                 }
               })
             }

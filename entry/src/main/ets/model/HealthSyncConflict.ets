@@ -6,17 +6,17 @@
 import { WeightRecord } from './WeightRecord';
 
 export enum ConflictType {
-  DUPLICATE = 'DUPLICATE',         // 重复数据
+  DUPLICATE = 'DUPLICATE', // 重复数据
   VERSION_MISMATCH = 'VERSION_MISMATCH', // 版本不匹配
   TIMESTAMP_CONFLICT = 'TIMESTAMP_CONFLICT', // 时间戳冲突
-  DATA_INCONSISTENCY = 'DATA_INCONSISTENCY'  // 数据不一致
+  DATA_INCONSISTENCY = 'DATA_INCONSISTENCY' // 数据不一致
 }
 
 export enum ResolutionOption {
-  USE_LOCAL = 'USE_LOCAL',         // 使用本地数据
-  USE_HEALTH = 'USE_HEALTH',       // 使用鸿蒙健康数据
+  USE_LOCAL = 'USE_LOCAL', // 使用本地数据
+  USE_HEALTH = 'USE_HEALTH', // 使用鸿蒙健康数据
   MERGE_AVERAGE = 'MERGE_AVERAGE', // 合并取平均值
-  SKIP = 'SKIP'                    // 跳过
+  SKIP = 'SKIP' // 跳过
 }
 
 export interface HealthAppRecord {
@@ -27,11 +27,11 @@ export interface HealthAppRecord {
   syncId?: string;
 }
 
-function isWeightRecord(record: WeightRecord | HealthAppRecord): record is WeightRecord {
+function isWeightRecord(record: WeightRecord | HealthAppRecord): boolean {
   return record instanceof WeightRecord;
 }
 
-export function isHealthAppRecord(record: WeightRecord | HealthAppRecord): record is HealthAppRecord {
+export function isHealthAppRecord(record: WeightRecord | HealthAppRecord): boolean {
   if (record instanceof WeightRecord) {
     return false;
   }
@@ -40,20 +40,20 @@ export function isHealthAppRecord(record: WeightRecord | HealthAppRecord): recor
   }
   const candidate = record as HealthAppRecord;
   return typeof candidate.weight === 'number' &&
-    Number.isFinite(candidate.weight) &&
+  Number.isFinite(candidate.weight) &&
     typeof candidate.date === 'number' &&
-    Number.isFinite(candidate.date);
+  Number.isFinite(candidate.date);
 }
 
 export class HealthSyncConflict {
   id: number;
   conflictType: ConflictType;
-  localRecord: WeightRecord;       // 本地记录
-  healthRecord: WeightRecord | HealthAppRecord;  // 鸿蒙健康记录
-  createdTime: number;             // 冲突检测时间
-  resolvedTime?: number;           // 冲突解决时间
+  localRecord: WeightRecord; // 本地记录
+  healthRecord: WeightRecord | HealthAppRecord; // 鸿蒙健康记录
+  createdTime: number; // 冲突检测时间
+  resolvedTime?: number; // 冲突解决时间
   resolutionOption?: ResolutionOption; // 选择的解决方案
-  description: string;             // 冲突描述
+  description: string; // 冲突描述
 
   constructor(
     conflictType: ConflictType,
@@ -131,11 +131,18 @@ export class HealthSyncConflict {
 
   private getNormalizedHealthRecord(): WeightRecord | null {
     const record = this.healthRecord;
-    if (isWeightRecord(record)) {
+    if (record instanceof WeightRecord) {
       return record;
     }
 
-    if (!isHealthAppRecord(record)) {
+    // 检查是否是HealthAppRecord类型
+    if (record === null || typeof record !== 'object') {
+      return null;
+    }
+
+    const candidate = record as HealthAppRecord;
+    if (typeof candidate.weight !== 'number' || !Number.isFinite(candidate.weight) ||
+      typeof candidate.date !== 'number' || !Number.isFinite(candidate.date)) {
       return null;
     }
 

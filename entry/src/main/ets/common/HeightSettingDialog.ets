@@ -13,7 +13,6 @@ export struct HeightSettingDialog {
   @Prop currentHeight: number;
   @Prop onHeightChange: (height: number) => void;
   @Prop onDismiss: () => void;
-
   @State inputHeight: string = '';
   @State isSaving: boolean = false;
 
@@ -23,7 +22,7 @@ export struct HeightSettingDialog {
 
   async saveHeight() {
     const height: number = parseFloat(this.inputHeight);
-    
+
     if (isNaN(height) || height < 100 || height > 250) {
       promptAction.showToast({
         message: '请输入有效的身高（100-250cm）',
@@ -62,7 +61,7 @@ export struct HeightSettingDialog {
 
   build() {
     if (this.isVisible) {
-      Stack() {
+      Flex({ direction: FlexDirection.Column, justifyContent: FlexAlign.Center, alignItems: ItemAlign.Center }) {
         // 遮罩层
         Column()
           .width('100%')
@@ -151,8 +150,6 @@ export struct HeightSettingDialog {
       }
       .width('100%')
       .height('100%')
-      .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Center)
     }
   }
 }

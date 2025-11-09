@@ -1,22 +1,26 @@
-import { common, UIAbilityContext } from '@kit.AbilityKit';
 
+import { common } from '@kit.AbilityKit';
 /**
  * Interface for UI context objects that may contain ability context
  */
 interface UIContextLike {
-  abilityContext?: unknown;
-  context?: unknown;
-  getHostContext?: () => unknown;
+  abilityContext?: common.Context;
+  context?: common.Context;
+  getHostContext?: () => common.Context;
+}
+
+interface ComponentWithUIContext {
+  getUIContext?(): Object;
 }
 
 /**
  * Type guard to check if a candidate is a valid common.Context
  */
-function isCommonContext(candidate: unknown): candidate is common.Context {
+function isCommonContext(candidate: Object): boolean {
   if (!candidate || typeof candidate !== 'object') {
     return false;
   }
-  const record = candidate as Record<string, unknown>;
+  const record = candidate as Record<string, Object>;
   return typeof record['getApplicationContext'] === 'function'
     || typeof record['databaseDir'] === 'string'
     || typeof record['cacheDir'] === 'string'
@@ -27,11 +31,11 @@ function isCommonContext(candidate: unknown): candidate is common.Context {
 /**
  * Type guard to check if a candidate is a UIAbilityContext
  */
-function isUIAbilityContext(candidate: unknown): candidate is UIAbilityContext {
+function isUIAbilityContext(candidate: Object): boolean {
   if (!isCommonContext(candidate)) {
     return false;
   }
-  const record = candidate as Record<string, unknown>;
+  const record = candidate as Record<string, Object>;
   return typeof record['startAbility'] === 'function'
     || typeof record['terminateSelf'] === 'function'
     || typeof record['abilityInfo'] === 'object';
@@ -42,7 +46,7 @@ function isUIAbilityContext(candidate: unknown): candidate is UIAbilityContext {
  * @param uiContext The UI context from getUIContext()
  * @returns A valid common.Context or null if resolution fails
  */
-export function resolveAbilityContext(uiContext: unknown): common.Context | null {
+export function resolveAbilityContext(uiContext: Object): common.Context | null {
   if (!uiContext) {
     return null;
   }
@@ -51,12 +55,10 @@ export function resolveAbilityContext(uiContext: unknown): common.Context | null
   if (isCommonContext(uiContext)) {
     return uiContext as common.Context;
   }
-
   // Check through UIContextLike interface
   const contextLike = uiContext as UIContextLike;
-
   // Check abilityContext property
-  const abilityContext = contextLike.abilityContext;
+  const abilityContext: common.Context | undefined = contextLike.abilityContext;
   if (abilityContext && isCommonContext(abilityContext)) {
     return abilityContext as common.Context;
   }
@@ -80,19 +82,18 @@ export function resolveAbilityContext(uiContext: unknown): common.Context | null
 
   return null;
 }
-
 /**
- * Resolves UIAbilityContext from UI context with specific type checking
+ * Resolves common.Context from UI context with specific type checking
  * @param uiContext The UI context from getUIContext()
- * @returns A UIAbilityContext or null if resolution fails
+ * @returns A common.Context or null if resolution fails
  */
-export function resolveUIAbilityContext(uiContext: unknown): UIAbilityContext | null {
+export function resolveUIAbilityContext(uiContext: Object): common.Context | null {
   const context = resolveAbilityContext(uiContext);
   if (!context) {
     return null;
   }
 
-  return isUIAbilityContext(context) ? context as UIAbilityContext : null;
+  return isUIAbilityContext(context) ? context as common.Context : null;
 }
 
 /**
@@ -101,24 +102,31 @@ export function resolveUIAbilityContext(uiContext: unknown): UIAbilityContext | 
  * @param component The component instance (typically 'this')
  * @returns A valid common.Context or null if resolution fails
  */
-export function getComponentContext(component: { getUIContext(): unknown }): common.Context | null {
+export function getComponentContext(component: ComponentWithUIContext): common.Context | null {
   try {
-    const uiContext = component.getUIContext();
-    return resolveAbilityContext(uiContext);
+    const getUIContextMethod = component.getUIContext;
+    if (getUIContextMethod) {
+      const uiContext = getUIContextMethod();
+      return resolveAbilityContext(uiContext);
+    }
+    return null;
   } catch (e) {
     return null;
   }
 }
-
 /**
- * Helper function to get UIAbilityContext from a component with proper error handling
+ * Helper function to get common.Context from a component with proper error handling
  * @param component The component instance (typically 'this')
- * @returns A UIAbilityContext or null if resolution fails
+ * @returns A common.Context or null if resolution fails
  */
-export function getComponentUIAbilityContext(component: { getUIContext(): unknown }): UIAbilityContext | null {
+export function getComponentUIAbilityContext(component: ComponentWithUIContext): common.Context | null {
   try {
-    const uiContext = component.getUIContext();
-    return resolveUIAbilityContext(uiContext);
+    const getUIContextMethod = component.getUIContext;
+    if (getUIContextMethod) {
+      const uiContext = getUIContextMethod();
+      return resolveUIAbilityContext(uiContext);
+    }
+    return null;
   } catch (e) {
     return null;
   }

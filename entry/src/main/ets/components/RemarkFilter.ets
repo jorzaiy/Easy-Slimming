@@ -1,11 +1,12 @@
-import { RemarkType, Remark } from '../model/Remark';
+import { RemarkType, Remark, RemarkTypeInfo } from '../model/Remark';
 import { AppColors, AppDimensions, AppText } from '../common/Constants';
 
 @Component
 export struct RemarkFilter {
   @State selectedType: RemarkType | 'all' = 'all';
   @State showFilterDialog: boolean = false;
-  onFilterChange: (type: RemarkType | 'all') => void = () => {};
+  onFilterChange: (type: RemarkType | 'all') => void = () => {
+  };
 
   private getFilterDisplayName(): string {
     if (this.selectedType === 'all') {
@@ -102,7 +103,7 @@ export struct RemarkFilter {
           Text(typeInfo.icon)
             .fontSize(16)
             .margin({ right: 8 })
-          
+
           Text(typeInfo.displayName)
             .fontSize(AppText.FONT_SIZE_SMALL)
             .layoutWeight(1)
@@ -120,6 +121,11 @@ export struct RemarkFilter {
     }
     .backgroundColor(AppColors.WHITE)
     .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
-    .shadow({ radius: 4, color: Color.Gray, offsetX: 0, offsetY: 2 })
+    .shadow({
+      radius: 4,
+      color: Color.Gray,
+      offsetX: 0,
+      offsetY: 2
+    })
   }
 }

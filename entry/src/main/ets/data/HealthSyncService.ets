@@ -33,7 +33,12 @@ export class HealthSyncService {
   private syncRecordDao: HealthSyncRecordDao;
   private syncSettingsDao: SyncSettingsDao;
   private isSyncing: boolean = false;
-  private syncProgress: SyncProgress = { total: 0, completed: 0, failed: 0, percentage: 0 };
+  private syncProgress: SyncProgress = {
+    total: 0,
+    completed: 0,
+    failed: 0,
+    percentage: 0
+  };
   private syncSettings: SyncSettings | null = null;
   private conflicts: Map<number, HealthSyncConflict> = new Map();
 
@@ -79,8 +84,31 @@ export class HealthSyncService {
       if (!this.syncSettings) {
         return false;
       }
-
-      Object.assign(this.syncSettings, settings);
+      // 手动合并设置，避免使用Object.assign
+      if (settings.syncEnabled !== undefined) {
+        this.syncSettings.syncEnabled = settings.syncEnabled;
+      }
+      if (settings.syncMode !== undefined) {
+        this.syncSettings.syncMode = settings.syncMode;
+      }
+      if (settings.autoSyncFrequency !== undefined) {
+        this.syncSettings.autoSyncFrequency = settings.autoSyncFrequency;
+      }
+      if (settings.syncOnAppStart !== undefined) {
+        this.syncSettings.syncOnAppStart = settings.syncOnAppStart;
+      }
+      if (settings.conflictResolution !== undefined) {
+        this.syncSettings.conflictResolution = settings.conflictResolution;
+      }
+      if (settings.enableDetailedLogs !== undefined) {
+        this.syncSettings.enableDetailedLogs = settings.enableDetailedLogs;
+      }
+      if (settings.maxSyncRetries !== undefined) {
+        this.syncSettings.maxSyncRetries = settings.maxSyncRetries;
+      }
+      if (settings.requestTimeout !== undefined) {
+        this.syncSettings.requestTimeout = settings.requestTimeout;
+      }
       await this.syncSettingsDao.update(this.syncSettings);
       hilog.info(DOMAIN, TAG, 'Sync settings updated');
       return true;
@@ -128,7 +156,12 @@ export class HealthSyncService {
     }
 
     this.isSyncing = true;
-    this.syncProgress = { total: 0, completed: 0, failed: 0, percentage: 0 };
+    this.syncProgress = {
+      total: 0,
+      completed: 0,
+      failed: 0,
+      percentage: 0
+    };
 
     try {
       let records: WeightRecord[] = [];
@@ -254,7 +287,12 @@ export class HealthSyncService {
     }
 
     this.isSyncing = true;
-    this.syncProgress = { total: 0, completed: 0, failed: 0, percentage: 0 };
+    this.syncProgress = {
+      total: 0,
+      completed: 0,
+      failed: 0,
+      percentage: 0
+    };
 
     try {
       const healthRecords = await this.fetchFromHealthApp();
@@ -339,7 +377,8 @@ export class HealthSyncService {
       } else {
         result.status = result.success ? SyncStatus.SUCCESS : SyncStatus.FAILED;
       }
-      result.message = `导入完成: ${result.syncedCount}条成功, ${result.failedCount}条失败, ${result.conflictCount}条冲突`;
+      result.message =
+        `导入完成: ${result.syncedCount}条成功, ${result.failedCount}条失败, ${result.conflictCount}条冲突`;
       hilog.info(DOMAIN, TAG, `Sync from health completed: ${result.message}`);
     } catch (e) {
       result.errors.push(`Sync failed: ${e}`);
@@ -507,9 +546,8 @@ export class HealthSyncService {
 
       // 计算数据哈希值用于冲突检测
       syncRecord.dataHash = this.calculateDataHash(record);
-
       // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise<void>(resolve => setTimeout(resolve, 100));
 
       return true;
     } catch (e) {
@@ -526,9 +564,8 @@ export class HealthSyncService {
       // 这里应该调用真实的鸿蒙健康API
       // 目前返回空数组
       hilog.info(DOMAIN, TAG, 'Fetching data from health app');
-
       // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise<void>(resolve => setTimeout(resolve, 500));
 
       return [];
     } catch (e) {
@@ -551,8 +588,8 @@ export class HealthSyncService {
 
         if (
           localDate.getFullYear() === healthDate.getFullYear() &&
-          localDate.getMonth() === healthDate.getMonth() &&
-          localDate.getDate() === healthDate.getDate()
+            localDate.getMonth() === healthDate.getMonth() &&
+            localDate.getDate() === healthDate.getDate()
         ) {
           return localRecord;
         }

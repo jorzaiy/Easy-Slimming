@@ -168,7 +168,8 @@ struct WeightChartPage {
     // 转换为图表坐标点
     this.chartDataPoints = this.records.map((record): ChartDataPoint => {
       const x = this.chartPadding + ((record.date - minTime) / timeRange) * (this.chartWidth - 2 * this.chartPadding);
-      const y = this.chartPadding + ((maxWeight - record.weight) / weightRange) * (this.chartHeight - 2 * this.chartPadding);
+      const y =
+        this.chartPadding + ((maxWeight - record.weight) / weightRange) * (this.chartHeight - 2 * this.chartPadding);
       return {
         date: new Date(record.date),
         weight: record.weight,
@@ -178,7 +179,8 @@ struct WeightChartPage {
     });
 
     // 计算目标线的Y坐标
-    this.targetWeightLineY = this.chartPadding + ((maxWeight - this.targetWeight) / weightRange) * (this.chartHeight - 2 * this.chartPadding);
+    this.targetWeightLineY =
+      this.chartPadding + ((maxWeight - this.targetWeight) / weightRange) * (this.chartHeight - 2 * this.chartPadding);
   }
 
   onTimeRangeChange(range: TimeRange) {
@@ -235,190 +237,200 @@ struct WeightChartPage {
         .width('100%')
         .padding(15)
         .backgroundColor(Color.White)
-        .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
+        .shadow({
+          radius: 3,
+          color: Color.Gray,
+          offsetX: 0,
+          offsetY: 2
+        })
 
-      // 时间范围选择器
-      Row() {
-        Button('一周')
-          .type(ButtonType.Capsule)
-          .height(36)
-          .fontSize(14)
-          .backgroundColor(this.timeRange === TimeRange.WEEK ? Color.Blue : '#F1F3F5')
-          .fontColor(this.timeRange === TimeRange.WEEK ? Color.White : '#333333')
-          .onClick(() => this.onTimeRangeChange(TimeRange.WEEK))
+        // 时间范围选择器
+        Row() {
+          Button('一周')
+            .type(ButtonType.Capsule)
+            .height(36)
+            .fontSize(14)
+            .backgroundColor(this.timeRange === TimeRange.WEEK ? Color.Blue : '#F1F3F5')
+            .fontColor(this.timeRange === TimeRange.WEEK ? Color.White : '#333333')
+            .onClick(() => this.onTimeRangeChange(TimeRange.WEEK))
 
-        Button('一月')
-          .type(ButtonType.Capsule)
-          .height(36)
-          .fontSize(14)
-          .backgroundColor(this.timeRange === TimeRange.MONTH ? Color.Blue : '#F1F3F5')
-          .fontColor(this.timeRange === TimeRange.MONTH ? Color.White : '#333333')
-          .margin({ left: 10 })
-          .onClick(() => this.onTimeRangeChange(TimeRange.MONTH))
+          Button('一月')
+            .type(ButtonType.Capsule)
+            .height(36)
+            .fontSize(14)
+            .backgroundColor(this.timeRange === TimeRange.MONTH ? Color.Blue : '#F1F3F5')
+            .fontColor(this.timeRange === TimeRange.MONTH ? Color.White : '#333333')
+            .margin({ left: 10 })
+            .onClick(() => this.onTimeRangeChange(TimeRange.MONTH))
 
-        Button('三月')
-          .type(ButtonType.Capsule)
-          .height(36)
-          .fontSize(14)
-          .backgroundColor(this.timeRange === TimeRange.THREE_MONTHS ? Color.Blue : '#F1F3F5')
-          .fontColor(this.timeRange === TimeRange.THREE_MONTHS ? Color.White : '#333333')
-          .margin({ left: 10 })
-          .onClick(() => this.onTimeRangeChange(TimeRange.THREE_MONTHS))
-      }
-      .width('100%')
-      .justifyContent(FlexAlign.Center)
-      .padding({ top: 20, bottom: 10 })
+          Button('三月')
+            .type(ButtonType.Capsule)
+            .height(36)
+            .fontSize(14)
+            .backgroundColor(this.timeRange === TimeRange.THREE_MONTHS ? Color.Blue : '#F1F3F5')
+            .fontColor(this.timeRange === TimeRange.THREE_MONTHS ? Color.White : '#333333')
+            .margin({ left: 10 })
+            .onClick(() => this.onTimeRangeChange(TimeRange.THREE_MONTHS))
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.Center)
+        .padding({ top: 20, bottom: 10 })
 
-      // 图表容器
-      Column() {
-        if (this.records.length > 0) {
-          // 统计信息
-          this.StatisticsCard()
-          
-          // 图例和目标体重设置
-          Row() {
+        // 图表容器
+        Column() {
+          if (this.records.length > 0) {
+            // 统计信息
+            this.StatisticsCard()
+
+            // 图例和目标体重设置
             Row() {
-              Circle({ width: 8, height: 8 })
-                .fill(Color.Blue)
-              Text('体重')
-                .fontSize(12)
-                .fontColor('#333333')
-                .margin({ left: 5 })
-            }
-            .margin({ right: 20 })
-
-            Row() {
-              Line()
-                .width(20)
-                .height(2)
-                .stroke(Color.Red)
-                .strokeDashArray([5, 5])
-              Text(`目标 ${this.targetWeight.toFixed(1)}kg`)
-                .fontSize(12)
-                .fontColor('#333333')
-                .margin({ left: 5 })
-            }
-            .onClick(() => this.showTargetWeightDialog())
-
-            Blank()
-
-            Text(`${this.records.length} 条记录`)
-              .fontSize(12)
-              .fontColor('#666666')
-          }
-          .width('100%')
-          .padding({ left: 10, right: 10 })
-          .margin({ bottom: 10 })
-
-          // 图表
-          Stack() {
-            // 背景网格
-            this.GridBackground()
-            
-            // 数据点和连线
-            if (this.chartDataPoints.length > 0) {
-              // Y轴标签
-              this.AxisLabels()
-              
-              // 目标线
-              Line()
-                .startPoint([this.chartPadding, this.targetWeightLineY])
-                .endPoint([this.chartWidth - this.chartPadding, this.targetWeightLineY])
-                .stroke(Color.Red)
-                .strokeWidth(2)
-                .strokeDashArray([5, 5])
-
-              // 体重曲线
-              Path()
-                .width(this.chartWidth)
-                .height(this.chartHeight)
-                .commands(this.generatePathCommands())
-                .stroke(Color.Blue)
-                .strokeWidth(3)
-                .fill(Color.Transparent)
-
-              // 数据点
-              ForEach(this.chartDataPoints.slice(), (point: ChartDataPoint, index?: number) => {
-                Circle({ width: 10, height: 10 })
-                  .fill(Color.Blue)
-                  .position({ x: point.x - 5, y: point.y - 5 })
-                  .onClick(() => {
-                    this.selectedPoint = point;
-                  })
-              })
-            }
-          }
-          .width(this.chartWidth)
-          .height(this.chartHeight)
-          .margin({ top: 10 })
-
-          // 选中点信息
-          if (this.selectedPoint) {
-            Column() {
               Row() {
-                Text('选中数据')
+                Circle({ width: 8, height: 8 })
+                  .fill(Color.Blue)
+                Text('体重')
+                  .fontSize(12)
+                  .fontColor('#333333')
+                  .margin({ left: 5 })
+              }
+              .margin({ right: 20 })
+
+              Row() {
+                Line()
+                  .width(20)
+                  .height(2)
+                  .stroke(Color.Red)
+                  .strokeDashArray([5, 5])
+                Text(`目标 ${this.targetWeight.toFixed(1)}kg`)
+                  .fontSize(12)
+                  .fontColor('#333333')
+                  .margin({ left: 5 })
+              }
+              .onClick(() => this.showTargetWeightDialog())
+
+              Blank()
+
+              Text(`${this.records.length} 条记录`)
+                .fontSize(12)
+                .fontColor('#666666')
+            }
+            .width('100%')
+            .padding({ left: 10, right: 10 })
+            .margin({ bottom: 10 })
+
+            // 图表
+            Stack() {
+              // 背景网格
+              this.GridBackground()
+
+              // 数据点和连线
+              if (this.chartDataPoints.length > 0) {
+                // Y轴标签
+                this.AxisLabels()
+
+                // 目标线
+                Line()
+                  .startPoint([this.chartPadding, this.targetWeightLineY])
+                  .endPoint([this.chartWidth - this.chartPadding, this.targetWeightLineY])
+                  .stroke(Color.Red)
+                  .strokeWidth(2)
+                  .strokeDashArray([5, 5])
+
+                // 体重曲线
+                Path()
+                  .width(this.chartWidth)
+                  .height(this.chartHeight)
+                  .commands(this.generatePathCommands())
+                  .stroke(Color.Blue)
+                  .strokeWidth(3)
+                  .fill(Color.Transparent)
+
+                // 数据点
+                ForEach(this.chartDataPoints.slice(), (point: ChartDataPoint, index?: number) => {
+                  Circle({ width: 10, height: 10 })
+                    .fill(Color.Blue)
+                    .position({ x: point.x - 5, y: point.y - 5 })
+                    .onClick(() => {
+                      this.selectedPoint = point;
+                    })
+                })
+              }
+            }
+            .width(this.chartWidth)
+            .height(this.chartHeight)
+            .margin({ top: 10 })
+
+            // 选中点信息
+            if (this.selectedPoint) {
+              Column() {
+                Row() {
+                  Text('选中数据')
+                    .fontSize(14)
+                    .fontColor('#333333')
+                    .fontWeight(FontWeight.Bold)
+                  Blank()
+                  Image($r('app.media.ic_back'))
+                    .width(16)
+                    .height(16)
+                    .fillColor('#666666')
+                    .onClick(() => {
+                      this.selectedPoint = null;
+                    })
+                }
+                .width('100%')
+                .margin({ bottom: 10 })
+
+                Text(`日期: ${this.formatDateOnly(this.selectedPoint.date.getTime())}`)
                   .fontSize(14)
                   .fontColor('#333333')
+                  .width('100%')
+
+                Text(`体重: ${this.selectedPoint.weight.toFixed(1)} kg`)
+                  .fontSize(16)
                   .fontWeight(FontWeight.Bold)
-                Blank()
-                Image($r('app.media.ic_back'))
-                  .width(16)
-                  .height(16)
-                  .fillColor('#666666')
-                  .onClick(() => {
-                    this.selectedPoint = null;
-                  })
+                  .fontColor(Color.Blue)
+                  .width('100%')
+                  .margin({ top: 5 })
+
+                Text(`目标: ${this.targetWeight.toFixed(1)} kg`)
+                  .fontSize(14)
+                  .fontColor('#666666')
+                  .width('100%')
+                  .margin({ top: 5 })
+
+                Text(`差距: ${this.calculateWeightDiff(this.selectedPoint.weight, this.targetWeight)} kg`)
+                  .fontSize(14)
+                  .fontColor((this.selectedPoint.weight - this.targetWeight) > 0 ? Color.Red : '#00C853')
+                  .width('100%')
+                  .margin({ top: 5 })
               }
-              .width('100%')
-              .margin({ bottom: 10 })
-
-              Text(`日期: ${this.formatDateOnly(this.selectedPoint.date.getTime())}`)
-                .fontSize(14)
-                .fontColor('#333333')
-                .width('100%')
-
-              Text(`体重: ${this.selectedPoint.weight.toFixed(1)} kg`)
-                .fontSize(16)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(Color.Blue)
-                .width('100%')
-                .margin({ top: 5 })
-
-              Text(`目标: ${this.targetWeight.toFixed(1)} kg`)
-                .fontSize(14)
-                .fontColor('#666666')
-                .width('100%')
-                .margin({ top: 5 })
-
-              Text(`差距: ${this.calculateWeightDiff(this.selectedPoint.weight, this.targetWeight)} kg`)
-                .fontSize(14)
-                .fontColor((this.selectedPoint.weight - this.targetWeight) > 0 ? Color.Red : '#00C853')
-                .width('100%')
-                .margin({ top: 5 })
+              .padding(15)
+              .backgroundColor(Color.White)
+              .borderRadius(10)
+              .margin({ top: 15 })
+              .shadow({
+                radius: 3,
+                color: Color.Gray,
+                offsetX: 0,
+                offsetY: 2
+              })
             }
-            .padding(15)
-            .backgroundColor(Color.White)
-            .borderRadius(10)
-            .margin({ top: 15 })
-            .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
+          } else {
+            Column() {
+              Text('暂无数据')
+                .fontSize(18)
+                .fontColor(Color.Gray)
+                .margin({ top: '40%' })
+              Text('记录体重后即可查看趋势图表')
+                .fontSize(14)
+                .fontColor(Color.Gray)
+                .margin({ top: 10 })
+            }
+            .layoutWeight(1)
           }
-        } else {
-          Column() {
-            Text('暂无数据')
-              .fontSize(18)
-              .fontColor(Color.Gray)
-              .margin({ top: '40%' })
-            Text('记录体重后即可查看趋势图表')
-              .fontSize(14)
-              .fontColor(Color.Gray)
-              .margin({ top: 10 })
-          }
-          .layoutWeight(1)
         }
-      }
-      .layoutWeight(1)
-      .width('100%')
-      .padding({ left: 20, right: 20 })
+        .layoutWeight(1)
+        .width('100%')
+        .padding({ left: 20, right: 20 })
       }
       .layoutWeight(1)
       .width('100%')
@@ -523,7 +535,12 @@ struct WeightChartPage {
       .backgroundColor(Color.White)
       .borderRadius(10)
       .margin({ bottom: 15 })
-      .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 2 })
+      .shadow({
+        radius: 3,
+        color: Color.Gray,
+        offsetX: 0,
+        offsetY: 2
+      })
     }
   }
 
@@ -532,7 +549,8 @@ struct WeightChartPage {
     if (this.records.length > 0) {
       Column() {
         ForEach([0, 1, 2, 3, 4, 5].slice(), (index: number, arrayIndex?: number) => {
-          Text(`${(this.weightRange.maxWeight - (index * (this.weightRange.maxWeight - this.weightRange.minWeight) / 5)).toFixed(1)}`)
+          Text(`${(this.weightRange.maxWeight -
+            (index * (this.weightRange.maxWeight - this.weightRange.minWeight) / 5)).toFixed(1)}`)
             .fontSize(10)
             .fontColor('#666666')
             .width(30)
@@ -552,15 +570,17 @@ struct WeightChartPage {
       ForEach([0, 1, 2, 3, 4, 5].slice(), (index: number, arrayIndex?: number) => {
         Line()
           .startPoint([this.chartPadding, this.chartPadding + index * (this.chartHeight - 2 * this.chartPadding) / 5])
-          .endPoint([this.chartWidth - this.chartPadding, this.chartPadding + index * (this.chartHeight - 2 * this.chartPadding) / 5])
+          .endPoint([this.chartWidth - this.chartPadding,
+            this.chartPadding + index * (this.chartHeight - 2 * this.chartPadding) / 5])
           .stroke('#E5E5E5')
           .strokeWidth(1)
       })
-      
+
       ForEach([0, 1, 2, 3, 4, 5].slice(), (index: number, arrayIndex?: number) => {
         Line()
           .startPoint([this.chartPadding + index * (this.chartWidth - 2 * this.chartPadding) / 5, this.chartPadding])
-          .endPoint([this.chartPadding + index * (this.chartWidth - 2 * this.chartPadding) / 5, this.chartHeight - this.chartPadding])
+          .endPoint([this.chartPadding + index * (this.chartWidth - 2 * this.chartPadding) / 5,
+            this.chartHeight - this.chartPadding])
           .stroke('#E5E5E5')
           .strokeWidth(1)
       })
@@ -624,6 +644,19 @@ struct WeightChartPage {
     .backgroundColor('rgba(0, 0, 0, 0.5)')
   }
 
+  private updateTargetWeight() {
+    if (this.tempTargetWeight && this.tempTargetWeight.trim().length > 0) {
+      const newTargetWeight = parseFloat(this.tempTargetWeight);
+      if (!isNaN(newTargetWeight) && newTargetWeight > 0) {
+        WeightRecord.setTargetWeight(newTargetWeight);
+        this.targetWeight = newTargetWeight;
+        this.showTargetDialog = false;
+        this.tempTargetWeight = '';
+        this.loadChartData();
+      }
+    }
+  }
+
   private calculateWeightDiff(currentWeight: number, targetWeight: number): string {
     const diff = currentWeight - targetWeight;
     return `${diff > 0 ? '+' : ''}${diff.toFixed(1)}`;
@@ -673,11 +706,11 @@ struct WeightChartPage {
     }
 
     let commands = `M ${this.chartDataPoints[0].x} ${this.chartDataPoints[0].y}`;
-    
+
     for (let i = 1; i < this.chartDataPoints.length; i++) {
       commands += ` L ${this.chartDataPoints[i].x} ${this.chartDataPoints[i].y}`;
     }
-    
+
     return commands;
   }
 }

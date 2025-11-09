@@ -43,8 +43,8 @@ export class StatisticsService {
   static async getStatistics(context: common.Context): Promise<WeightStatistics | null> {
     try {
       // 先尝试从缓存获取
-      const cached = await this.getCachedStatistics(context);
-      if (cached && !this.isCacheExpired(cached.lastUpdated)) {
+      const cached = await StatisticsService.getCachedStatistics(context);
+      if (cached && !StatisticsService.isCacheExpired(cached.lastUpdated)) {
         hilog.info(DOMAIN, TAG, 'Using cached statistics');
         return cached;
       }
@@ -57,13 +57,12 @@ export class StatisticsService {
       }
 
       const records = await dao.queryAll();
-      const height = await this.getUserHeight(context);
-      
+      const height = await StatisticsService.getUserHeight(context);
+
       const statistics = StatisticsCalculator.calculateStatistics(records, height);
-      
       // 缓存结果
       if (statistics) {
-        await this.cacheStatistics(context, statistics);
+        await StatisticsService.cacheStatistics(context, statistics);
       }
 
       return statistics;
@@ -79,10 +78,10 @@ export class StatisticsService {
   static async refreshStatistics(context: common.Context): Promise<WeightStatistics | null> {
     try {
       // 清除缓存
-      await this.clearCache(context);
-      
+      await StatisticsService.clearCache(context);
+
       // 重新计算
-      return await this.getStatistics(context);
+      return await StatisticsService.getStatistics(context);
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to refresh statistics: ${e}`);
       return null;
@@ -110,16 +109,33 @@ export class StatisticsService {
     try {
       const dataStore = await preferences.getPreferences(context, 'weight_app_stats');
       const cachedData: string = await dataStore.get(StatisticsService.CACHE_KEY, '') as string;
-      
+
       if (!cachedData) {
         return null;
       }
-
-      const data: Record<string, any> = JSON.parse(cachedData);
+      const data: Record<string, number | string | boolean | Record<string, string | number>> = JSON.parse(cachedData);
       if (!data) {
         return null;
       }
-      
+
+      // 手动重建 TrendData 对象
+      const trend7DaysData = data.trend7Days as Record<string, string | number>;
+      const trend30DaysData = data.trend30Days as Record<string, string | number>;
+
+      const trend7Days: TrendData = {
+        period: trend7DaysData.period as string,
+        change: trend7DaysData.change as number,
+        trend: trend7DaysData.trend as 'up' | 'down' | 'stable',
+        percentage: trend7DaysData.percentage as number
+      };
+
+      const trend30Days: TrendData = {
+        period: trend30DaysData.period as string,
+        change: trend30DaysData.change as number,
+        trend: trend30DaysData.trend as 'up' | 'down' | 'stable',
+        percentage: trend30DaysData.percentage as number
+      };
+
       return new WeightStatistics(
         data.currentWeight as number,
         data.targetWeight as number,
@@ -129,8 +145,8 @@ export class StatisticsService {
         data.maxWeight as number,
         data.minWeight as number,
         data.totalRecords as number,
-        data.trend7Days as TrendData,
-        data.trend30Days as TrendData,
+        trend7Days,
+        trend30Days,
         data.progressPercentage as number,
         data.lastUpdated as number
       );
@@ -170,7 +186,7 @@ export class StatisticsService {
       await dataStore.put(StatisticsService.HEIGHT_KEY, height);
       await dataStore.flush();
       hilog.info(DOMAIN, TAG, `User height saved: ${height}cm`);
-      
+
       // 清除统计缓存，因为身高变化会影响BMI
       await StatisticsService.clearCache(context);
     } catch (e) {
@@ -197,8 +213,8 @@ export class StatisticsService {
    * 获取指定时间范围的统计概览
    */
   static async getRangeStatistics(
-    context: common.Context, 
-    startDate: number, 
+    context: common.Context,
+    startDate: number,
     endDate: number
   ): Promise<RangeStatistics | null> {
     try {
@@ -208,7 +224,7 @@ export class StatisticsService {
       }
 
       const records: WeightRecord[] = await dao.queryByDateRange(startDate, endDate);
-      
+
       if (records.length === 0) {
         return null;
       }
@@ -226,7 +242,7 @@ export class StatisticsService {
         max: Math.round(max * 10) / 10,
         change: Math.round(change * 10) / 10
       };
-      
+
       return result;
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to get range statistics: ${e}`);

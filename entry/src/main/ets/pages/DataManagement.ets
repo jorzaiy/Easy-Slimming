@@ -9,6 +9,7 @@ import promptAction from '@ohos.promptAction';
 import { getAppDao } from '../common/Global';
 import { getTargetWeightService } from '../data/TargetWeightService';
 import { getDataExportImportService, DataExportImportService } from '../data/DataExportImportService';
+import { ExportOptions, ImportResult } from '../model/ExportData';
 import { common } from '@kit.AbilityKit';
 import { getComponentContext } from '../common/ContextUtils';
 import fs from '@ohos.file.fs';
@@ -60,8 +61,7 @@ struct DataManagement {
       const abilityContext = getComponentContext(this);
       const targetService = abilityContext ? await getTargetWeightService(abilityContext) : null;
       const targets = targetService ? await targetService.getAllTargets() : undefined;
-
-      const options = {
+      const options: ExportOptions = {
         format: this.exportFormat as 'csv' | 'excel' | 'json',
         includeStatistics: this.includeStatistics,
         timestamp: Date.now()
@@ -90,7 +90,7 @@ struct DataManagement {
       }
 
       await this.saveExportFile(fileName, content);
-      
+
       this.showExportDialog = false;
       promptAction.showToast({
         message: `导出成功: ${fileName}`,
@@ -142,11 +142,10 @@ struct DataManagement {
       }
 
       const service = await getDataExportImportService(dao);
-      
       // 读取文件
       const content = fs.readTextSync(filePath);
 
-      let importResult;
+      let importResult: ImportResult;
 
       if (filePath.endsWith('.json')) {
         importResult = await service.importFromJSON(content, {
@@ -237,7 +236,12 @@ struct DataManagement {
         .padding({ left: AppDimensions.PADDING_MEDIUM, right: AppDimensions.PADDING_MEDIUM })
         .alignItems(VerticalAlign.Center)
         .backgroundColor(AppColors.WHITE)
-        .shadow({ radius: 2, color: Color.Gray, offsetX: 0, offsetY: 1 })
+        .shadow({
+          radius: 2,
+          color: Color.Gray,
+          offsetX: 0,
+          offsetY: 1
+        })
 
         Scroll(this.scroller) {
           Column({ space: AppDimensions.MARGIN_LARGE }) {
@@ -268,7 +272,12 @@ struct DataManagement {
             .padding(AppDimensions.PADDING_LARGE)
             .backgroundColor(AppColors.WHITE)
             .borderRadius(AppDimensions.BORDER_RADIUS)
-            .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 1 })
+            .shadow({
+              radius: 3,
+              color: Color.Gray,
+              offsetX: 0,
+              offsetY: 1
+            })
 
             // 导入功能卡片
             Column({ space: AppDimensions.MARGIN_MEDIUM }) {
@@ -297,7 +306,12 @@ struct DataManagement {
             .padding(AppDimensions.PADDING_LARGE)
             .backgroundColor(AppColors.WHITE)
             .borderRadius(AppDimensions.BORDER_RADIUS)
-            .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 1 })
+            .shadow({
+              radius: 3,
+              color: Color.Gray,
+              offsetX: 0,
+              offsetY: 1
+            })
 
             // 帮助信息
             Column({ space: AppDimensions.MARGIN_SMALL }) {
@@ -465,8 +479,7 @@ struct DataManagement {
         }
         .width('100%')
         .height('100%')
-        .justifyContent(FlexAlign.Center)
-        .alignItems(HorizontalAlign.Center)
+        .alignContent(Alignment.Center)
       }
     }
     .width('100%')

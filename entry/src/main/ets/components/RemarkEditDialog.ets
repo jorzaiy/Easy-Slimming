@@ -1,4 +1,4 @@
-import { Remark, RemarkType } from '../model/Remark';
+import { Remark, RemarkType, RemarkTypeInfo } from '../model/Remark';
 import { AppColors, AppDimensions, AppText, BusinessConstants } from '../common/Constants';
 
 @Component
@@ -8,8 +8,10 @@ export struct RemarkEditDialog {
   @State selectedType: RemarkType = RemarkType.OTHER;
   @State content: string = '';
   @State showTypeSelector: boolean = false;
-  onSave: (type: RemarkType, content: string) => void = () => {};
-  onCancel: () => void = () => {};
+  onSave: (type: RemarkType, content: string) => void = () => {
+  };
+  onCancel: () => void = () => {
+  };
 
   aboutToAppear() {
     if (this.remark) {
@@ -78,7 +80,7 @@ export struct RemarkEditDialog {
               .width('100%')
               .textAlign(TextAlign.Start)
 
-            TextArea({ 
+            TextArea({
               placeholder: '请输入备注内容...',
               text: this.content
             })
@@ -149,7 +151,7 @@ export struct RemarkEditDialog {
           Text(typeInfo.icon)
             .fontSize(18)
             .margin({ right: 8 })
-          
+
           Text(typeInfo.displayName)
             .fontSize(AppText.FONT_SIZE_SMALL)
             .layoutWeight(1)
@@ -166,7 +168,12 @@ export struct RemarkEditDialog {
     }
     .backgroundColor(AppColors.WHITE)
     .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
-    .shadow({ radius: 4, color: Color.Gray, offsetX: 0, offsetY: 2 })
+    .shadow({
+      radius: 4,
+      color: Color.Gray,
+      offsetX: 0,
+      offsetY: 2
+    })
   }
 
   private getTypeDisplayName(type: RemarkType): string {

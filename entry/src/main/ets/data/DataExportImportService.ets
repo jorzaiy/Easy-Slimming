@@ -42,20 +42,22 @@ export class DataExportImportService {
       // 过滤日期范围
       if (options.startDate || options.endDate) {
         records = records.filter(r => {
-          if (options.startDate && r.date < options.startDate) return false;
-          if (options.endDate && r.date > options.endDate) return false;
+          if (options.startDate && r.date < options.startDate) {
+            return false;
+          }
+          if (options.endDate && r.date > options.endDate) {
+            return false;
+          }
           return true;
         });
       }
-
       const exportRecords: ExportRecordData[] = records.map(r => ({
         id: r.id,
         weight: r.weight,
         date: r.date,
         formattedDate: r.getFormattedDate(),
         notes: r.notes
-      }));
-
+      } as ExportRecordData));
       let exportStatistics: ExportStatisticsData | undefined;
       if (options.includeStatistics && records.length > 0) {
         const weights: number[] = records.map(r => r.weight);
@@ -66,18 +68,17 @@ export class DataExportImportService {
           minWeight: Math.min(...weights),
           maxWeight: Math.max(...weights),
           currentTarget: targets && targets.length > 0 ? targets[0].targetWeight : undefined
-        };
+        } as ExportStatisticsData;
       }
-
       const exportTargets: ExportTargetData[] | undefined = targets && targets.length > 0
         ? targets.map(t => ({
-            id: t.id,
-            targetWeight: t.targetWeight,
-            setDate: t.setDate,
-            formattedDate: new Date(t.setDate).toISOString(),
-            targetDate: t.targetDate,
-            notes: t.notes
-          }))
+          id: t.id,
+          targetWeight: t.targetWeight,
+          setDate: t.setDate,
+          formattedDate: new Date(t.setDate).toISOString(),
+          targetDate: t.targetDate,
+          notes: t.notes
+        } as ExportTargetData))
         : undefined;
 
       const content: ExportDataContent = {
@@ -109,8 +110,12 @@ export class DataExportImportService {
       // 过滤日期范围
       if (options.startDate || options.endDate) {
         records = records.filter(r => {
-          if (options.startDate && r.date < options.startDate) return false;
-          if (options.endDate && r.date > options.endDate) return false;
+          if (options.startDate && r.date < options.startDate) {
+            return false;
+          }
+          if (options.endDate && r.date > options.endDate) {
+            return false;
+          }
           return true;
         });
       }

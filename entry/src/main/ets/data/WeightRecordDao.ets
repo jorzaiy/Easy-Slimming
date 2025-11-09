@@ -5,6 +5,7 @@ import { rdbHelper, TABLE_NAME, REMARKS_TABLE_NAME } from './RdbHelper';
 import hilog from '@ohos.hilog';
 import { LogConstants } from '../common/Constants';
 import { common } from '@kit.AbilityKit';
+
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'WeightRecordDao';
 
@@ -43,7 +44,7 @@ export class WeightRecordDao {
         'date': record.date,
         'notes': record.notes || ''
       };
-      
+
       await this.rdbStore.executeSql('BEGIN TRANSACTION');
       let id: number = await this.rdbStore.insert(TABLE_NAME, valueBucket);
       await this.rdbStore.executeSql('COMMIT');
@@ -110,17 +111,17 @@ export class WeightRecordDao {
   async deleteById(id: number): Promise<number> {
     try {
       await this.rdbStore.executeSql('BEGIN TRANSACTION');
-      
+
       // 先删除关联的备注
       let remarkPredicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
       remarkPredicates.equalTo('record_id', id);
       await this.rdbStore.delete(remarkPredicates);
-      
+
       // 再删除体重记录
       let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(TABLE_NAME);
       predicates.equalTo('id', id);
       let rows: number = await this.rdbStore.delete(predicates);
-      
+
       await this.rdbStore.executeSql('COMMIT');
       hilog.info(DOMAIN, TAG, `Deleted ${rows} records and associated remarks.`);
       return rows;
@@ -236,7 +237,7 @@ export class WeightRecordDao {
         'content': content,
         'timestamp': remark.timestamp
       };
-      
+
       await this.rdbStore.executeSql('BEGIN TRANSACTION');
       let id: number = await this.rdbStore.insert(REMARKS_TABLE_NAME, valueBucket);
       await this.rdbStore.executeSql('COMMIT');
@@ -303,7 +304,7 @@ export class WeightRecordDao {
       };
       let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
       predicates.equalTo('id', remarkId);
-      
+
       let rows: number = await this.rdbStore.update(valueBucket, predicates);
       hilog.info(DOMAIN, TAG, `Updated ${rows} remark(s) with id: ${remarkId}.`);
       return rows;
@@ -357,9 +358,9 @@ export class WeightRecordDao {
   async queryRecordIdsByRemarkType(type: RemarkType): Promise<number[]> {
     let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
     predicates.equalTo('type', type as string);
-    predicates.distinct('record_id');
+    predicates.distinct();
     try {
-      let resultSet = await this.rdbStore.query(predicates);
+      let resultSet = await this.rdbStore.query(predicates, ['record_id']);
       let recordIds: number[] = [];
       if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
@@ -386,9 +387,9 @@ export class WeightRecordDao {
   async searchRecordIdsByRemarkContent(keyword: string): Promise<number[]> {
     let predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates(REMARKS_TABLE_NAME);
     predicates.contains('content', keyword);
-    predicates.distinct('record_id');
+    predicates.distinct();
     try {
-      let resultSet = await this.rdbStore.query(predicates);
+      let resultSet = await this.rdbStore.query(predicates, ['record_id']);
       let recordIds: number[] = [];
       if (resultSet && resultSet.rowCount > 0) {
         while (resultSet.goToNextRow()) {
@@ -408,6 +409,7 @@ export class WeightRecordDao {
       return [];
     }
   }
+
   /**
    * 获取体重记录及其备注
    * @param recordId 体重记录ID
@@ -416,7 +418,7 @@ export class WeightRecordDao {
   async queryWithRemarks(recordId: number): Promise<WeightRecordWithRemarks> {
     const record: WeightRecord | null = await this.queryById(recordId);
     const remarks: Remark[] = await this.queryRemarksByRecordId(recordId);
-    
+
     hilog.info(DOMAIN, TAG, `Queried record ${recordId} with ${remarks.length} remarks.`);
     return { record, remarks };
   }
