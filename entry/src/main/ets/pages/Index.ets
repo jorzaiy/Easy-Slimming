@@ -18,7 +18,7 @@ struct Index {
   @State error: string = '';
   @State isSaving: boolean = false;
   @State currentTargetWeight: number = 70.0;
-  @Provide keypadCallbacks: any = {};
+  @Provide callbacks: any = {};
 
   async aboutToAppear() {
     await this.loadLatestRecord();
@@ -31,7 +31,7 @@ struct Index {
   }
 
   private setupKeypadCallbacks() {
-    this.keypadCallbacks = {
+    this.callbacks = {
       onValueChange: (value: string) => {
         this.weightInput = value;
         this.error = '';
@@ -311,7 +311,7 @@ struct Index {
           .fontWeight(FontWeight.Bold)
           .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
 
-        NumericKeypad({ callbacks: this.keypadCallbacks })
+        NumericKeypad({})
       }
       .width('50%')
       .height('100%')
