@@ -194,8 +194,8 @@ struct Index {
   }
 
   build() {
-    Row() {
-      // Column 1: Latest Record Card
+    Column() {
+      // 第一栏 - 上次记录展示
       Column() {
         Text('最近记录')
           .fontSize(AppText.FONT_SIZE_SUBTITLE)
@@ -260,57 +260,50 @@ struct Index {
           .alignItems(HorizontalAlign.Center)
         }
       }
-      .width('25%')
-      .height('100%')
+      .width('100%')
+      .height(200)
       .padding(AppDimensions.PADDING_SMALL)
 
-      // Column 2: Quick Actions
-      Column() {
-        Text('快速操作')
-          .fontSize(AppText.FONT_SIZE_SUBTITLE)
+      // 第二栏 - 功能按钮栏（水平排列）
+      Row() {
+        Button('趋势图表')
+          .layoutWeight(1)
+          .height(AppDimensions.BUTTON_HEIGHT)
+          .fontSize(AppText.FONT_SIZE_SMALL)
           .fontWeight(FontWeight.Bold)
-          .margin({ bottom: AppDimensions.MARGIN_MEDIUM })
+          .backgroundColor(AppColors.BLUE)
+          .fontColor(AppColors.WHITE)
+          .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
+          .onClick(() => this.navigateToPage('pages/WeightChart'))
+          .margin({ right: AppDimensions.MARGIN_SMALL })
 
-        Column() {
-          Button('趋势图表')
-            .width('100%')
-            .height(AppDimensions.BUTTON_HEIGHT)
-            .fontSize(AppText.FONT_SIZE_SMALL)
-            .fontWeight(FontWeight.Bold)
-            .backgroundColor(AppColors.BLUE)
-            .fontColor(AppColors.WHITE)
-            .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
-            .onClick(() => this.navigateToPage('pages/WeightChart'))
-            .margin({ bottom: AppDimensions.MARGIN_SMALL })
+        Button('统计仪表板')
+          .layoutWeight(1)
+          .height(AppDimensions.BUTTON_HEIGHT)
+          .fontSize(AppText.FONT_SIZE_SMALL)
+          .fontWeight(FontWeight.Bold)
+          .backgroundColor(AppColors.GREEN)
+          .fontColor(AppColors.WHITE)
+          .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
+          .onClick(() => this.navigateToPage('pages/StatisticsDashboard'))
+          .margin({ right: AppDimensions.MARGIN_SMALL })
 
-          Button('统计仪表板')
-            .width('100%')
-            .height(AppDimensions.BUTTON_HEIGHT)
-            .fontSize(AppText.FONT_SIZE_SMALL)
-            .fontWeight(FontWeight.Bold)
-            .backgroundColor(AppColors.GREEN)
-            .fontColor(AppColors.WHITE)
-            .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
-            .onClick(() => this.navigateToPage('pages/StatisticsDashboard'))
-            .margin({ bottom: AppDimensions.MARGIN_SMALL })
-
-          Button('设置')
-            .width('100%')
-            .height(AppDimensions.BUTTON_HEIGHT)
-            .fontSize(AppText.FONT_SIZE_SMALL)
-            .fontWeight(FontWeight.Bold)
-            .backgroundColor(AppColors.SECONDARY)
-            .fontColor(AppColors.WHITE)
-            .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
-            .onClick(() => this.navigateToPage('pages/Settings'))
-        }
-        .width('100%')
+        Button('设置')
+          .layoutWeight(1)
+          .height(AppDimensions.BUTTON_HEIGHT)
+          .fontSize(AppText.FONT_SIZE_SMALL)
+          .fontWeight(FontWeight.Bold)
+          .backgroundColor(AppColors.SECONDARY)
+          .fontColor(AppColors.WHITE)
+          .borderRadius(AppDimensions.BORDER_RADIUS_SMALL)
+          .onClick(() => this.navigateToPage('pages/Settings'))
       }
-      .width('25%')
-      .height('100%')
+      .width('100%')
+      .height(80)
       .padding(AppDimensions.PADDING_SMALL)
+      .gap(AppDimensions.MARGIN_SMALL)
 
-      // Column 3: Numeric Keypad
+      // 第三栏 - 数字键盘输入（占用剩余空间）
       Column() {
         Text('体重输入')
           .fontSize(AppText.FONT_SIZE_SUBTITLE)
@@ -319,8 +312,8 @@ struct Index {
 
         NumericKeypad({})
       }
-      .width('50%')
-      .height('100%')
+      .width('100%')
+      .layoutWeight(1)
       .padding(AppDimensions.PADDING_SMALL)
     }
     .width('100%')
