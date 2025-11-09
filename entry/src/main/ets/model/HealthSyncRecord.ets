@@ -4,15 +4,17 @@
  */
 
 export enum SyncDirection {
-  TO_HEALTH = 'TO_HEALTH',       // 同步到鸿蒙健康应用
-  FROM_HEALTH = 'FROM_HEALTH'    // 从鸿蒙健康应用导入
+  TO_HEALTH = 'TO_HEALTH',         // 同步到鸿蒙健康应用
+  FROM_HEALTH = 'FROM_HEALTH',     // 从鸿蒙健康应用导入
+  BIDIRECTIONAL = 'BIDIRECTIONAL'  // 双向同步
 }
 
 export enum SyncStatus {
-  PENDING = 'PENDING',           // 待同步
-  IN_PROGRESS = 'IN_PROGRESS',   // 同步中
-  SUCCESS = 'SUCCESS',           // 成功
-  FAILED = 'FAILED'              // 失败
+  PENDING = 'PENDING',             // 待同步
+  SYNCING = 'SYNCING',             // 同步进行中
+  SUCCESS = 'SUCCESS',             // 成功
+  FAILED = 'FAILED',               // 失败
+  CONFLICT = 'CONFLICT'            // 发生冲突
 }
 
 export interface SyncProgress {
@@ -74,12 +76,14 @@ export class HealthSyncRecord {
     switch (this.status) {
       case SyncStatus.PENDING:
         return '待同步';
-      case SyncStatus.IN_PROGRESS:
+      case SyncStatus.SYNCING:
         return '同步中';
       case SyncStatus.SUCCESS:
         return '成功';
       case SyncStatus.FAILED:
         return '失败';
+      case SyncStatus.CONFLICT:
+        return '冲突';
       default:
         return '未知';
     }
@@ -91,6 +95,8 @@ export class HealthSyncRecord {
         return '同步到健康应用';
       case SyncDirection.FROM_HEALTH:
         return '从健康应用导入';
+      case SyncDirection.BIDIRECTIONAL:
+        return '双向同步';
       default:
         return '未知方向';
     }

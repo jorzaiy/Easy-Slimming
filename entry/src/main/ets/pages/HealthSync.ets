@@ -32,6 +32,11 @@ struct HealthSync {
   private syncSettingsDao: SyncSettingsDao | null = null;
   private syncRecordDao: HealthSyncRecordDao | null = null;
 
+  private getCommonContext(): common.Context | null {
+    const uiContext = this.getUIContext();
+    return uiContext ? uiContext as common.Context : null;
+  }
+
   async aboutToAppear() {
     await this.initializeServices();
     await this.loadSyncData();
@@ -44,17 +49,13 @@ struct HealthSync {
         throw new Error('Weight record DAO not initialized');
       }
 
-      const context = this.getUIContext();
+      const context = this.getCommonContext();
       if (!context) {
         throw new Error('Context not available');
       }
 
-      const syncSettingsService = await (await import('../data/SyncSettingsDao')).getSyncSettingsDao(
-        context as unknown as common.Context
-      );
-      const syncRecordService = await (await import('../data/HealthSyncRecordDao')).getHealthSyncRecordDao(
-        context as unknown as common.Context
-      );
+      const syncSettingsService = await (await import('../data/SyncSettingsDao')).getSyncSettingsDao(context);
+      const syncRecordService = await (await import('../data/HealthSyncRecordDao')).getHealthSyncRecordDao(context);
 
       if (syncSettingsService && syncRecordService) {
         this.syncSettingsDao = syncSettingsService;
@@ -95,7 +96,10 @@ struct HealthSync {
   private updateSyncStatus() {
     if (this.isSyncing) {
       this.syncStatus = '同步中...';
-    } else if (this.syncHistory.length > 0) {
+      return;
+    }
+
+    if (this.syncHistory.length > 0) {
       const lastSync = this.syncHistory[0];
       switch (lastSync.status) {
         case SyncStatus.SUCCESS:
@@ -107,12 +111,19 @@ struct HealthSync {
         case SyncStatus.SYNCING:
           this.syncStatus = '同步中...';
           break;
+        case SyncStatus.CONFLICT:
+          this.syncStatus = '同步冲突';
+          break;
+        case SyncStatus.PENDING:
+          this.syncStatus = '待同步';
+          break;
         default:
-          this.syncStatus = lastSync.status;
+          this.syncStatus = this.getSyncStatusText(lastSync.status);
       }
-    } else {
-      this.syncStatus = '未同步';
+      return;
     }
+
+    this.syncStatus = '未同步';
   }
 
   private async startSync() {
@@ -146,6 +157,8 @@ struct HealthSync {
       case SyncStatus.SUCCESS:
         return AppColors.SUCCESS;
       case SyncStatus.FAILED:
+        return AppColors.ERROR;
+      case SyncStatus.CONFLICT:
         return AppColors.WARNING;
       case SyncStatus.SYNCING:
         return AppColors.PRIMARY;
@@ -212,7 +225,7 @@ struct HealthSync {
       .padding({ left: 16, right: 16 })
       .alignItems(VerticalAlign.Center)
 
-      Scroll() {
+      Scroller() {
         Column({ space: 16 }) {
           // 同步状态卡片
           Column({ space: 12 }) {
@@ -266,7 +279,7 @@ struct HealthSync {
           .shadow({ radius: 3, color: Color.Gray, offsetX: 0, offsetY: 1 })
 
           // 操作按钮
-          Row() {
+          Row({ space: 12 }) {
             Button('同步到鸿蒙')
               .layoutWeight(1)
               .height(44)
@@ -285,7 +298,6 @@ struct HealthSync {
               .fontColor(AppColors.PRIMARY)
               .backgroundColor(Color.White)
               .border({ width: 1, color: AppColors.PRIMARY })
-              .margin({ left: 12 })
               .onClick(() => {
                 try {
                   router.pushUrl({ url: 'pages/HealthSyncSettings' });
@@ -295,7 +307,6 @@ struct HealthSync {
               })
           }
           .width('90%')
-          .gap(12)
 
           // 同步历史
           Column({ space: 8 }) {

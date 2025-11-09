@@ -3,6 +3,8 @@
  * 管理与鸿蒙运动健康应用的同步配置
  */
 
+import { ResolutionOption } from './HealthSyncConflict';
+
 export enum SyncMode {
   MANUAL = 'MANUAL',           // 手动同步
   AUTO = 'AUTO',               // 自动同步
@@ -21,7 +23,7 @@ export class SyncSettings {
   autoSyncFrequency: SyncFrequency; // 自动同步频率
   lastSyncTime?: number;       // 最后同步时间
   syncOnAppStart: boolean;     // 应用启动时同步
-  conflictResolution: 'LOCAL' | 'HEALTH' | 'MERGE'; // 冲突解决策略
+  conflictResolution: ResolutionOption; // 冲突解决策略
   enableDetailedLogs: boolean; // 是否启用详细日志
   maxSyncRetries: number;      // 最大重试次数
   requestTimeout: number;      // 请求超时时间（毫秒）
@@ -31,7 +33,7 @@ export class SyncSettings {
     syncEnabled: boolean = false,
     syncMode: SyncMode = SyncMode.MANUAL,
     syncOnAppStart: boolean = false,
-    conflictResolution: 'LOCAL' | 'HEALTH' | 'MERGE' = 'LOCAL',
+    conflictResolution: ResolutionOption = ResolutionOption.USE_LOCAL,
     maxSyncRetries: number = 3,
     requestTimeout: number = 30000
   ) {
@@ -73,5 +75,24 @@ export class SyncSettings {
       return -1;
     }
     return Date.now() - this.lastSyncTime;
+  }
+
+  static normalizeConflictResolution(value: string): ResolutionOption {
+    switch (value) {
+      case ResolutionOption.USE_LOCAL:
+      case 'LOCAL':
+        return ResolutionOption.USE_LOCAL;
+      case ResolutionOption.USE_HEALTH:
+      case 'HEALTH':
+        return ResolutionOption.USE_HEALTH;
+      case ResolutionOption.MERGE_AVERAGE:
+      case 'MERGE':
+        return ResolutionOption.MERGE_AVERAGE;
+      case ResolutionOption.SKIP:
+      case 'SKIP':
+        return ResolutionOption.SKIP;
+      default:
+        return ResolutionOption.USE_LOCAL;
+    }
   }
 }

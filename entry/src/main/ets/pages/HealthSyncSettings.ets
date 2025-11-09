@@ -6,6 +6,7 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
 import { SyncSettings, SyncMode } from '../model/SyncSettings';
+import { ResolutionOption } from '../model/HealthSyncConflict';
 import { SyncSettingsDao } from '../data/SyncSettingsDao';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import { common } from '@kit.AbilityKit';
@@ -14,19 +15,27 @@ import promptAction from '@ohos.promptAction';
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'HealthSyncSettings';
 
+interface SyncOption<T> {
+  label: string;
+  value: T;
+}
+
+type SyncModeOption = SyncOption<SyncMode>;
+type ConflictResolutionOption = SyncOption<ResolutionOption>;
+
 @Entry
 @Component
 struct HealthSyncSettings {
   @State settings: SyncSettings | null = null;
-  @State syncModeOptions = [
+  @State syncModeOptions: SyncModeOption[] = [
     { label: '手动同步', value: SyncMode.MANUAL },
     { label: '自动同步', value: SyncMode.AUTO },
     { label: '后台同步', value: SyncMode.AUTO_BACKGROUND }
   ];
-  @State conflictResolutionOptions = [
-    { label: '保留本地数据', value: 'LOCAL' },
-    { label: '使用鸿蒙数据', value: 'HEALTH' },
-    { label: '合并数据', value: 'MERGE' }
+  @State conflictResolutionOptions: ConflictResolutionOption[] = [
+    { label: '保留本地数据', value: ResolutionOption.USE_LOCAL },
+    { label: '使用鸿蒙数据', value: ResolutionOption.USE_HEALTH },
+    { label: '合并数据', value: ResolutionOption.MERGE_AVERAGE }
   ];
   private syncSettingsDao: SyncSettingsDao | null = null;
 
@@ -152,7 +161,7 @@ struct HealthSyncSettings {
                   .fontWeight(FontWeight.Bold)
                   .padding({ left: 8 })
 
-                ForEach(this.syncModeOptions, (option: { label: string; value: SyncMode }) => {
+                ForEach(this.syncModeOptions, (option: SyncModeOption) => {
                   Row() {
                     Radio({ value: option.value, group: 'syncMode' })
                       .checked(this.settings!.syncMode === option.value)
@@ -281,14 +290,13 @@ struct HealthSyncSettings {
 
                 ForEach(
                   this.conflictResolutionOptions,
-                  (option: { label: string; value: string }) => {
+                  (option: ConflictResolutionOption) => {
                     Row() {
                       Radio({ value: option.value, group: 'conflict' })
                         .checked(this.settings!.conflictResolution === option.value)
                         .onChange((isChecked: boolean) => {
                           if (isChecked) {
-                            this.settings!.conflictResolution =
-                              option.value as 'LOCAL' | 'HEALTH' | 'MERGE';
+                            this.settings!.conflictResolution = option.value;
                           }
                         })
 
@@ -325,7 +333,7 @@ struct HealthSyncSettings {
                   }
                   .layoutWeight(1)
 
-                  Row() {
+                  Row({ space: 8 }) {
                     Button('-')
                       .width(36)
                       .height(36)
@@ -358,7 +366,6 @@ struct HealthSyncSettings {
                         }
                       })
                   }
-                  .gap(8)
                 }
                 .width('100%')
                 .padding(12)
@@ -399,7 +406,7 @@ struct HealthSyncSettings {
       .layoutWeight(1)
 
       // 底部按钮
-      Row() {
+      Row({ space: 12 }) {
         Button('取消')
           .layoutWeight(1)
           .height(44)
@@ -421,13 +428,11 @@ struct HealthSyncSettings {
           .fontSize(AppText.FONT_SIZE_BODY)
           .fontColor(Color.White)
           .backgroundColor(AppColors.PRIMARY)
-          .margin({ left: 12 })
           .onClick(() => {
             this.saveSettings();
           })
       }
       .width('90%')
-      .gap(12)
       .padding({ left: 16, right: 16, bottom: 16 })
     }
     .width('100%')

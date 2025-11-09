@@ -4,7 +4,16 @@
  */
 
 import { SyncSettings, SyncMode } from '../model/SyncSettings';
+import { ResolutionOption } from '../model/HealthSyncConflict';
 import { AppColors, AppDimensions, AppText } from '../common/Constants';
+
+interface SyncOption<T> {
+  label: string;
+  value: T;
+}
+
+type SyncModeOption = SyncOption<SyncMode>;
+type ConflictResolutionOption = SyncOption<ResolutionOption>;
 
 export interface HealthSyncSettingsDialogParams {
   isVisible: boolean;
@@ -17,15 +26,15 @@ export interface HealthSyncSettingsDialogParams {
 export struct HealthSyncSettingsDialog {
   @Link isVisible: boolean;
   @State settings: SyncSettings | null = null;
-  @State syncModeOptions = [
+  @State syncModeOptions: SyncModeOption[] = [
     { label: '手动同步', value: SyncMode.MANUAL },
     { label: '自动同步', value: SyncMode.AUTO },
     { label: '后台自动同步', value: SyncMode.AUTO_BACKGROUND }
   ];
-  @State conflictResolutionOptions = [
-    { label: '保留本地数据', value: 'LOCAL' },
-    { label: '使用鸿蒙数据', value: 'HEALTH' },
-    { label: '合并数据', value: 'MERGE' }
+  @State conflictResolutionOptions: ConflictResolutionOption[] = [
+    { label: '保留本地数据', value: ResolutionOption.USE_LOCAL },
+    { label: '使用鸿蒙数据', value: ResolutionOption.USE_HEALTH },
+    { label: '合并数据', value: ResolutionOption.MERGE_AVERAGE }
   ];
   onSettingsChanged: (settings: SyncSettings) => void = () => {};
   onDismiss: () => void = () => {};
