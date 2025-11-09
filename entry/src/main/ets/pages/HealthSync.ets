@@ -14,6 +14,7 @@ import { SyncSettings } from '../model/SyncSettings';
 import { AppColors, AppDimensions, AppText, LogConstants } from '../common/Constants';
 import { getAppDao } from '../common/Global';
 import { common } from '@kit.AbilityKit';
+import { resolveAbilityContext } from '../common/ContextUtils';
 import promptAction from '@ohos.promptAction';
 
 const DOMAIN = LogConstants.DOMAIN;
@@ -31,10 +32,11 @@ struct HealthSync {
   private healthSyncService: HealthSyncService | null = null;
   private syncSettingsDao: SyncSettingsDao | null = null;
   private syncRecordDao: HealthSyncRecordDao | null = null;
+  private scroller: Scroller = new Scroller();
 
   private getCommonContext(): common.Context | null {
     const uiContext = this.getUIContext();
-    return uiContext ? uiContext as common.Context : null;
+    return uiContext ? resolveAbilityContext(uiContext) : null;
   }
 
   async aboutToAppear() {
@@ -225,7 +227,7 @@ struct HealthSync {
       .padding({ left: 16, right: 16 })
       .alignItems(VerticalAlign.Center)
 
-      Scroller() {
+      Scroll(this.scroller) {
         Column({ space: 16 }) {
           // 同步状态卡片
           Column({ space: 12 }) {

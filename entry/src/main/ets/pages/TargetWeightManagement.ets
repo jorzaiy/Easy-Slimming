@@ -10,6 +10,7 @@ import { NavigationHelper } from '../common/NavigationHelper';
 import { TargetWeightSettingDialog } from '../common/TargetWeightSettingDialog';
 import promptAction from '@ohos.promptAction';
 import { common } from '@kit.AbilityKit';
+import { resolveAbilityContext } from '../common/ContextUtils';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'TargetManagement';
@@ -21,6 +22,7 @@ struct TargetWeightManagement {
   @State currentTarget: TargetWeightRecord | null = null;
   @State showDialog: boolean = false;
   @State isLoading: boolean = true;
+  private scroller: Scroller = new Scroller();
 
   async aboutToAppear() {
     await this.loadTargets();
@@ -32,11 +34,15 @@ struct TargetWeightManagement {
 
   async loadTargets() {
     try {
-      const context = this.getUIContext();
-      if (!context) {
+      const uiContext = this.getUIContext();
+      if (!uiContext) {
         return;
       }
-      const service = await getTargetWeightService(context as unknown as common.Context);
+      const abilityContext = resolveAbilityContext(uiContext);
+      if (!abilityContext) {
+        return;
+      }
+      const service = await getTargetWeightService(abilityContext);
       if (service) {
         this.targetHistory = await service.getTargetWeightHistory(20);
         this.currentTarget = this.targetHistory.length > 0 ? this.targetHistory[0] : null;
@@ -157,7 +163,7 @@ struct TargetWeightManagement {
             .fontSize(AppText.FONT_SIZE_BODY)
             .fontColor(AppColors.GRAY)
         } else {
-          Scroller() {
+          Scroll(this.scroller) {
             Column({ space: AppDimensions.MARGIN_MEDIUM }) {
               // 当前目标卡片
               if (this.currentTarget) {

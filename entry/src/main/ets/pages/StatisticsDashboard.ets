@@ -11,6 +11,7 @@ import { HeightSettingDialog } from '../common/HeightSettingDialog';
 import { TimeRangeSelector, TimeRange } from '../common/TimeRangeSelector';
 import promptAction from '@ohos.promptAction';
 import { common } from '@kit.AbilityKit';
+import { resolveAbilityContext } from '../common/ContextUtils';
 
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'StatisticsDashboard';
@@ -40,9 +41,12 @@ struct StatisticsDashboard {
 
   async loadStatistics(): Promise<void> {
     try {
-      const context = this.getUIContext() as common.Context | null;
-      if (context) {
-        this.statistics = await StatisticsService.getStatistics(context);
+      const uiContext = this.getUIContext();
+      if (uiContext) {
+        const abilityContext = resolveAbilityContext(uiContext);
+        if (abilityContext) {
+          this.statistics = await StatisticsService.getStatistics(abilityContext);
+        }
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load statistics: ${e}`);
@@ -57,9 +61,12 @@ struct StatisticsDashboard {
 
   async loadUserHeight(): Promise<void> {
     try {
-      const context = this.getUIContext() as common.Context | null;
-      if (context) {
-        this.userHeight = await StatisticsService.getUserHeight(context);
+      const uiContext = this.getUIContext();
+      if (uiContext) {
+        const abilityContext = resolveAbilityContext(uiContext);
+        if (abilityContext) {
+          this.userHeight = await StatisticsService.getUserHeight(abilityContext);
+        }
       }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load user height: ${e}`);
@@ -74,10 +81,12 @@ struct StatisticsDashboard {
 
   async loadRangeStatistics(): Promise<void> {
     try {
-      const context = this.getUIContext() as common.Context | null;
-      if (context) {
-        this.rangeStats = await StatisticsService.getTimeRangeStatistics(context, this.selectedTimeRange);
-      }
+      const uiContext = this.getUIContext();
+      if (uiContext) {
+        const abilityContext = resolveAbilityContext(uiContext);
+        if (abilityContext) {
+          this.rangeStats = await StatisticsService.getTimeRangeStatistics(abilityContext, this.selectedTimeRange);
+        }
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to load range statistics: ${e}`);
     }

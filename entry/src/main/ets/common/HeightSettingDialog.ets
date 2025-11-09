@@ -4,6 +4,7 @@
 import { StatisticsService } from '../data/StatisticsService';
 import { AppColors, AppDimensions, AppText } from './Constants';
 import { common } from '@kit.AbilityKit';
+import { resolveAbilityContext } from './ContextUtils';
 import promptAction from '@ohos.promptAction';
 
 @Component
@@ -31,8 +32,17 @@ export struct HeightSettingDialog {
       return;
     }
 
-    const context = this.getUIContext();
-    if (!context) {
+    const uiContext = this.getUIContext();
+    if (!uiContext) {
+      promptAction.showToast({
+        message: '保存失败，请重试',
+        duration: 2000
+      });
+      return;
+    }
+
+    const abilityContext = resolveAbilityContext(uiContext);
+    if (!abilityContext) {
       promptAction.showToast({
         message: '保存失败，请重试',
         duration: 2000
@@ -42,7 +52,7 @@ export struct HeightSettingDialog {
 
     this.isSaving = true;
     try {
-      await StatisticsService.saveUserHeight(context as unknown as common.Context, height);
+      await StatisticsService.saveUserHeight(abilityContext, height);
       this.onHeightChange(height);
       this.onDismiss();
       promptAction.showToast({
