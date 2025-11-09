@@ -1,0 +1,6 @@
+# 强制所有.ets文件使用LF换行
+*.ets text eol=lf
+
+# 二进制文件不转换
+*.png binary
+*.jpg binary
