@@ -301,7 +301,7 @@ struct Index {
       .width('100%')
       .height(80)
       .padding(AppDimensions.PADDING_SMALL)
-      .gap(AppDimensions.MARGIN_SMALL)
+      .justifyContent(FlexAlign.SpaceBetween)
 
       // 第三栏 - 数字键盘输入（占用剩余空间）
       Column() {
