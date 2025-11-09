@@ -10,7 +10,7 @@ export struct RemarkDisplay {
   build() {
     Column() {
       if (this.remarks.length > 0) {
-        ForEach(this.remarks, (remark: Remark, index?: number) => {
+        ForEach(this.remarks.slice(), (remark: Remark, index?: number) => {
           Column() {
             // 备注头部：类型、时间戳
             Row() {
@@ -110,7 +110,7 @@ export struct RemarkSummary {
   build() {
     if (this.remarks.length > 0) {
       Row() {
-        ForEach(this.remarks.slice(0, this.maxDisplay), (remark: Remark) => {
+        ForEach(this.remarks.slice(0, this.maxDisplay), (remark: Remark, index?: number) => {
           Row() {
             Text(remark.getTypeIcon())
               .fontSize(14)

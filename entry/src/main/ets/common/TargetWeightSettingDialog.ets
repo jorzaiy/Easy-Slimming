@@ -24,10 +24,10 @@ export struct TargetWeightSettingDialog {
   @State hasTargetDate: boolean = false;
   @State notes: string = '';
   @State isSaving: boolean = false;
-  private scroller: Scroller = new Scroller();
+  private dialogScroller: Scroller = new Scroller();
 
   // 预设目标值
-  private readonly presets: readonly number[] = [60, 65, 70, 75, 80];
+  private presets: number[] = [60, 65, 70, 75, 80];
 
   aboutToAppear() {
     if (this.currentTarget) {
@@ -145,7 +145,7 @@ export struct TargetWeightSettingDialog {
             .textAlign(TextAlign.Center)
 
           // 内容区
-          Scroll(this.scroller) {
+          Scroll(this.dialogScroller) {
            Column({ space: AppDimensions.MARGIN_MEDIUM }) {
               // 预设目标值
               Column({ space: AppDimensions.MARGIN_SMALL }) {
@@ -155,7 +155,7 @@ export struct TargetWeightSettingDialog {
                   .fontWeight(FontWeight.Medium)
 
                 Grid() {
-                   ForEach(this.presets, (preset: number) => {
+                   ForEach(this.presets.slice(), (preset: number, index?: number) => {
                      GridItem() {
                        Text(preset.toString())
                          .width('100%')

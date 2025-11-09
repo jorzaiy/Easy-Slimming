@@ -318,7 +318,7 @@ struct HealthSync {
               .fontColor(Color.Black)
 
             if (this.syncHistory.length > 0) {
-              ForEach(this.syncHistory, (record: HealthSyncRecord) => {
+              ForEach(this.syncHistory.slice(), (record: HealthSyncRecord, index?: number) => {
                 Column({ space: 8 }) {
                   Row() {
                     Column({ space: 4 }) {

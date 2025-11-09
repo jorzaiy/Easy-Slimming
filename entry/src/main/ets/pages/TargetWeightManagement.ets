@@ -237,7 +237,7 @@ struct TargetWeightManagement {
               }
 
               // 历史目标列表
-              ForEach(this.targetHistory, (target: TargetWeightRecord, index: number) => {
+              ForEach(this.targetHistory.slice(), (target: TargetWeightRecord, index: number) => {
                 if (index > 0) {
                   Column({ space: AppDimensions.MARGIN_SMALL }) {
                     Row() {

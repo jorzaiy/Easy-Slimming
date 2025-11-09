@@ -106,7 +106,7 @@ export struct HealthSyncSettingsDialog {
                   .fontColor(AppColors.GRAY)
 
                 Row() {
-                  ForEach(this.syncModeOptions, (option: { label: string; value: SyncMode }) => {
+                  ForEach(this.syncModeOptions.slice(), (option: SyncModeOption, index?: number) => {
                     Column() {
                       Text(option.label)
                         .fontSize(AppText.FONT_SIZE_SMALL)
@@ -153,14 +153,13 @@ export struct HealthSyncSettingsDialog {
                   .fontSize(AppText.FONT_SIZE_BODY)
                   .fontColor(AppColors.GRAY)
 
-                ForEach(this.conflictResolutionOptions, (option: { label: string; value: string }) => {
+                ForEach(this.conflictResolutionOptions.slice(), (option: ConflictResolutionOption, index?: number) => {
                   Row() {
                     Radio({ value: option.value, group: 'conflict' })
                       .checked(this.settings?.conflictResolution === option.value)
                       .onChange((isChecked: boolean) => {
                         if (isChecked && this.settings) {
-                          this.settings.conflictResolution =
-                            option.value as 'LOCAL' | 'HEALTH' | 'MERGE';
+                          this.settings.conflictResolution = option.value;
                           this.onSettingsChanged(this.settings);
                         }
                       })

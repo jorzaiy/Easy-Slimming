@@ -22,7 +22,7 @@ export struct HeightSettingDialog {
   }
 
   async saveHeight() {
-    const height = parseFloat(this.inputHeight);
+    const height: number = parseFloat(this.inputHeight);
     
     if (isNaN(height) || height < 100 || height > 250) {
       promptAction.showToast({

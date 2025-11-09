@@ -213,7 +213,7 @@ struct HistoryPage {
 
       if (this.filteredRecords.length > 0) {
         List({ space: 10 }) {
-          ForEach(this.filteredRecords, (item: WeightRecord) => {
+          ForEach(this.filteredRecords.slice(), (item: WeightRecord, index?: number) => {
             ListItem() {
               this.RecordItem(item)
             }
