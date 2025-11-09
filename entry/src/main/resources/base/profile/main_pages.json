@@ -10,6 +10,7 @@
     "pages/TargetWeightManagement",
     "pages/DataManagement",
     "pages/HealthSync",
-    "pages/HealthSyncSettings"
+    "pages/HealthSyncSettings",
+    "pages/Settings"
   ]
 }
