@@ -18,6 +18,17 @@ struct Index {
   @State currentTarget: TargetWeightRecord | null = null;
   @State showTargetDialog: boolean = false;
 
+  // 监听currentTargetLink的变化，同步更新currentTarget
+  @Watch('onTargetLinkChanged')
+  @Provide currentTargetLink: TargetWeightRecord | null = null;
+
+  onTargetLinkChanged() {
+    this.currentTarget = this.currentTargetLink;
+    if (this.currentTargetLink) {
+      WeightRecord.setTargetWeight(this.currentTargetLink.targetWeight);
+    }
+  }
+
   async aboutToAppear() {
     await this.loadLatestRecord();
     await this.loadTargetWeight();
@@ -63,7 +74,9 @@ struct Index {
       }
       const service = await getTargetWeightService(abilityContext);
       if (service) {
-        this.currentTarget = await service.getCurrentTarget();
+        const target = await service.getCurrentTarget();
+        this.currentTarget = target;
+        this.currentTargetLink = target;
         hilog.info(DOMAIN, TAG, 'Loaded target weight.');
       }
     } catch (e) {
@@ -92,11 +105,6 @@ struct Index {
     // 假设初始体重为 100kg（示例，实际需要追踪）
     // 这里简化处理
     return Math.min(100, Math.max(0, ((startWeight - targetWeight) / startWeight) * 100));
-  }
-
-  onTargetChange(target: TargetWeightRecord) {
-    this.currentTarget = target;
-    WeightRecord.setTargetWeight(target.targetWeight);
   }
 
   build() {
@@ -324,13 +332,8 @@ struct Index {
       // 目标体重设置对话框
       TargetWeightSettingDialog({
         isVisible: this.showTargetDialog,
-        currentTarget: this.currentTarget,
-        onTargetChange: (target: TargetWeightRecord) => {
-          this.onTargetChange(target);
-        },
-        onDismiss: () => {
-          this.showTargetDialog = false;
-        }
+        currentTarget: $currentTargetLink,
+        dialogVisible: $showTargetDialog
       })
     }
     .width('100%')
