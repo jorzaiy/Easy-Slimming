@@ -42,7 +42,7 @@ export class TargetWeightService {
   async setTargetWeight(weight: number, targetDate?: number, notes?: string): Promise<boolean> {
     try {
       if (weight <= 0 || weight > 200) {
-        throw new Error(`Invalid weight value: ${weight}. Must be between 0 and 200.`);
+        throw new Error(`Invalid target weight value: ${weight}. Must be greater than 0 and up to 200.`);
       }
 
       const valueBucket: relationalStore.ValuesBucket = {
@@ -182,7 +182,7 @@ export class TargetWeightService {
   async updateTarget(id: number, weight: number, targetDate?: number, notes?: string): Promise<boolean> {
     try {
       if (weight <= 0 || weight > 200) {
-        throw new Error(`Invalid weight value: ${weight}. Must be between 0 and 200.`);
+        throw new Error(`Invalid target weight value: ${weight}. Must be greater than 0 and up to 200.`);
       }
 
       const valueBucket: relationalStore.ValuesBucket = {

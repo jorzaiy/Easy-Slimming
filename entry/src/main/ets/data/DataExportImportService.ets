@@ -415,8 +415,8 @@ export class DataExportImportService {
 
           if (typeof recordData.weight !== 'number') {
             errors.push(`Record ${i}: Invalid weight type`);
-          } else if (recordData.weight <= 0 || recordData.weight > 200) {
-            errors.push(`Record ${i}: Weight out of valid range`);
+          } else if (recordData.weight < 0 || recordData.weight > 200) {
+            errors.push(`Record ${i}: Weight out of valid range (0-200 kg)`);
           }
 
           if (typeof recordData.date !== 'number') {

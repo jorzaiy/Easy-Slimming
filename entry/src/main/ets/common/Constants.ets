@@ -49,7 +49,7 @@ export class AppText {
 
 // 业务常量
 export class BusinessConstants {
-  static readonly MIN_WEIGHT = 30;
+  static readonly MIN_WEIGHT = 0;
   static readonly MAX_WEIGHT = 200;
   static readonly MAX_NOTES_LENGTH = 200;
   static readonly MAX_REMARK_CONTENT_LENGTH = 200;
