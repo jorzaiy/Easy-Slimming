@@ -2,7 +2,9 @@
   "apiType": "stageMode",
   "buildOption": {
     "resOptions": {
-      "compression": true
+      "compression": {
+        "enable": true
+      }
     }
   },
   "buildOptionSet": [
