@@ -97,7 +97,7 @@ export struct RemarkFilter {
         .margin({ top: 4, bottom: 4 })
 
       // 备注类型选项
-      ForEach(Remark.getAllTypes(), (typeInfo) => {
+      ForEach(Remark.getAllTypes().slice(), (typeInfo: RemarkTypeInfo) => {
         Row() {
           Text(typeInfo.icon)
             .fontSize(16)

@@ -341,7 +341,7 @@ struct WeightChartPage {
                 .fill(Color.Transparent)
 
               // 数据点
-              ForEach(this.chartDataPoints, (point: ChartDataPoint) => {
+              ForEach(this.chartDataPoints.slice(), (point: ChartDataPoint, index?: number) => {
                 Circle({ width: 10, height: 10 })
                   .fill(Color.Blue)
                   .position({ x: point.x - 5, y: point.y - 5 })
@@ -534,7 +534,7 @@ struct WeightChartPage {
   AxisLabels() {
     if (this.records.length > 0) {
       Column() {
-        ForEach([0, 1, 2, 3, 4, 5], (index: number) => {
+        ForEach([0, 1, 2, 3, 4, 5].slice(), (index: number, arrayIndex?: number) => {
           Text(`${(this.weightRange.maxWeight - (index * (this.weightRange.maxWeight - this.weightRange.minWeight) / 5)).toFixed(1)}`)
             .fontSize(10)
             .fontColor('#666666')
@@ -552,7 +552,7 @@ struct WeightChartPage {
   @Builder
   GridBackground() {
     Column() {
-      ForEach([0, 1, 2, 3, 4, 5], (index: number) => {
+      ForEach([0, 1, 2, 3, 4, 5].slice(), (index: number, arrayIndex?: number) => {
         Line()
           .startPoint([this.chartPadding, this.chartPadding + index * (this.chartHeight - 2 * this.chartPadding) / 5])
           .endPoint([this.chartWidth - this.chartPadding, this.chartPadding + index * (this.chartHeight - 2 * this.chartPadding) / 5])
@@ -560,7 +560,7 @@ struct WeightChartPage {
           .strokeWidth(1)
       })
       
-      ForEach([0, 1, 2, 3, 4, 5], (index: number) => {
+      ForEach([0, 1, 2, 3, 4, 5].slice(), (index: number, arrayIndex?: number) => {
         Line()
           .startPoint([this.chartPadding + index * (this.chartWidth - 2 * this.chartPadding) / 5, this.chartPadding])
           .endPoint([this.chartPadding + index * (this.chartWidth - 2 * this.chartPadding) / 5, this.chartHeight - this.chartPadding])

@@ -144,7 +144,7 @@ export struct RemarkEditDialog {
   @Builder
   buildTypeSelector() {
     Column() {
-      ForEach(Remark.getAllTypes(), (typeInfo) => {
+      ForEach(Remark.getAllTypes().slice(), (typeInfo: RemarkTypeInfo) => {
         Row() {
           Text(typeInfo.icon)
             .fontSize(18)

@@ -21,19 +21,19 @@ export struct RemarkEntry {
       this.newRemarkContent.trim()
     );
 
-    this.remarks.push(newRemark);
+    this.remarks = [...this.remarks, newRemark];
     this.newRemarkContent = '';
     this.newRemarkType = RemarkType.OTHER;
     this.onRemarksChange(this.remarks);
   }
 
   private removeRemark(index: number) {
-    this.remarks.splice(index, 1);
+    this.remarks = this.remarks.filter((_: Remark, i: number) => i !== index);
     this.onRemarksChange(this.remarks);
   }
 
   private updateRemark(index: number, remark: Remark) {
-    this.remarks[index] = remark;
+    this.remarks = this.remarks.map((r: Remark, i: number) => i === index ? remark : r);
     this.onRemarksChange(this.remarks);
   }
 
@@ -92,7 +92,7 @@ export struct RemarkEntry {
             .width('100%')
             .textAlign(TextAlign.Start)
 
-          ForEach(this.remarks, (remark: Remark, index?: number) => {
+          ForEach(this.remarks.slice(), (remark: Remark, index?: number) => {
             Row() {
               // 备注类型图标和标签
               Row() {
@@ -147,7 +147,7 @@ export struct RemarkEntry {
   @Builder
   buildTypeSelector() {
     Column() {
-      ForEach(Remark.getAllTypes(), (typeInfo) => {
+      ForEach(Remark.getAllTypes().slice(), (typeInfo: RemarkTypeInfo) => {
         Row() {
           Text(typeInfo.icon)
             .fontSize(18)

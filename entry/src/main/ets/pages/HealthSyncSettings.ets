@@ -166,7 +166,7 @@ struct HealthSyncSettings {
                   .fontWeight(FontWeight.Bold)
                   .padding({ left: 8 })
 
-                ForEach(this.syncModeOptions, (option: SyncModeOption) => {
+                ForEach(this.syncModeOptions.slice(), (option: SyncModeOption, index?: number) => {
                   Row() {
                     Radio({ value: option.value, group: 'syncMode' })
                       .checked(this.settings!.syncMode === option.value)
@@ -294,8 +294,8 @@ struct HealthSyncSettings {
                 .borderRadius(8)
 
                 ForEach(
-                  this.conflictResolutionOptions,
-                  (option: ConflictResolutionOption) => {
+                  this.conflictResolutionOptions.slice(),
+                  (option: ConflictResolutionOption, index?: number) => {
                     Row() {
                       Radio({ value: option.value, group: 'conflict' })
                         .checked(this.settings!.conflictResolution === option.value)

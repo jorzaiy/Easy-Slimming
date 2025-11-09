@@ -15,7 +15,7 @@ export struct TimeRangeSelector {
   @Prop selectedRange: TimeRange;
   @Prop onRangeChange: (range: TimeRange) => void;
 
-  private ranges: readonly TimeRangeOption[] = [
+  private ranges: TimeRangeOption[] = [
     { value: 'all', label: '全部' },
     { value: 'month', label: '本月' },
     { value: 'week', label: '本周' },
@@ -25,7 +25,7 @@ export struct TimeRangeSelector {
 
   build() {
     Row({ space: AppDimensions.MARGIN_SMALL }) {
-      ForEach(this.ranges, (range: TimeRangeOption) => {
+      ForEach(this.ranges.slice(), (range: TimeRangeOption, index?: number) => {
         Button(range.label)
           .type(ButtonType.Normal)
           .height(32)
