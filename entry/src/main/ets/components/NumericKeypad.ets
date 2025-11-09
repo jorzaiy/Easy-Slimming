@@ -23,10 +23,6 @@ export interface NumericKeypadCallbacks {
   onCancel?: () => void;
 }
 
-interface NumericKeypadParams {
-  callbacks?: NumericKeypadCallbacks;
-}
-
 /**
  * NumericKeypad Component
  * 
@@ -64,7 +60,7 @@ interface NumericKeypadParams {
 export struct NumericKeypad {
   @State displayValue: string = '';
   @State errorMessage: string = '';
-  @Consume callbacks: NumericKeypadCallbacks;
+  @Consume callbacks: NumericKeypadCallbacks = {};
   @Prop disabled: boolean = false;
   @Prop showErrorMessage: string = '';
 
