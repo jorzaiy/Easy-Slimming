@@ -2,9 +2,7 @@
   "apiType": "stageMode",
   "buildOption": {
     "resOptions": {
-      "copyCodeResource": {
-        "enable": false
-      }
+      "compression": true
     }
   },
   "buildOptionSet": [
@@ -20,14 +18,14 @@
           }
         }
       }
-    },
+    }
   ],
   "targets": [
     {
       "name": "default"
     },
     {
-      "name": "ohosTest",
+      "name": "ohosTest"
     }
   ]
 }
