@@ -169,6 +169,7 @@ export class DataExportImportService {
       errors: [],
       timestamp: Date.now()
     };
+    const rdbStore = this.dao.getRdbStore();
 
     try {
       const data: ExportDataContent = JSON.parse(jsonContent);
@@ -178,7 +179,7 @@ export class DataExportImportService {
         return result;
       }
 
-      await this.dao.rdbStore.executeSql('BEGIN TRANSACTION');
+      await rdbStore.executeSql('BEGIN TRANSACTION');
 
       for (const recordData of data.records) {
         try {
@@ -225,7 +226,7 @@ export class DataExportImportService {
         }
       }
 
-      await this.dao.rdbStore.executeSql('COMMIT');
+      await rdbStore.executeSql('COMMIT');
       result.success = result.failedCount === 0;
 
       hilog.info(
@@ -235,7 +236,7 @@ export class DataExportImportService {
       );
     } catch (e) {
       try {
-        await this.dao.rdbStore.executeSql('ROLLBACK');
+        await rdbStore.executeSql('ROLLBACK');
       } catch (rollbackError) {
         hilog.error(DOMAIN, TAG, `Failed to rollback transaction: ${rollbackError}`);
       }
@@ -262,6 +263,7 @@ export class DataExportImportService {
       errors: [],
       timestamp: Date.now()
     };
+    const rdbStore = this.dao.getRdbStore();
 
     try {
       const lines = csvContent.split('\n').filter(line => line.trim());
@@ -282,7 +284,7 @@ export class DataExportImportService {
         return result;
       }
 
-      await this.dao.rdbStore.executeSql('BEGIN TRANSACTION');
+      await rdbStore.executeSql('BEGIN TRANSACTION');
 
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
@@ -353,7 +355,7 @@ export class DataExportImportService {
         }
       }
 
-      await this.dao.rdbStore.executeSql('COMMIT');
+      await rdbStore.executeSql('COMMIT');
       result.success = result.failedCount === 0;
 
       hilog.info(
@@ -363,7 +365,7 @@ export class DataExportImportService {
       );
     } catch (e) {
       try {
-        await this.dao.rdbStore.executeSql('ROLLBACK');
+        await rdbStore.executeSql('ROLLBACK');
       } catch (rollbackError) {
         hilog.error(DOMAIN, TAG, `Failed to rollback transaction: ${rollbackError}`);
       }
