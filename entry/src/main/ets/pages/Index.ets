@@ -261,7 +261,7 @@ struct Index {
         }
       }
       .width('100%')
-      .height(200)
+      .height(120)
       .padding(AppDimensions.PADDING_SMALL)
 
       // 第二栏 - 功能按钮栏（水平排列）
@@ -299,7 +299,7 @@ struct Index {
           .onClick(() => this.navigateToPage('pages/Settings'))
       }
       .width('100%')
-      .height(80)
+      .height(50)
       .padding(AppDimensions.PADDING_SMALL)
       .justifyContent(FlexAlign.SpaceBetween)
 
