@@ -285,7 +285,17 @@ export async function getRemarkDao(context: common.Context): Promise<RemarkDao |
   if (remarkDao) {
     return remarkDao;
   }
-  // 需要获取RdbStore，这里通过WeightRecordDao的RdbHelper来获取
-  // 在实际使用中，我们会通过Global来统一管理
+  
+  try {
+    const helperModule = await import('./RdbHelper');
+    const rdbStore = await helperModule.rdbHelper.initRdbStore(context);
+    if (rdbStore) {
+      remarkDao = new RemarkDao(rdbStore);
+      return remarkDao;
+    }
+  } catch (e) {
+    hilog.error(DOMAIN, TAG, `Failed to get RemarkDao, cause: ${e}`);
+  }
+  
   return null;
 }
