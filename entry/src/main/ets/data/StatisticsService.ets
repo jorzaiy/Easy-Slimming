@@ -13,6 +13,17 @@ import preferences from '@ohos.data.preferences';
 const DOMAIN = LogConstants.DOMAIN;
 const TAG = LogConstants.TAG_PREFIX + 'StatisticsService';
 
+/**
+ * 时间范围统计数据接口
+ */
+export interface RangeStatistics {
+  count: number;
+  average: number;
+  min: number;
+  max: number;
+  change: number;
+}
+
 export class StatisticsService {
   private static readonly CACHE_KEY = 'weight_statistics_cache';
   private static readonly CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
@@ -76,7 +87,7 @@ export class StatisticsService {
   private static async cacheStatistics(context: common.Context, statistics: WeightStatistics): Promise<void> {
     try {
       const dataStore = await preferences.getPreferences(context, 'weight_app_stats');
-      await dataStore.put(this.CACHE_KEY, JSON.stringify(statistics));
+      await dataStore.put(StatisticsService.CACHE_KEY, JSON.stringify(statistics));
       await dataStore.flush();
       hilog.info(DOMAIN, TAG, 'Statistics cached successfully');
     } catch (e) {
@@ -90,13 +101,17 @@ export class StatisticsService {
   private static async getCachedStatistics(context: common.Context): Promise<WeightStatistics | null> {
     try {
       const dataStore = await preferences.getPreferences(context, 'weight_app_stats');
-      const cachedData = await dataStore.get(this.CACHE_KEY, '') as string;
+      const cachedData = await dataStore.get(StatisticsService.CACHE_KEY, '') as string;
       
       if (!cachedData) {
         return null;
       }
 
       const data = JSON.parse(cachedData);
+      if (!data) {
+        return null;
+      }
+      
       return new WeightStatistics(
         data.currentWeight,
         data.targetWeight,
@@ -121,7 +136,7 @@ export class StatisticsService {
    * 检查缓存是否过期
    */
   private static isCacheExpired(lastUpdated: number): boolean {
-    return Date.now() - lastUpdated > this.CACHE_DURATION;
+    return Date.now() - lastUpdated > StatisticsService.CACHE_DURATION;
   }
 
   /**
@@ -130,7 +145,7 @@ export class StatisticsService {
   private static async clearCache(context: common.Context): Promise<void> {
     try {
       const dataStore = await preferences.getPreferences(context, 'weight_app_stats');
-      await dataStore.delete(this.CACHE_KEY);
+      await dataStore.delete(StatisticsService.CACHE_KEY);
       await dataStore.flush();
       hilog.info(DOMAIN, TAG, 'Cache cleared successfully');
     } catch (e) {
@@ -144,12 +159,12 @@ export class StatisticsService {
   static async saveUserHeight(context: common.Context, height: number): Promise<void> {
     try {
       const dataStore = await preferences.getPreferences(context, 'weight_app_settings');
-      await dataStore.put(this.HEIGHT_KEY, height);
+      await dataStore.put(StatisticsService.HEIGHT_KEY, height);
       await dataStore.flush();
       hilog.info(DOMAIN, TAG, `User height saved: ${height}cm`);
       
       // 清除统计缓存，因为身高变化会影响BMI
-      await this.clearCache(context);
+      await StatisticsService.clearCache(context);
     } catch (e) {
       hilog.error(DOMAIN, TAG, `Failed to save user height: ${e}`);
     }
@@ -161,7 +176,7 @@ export class StatisticsService {
   static async getUserHeight(context: common.Context): Promise<number> {
     try {
       const dataStore = await preferences.getPreferences(context, 'weight_app_settings');
-      const height = await dataStore.get(this.HEIGHT_KEY, 170) as number; // 默认170cm
+      const height = await dataStore.get(StatisticsService.HEIGHT_KEY, 170) as number; // 默认170cm
       hilog.info(DOMAIN, TAG, `User height retrieved: ${height}cm`);
       return height;
     } catch (e) {
@@ -177,13 +192,7 @@ export class StatisticsService {
     context: common.Context, 
     startDate: number, 
     endDate: number
-  ): Promise<{
-    count: number;
-    average: number;
-    min: number;
-    max: number;
-    change: number;
-  } | null> {
+  ): Promise<RangeStatistics | null> {
     try {
       const dao = await getWeightRecordDao(context);
       if (!dao) {
@@ -256,14 +265,10 @@ export class StatisticsService {
   static async getTimeRangeStatistics(
     context: common.Context,
     range: string
-  ): Promise<{
-    count: number;
-    average: number;
-    min: number;
-    max: number;
-    change: number;
-  } | null> {
-    const { startDate, endDate } = this.getDateRange(range);
-    return await this.getRangeStatistics(context, startDate, endDate);
+  ): Promise<RangeStatistics | null> {
+    const dateRange = StatisticsService.getDateRange(range);
+    const startDate = dateRange.startDate;
+    const endDate = dateRange.endDate;
+    return await StatisticsService.getRangeStatistics(context, startDate, endDate);
   }
 }
