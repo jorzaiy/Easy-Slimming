@@ -15,9 +15,8 @@ const TAG = LogConstants.TAG_PREFIX + 'TargetWeightDialog';
 @Component
 export struct TargetWeightSettingDialog {
   @Prop isVisible: boolean;
-  @Prop currentTarget: TargetWeightRecord | null;
-  @Prop onTargetChange: (target: TargetWeightRecord) => void;
-  @Prop onDismiss: () => void;
+  @Link currentTarget: TargetWeightRecord | null;
+  @Link dialogVisible: boolean;
   @State inputWeight: string = '';
   @State selectedTargetDate: Date = new Date();
   @State hasTargetDate: boolean = false;
@@ -86,8 +85,8 @@ export struct TargetWeightSettingDialog {
       if (success) {
         const target = await service.getCurrentTarget();
         if (target) {
-          this.onTargetChange(target);
-          this.onDismiss();
+          this.currentTarget = target;
+          this.dialogVisible = false;
           promptAction.showToast({
             message: `目标已设置为 ${weight.toFixed(1)} kg`,
             duration: 2000
@@ -121,7 +120,7 @@ export struct TargetWeightSettingDialog {
           .height('100%')
           .backgroundColor('rgba(0, 0, 0, 0.5)')
           .onClick(() => {
-            this.onDismiss();
+            this.dialogVisible = false;
           })
 
         // 对话框内容
@@ -282,7 +281,7 @@ export struct TargetWeightSettingDialog {
               .fontColor(AppColors.GRAY)
               .border({ width: 1, color: AppColors.BORDER_GRAY, radius: AppDimensions.BORDER_RADIUS_SMALL })
               .onClick(() => {
-                this.onDismiss();
+                this.dialogVisible = false;
               })
 
             Button(this.isSaving ? '保存中...' : '保存')
